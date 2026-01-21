@@ -31,12 +31,15 @@ export function DateRangeFilter({
     to: dateRange?.endDate,
   });
 
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
   const handleApply = () => {
     if (date.from && date.to) {
       onApply({
         startDate: date.from,
         endDate: date.to,
       });
+      setIsPopoverOpen(false);
     }
   };
 
@@ -47,7 +50,7 @@ export function DateRangeFilter({
 
   return (
     <div className="flex items-center gap-2">
-      <Popover>
+      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
