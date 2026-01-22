@@ -8,6 +8,7 @@ import type {
   YearlyAnalysis,
   SpendingBottleneck,
   ProcessedTransaction,
+  MonthlyReport,
 } from "@/types";
 import { SpendingAnalyzer } from "@/lib/analysis";
 import { databaseService } from "@/lib/database-service";
@@ -70,6 +71,7 @@ interface SpendingStore {
   yearlyAnalysis: YearlyAnalysis[];
   bottlenecks: SpendingBottleneck[];
   walletBalances: WalletBalance[];
+  currentMonthReport: MonthlyReport | null;
 
   // Selected items for drill-down
   selectedCategory: string | null;
@@ -122,6 +124,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
   yearlyAnalysis: [],
   bottlenecks: [],
   walletBalances: [],
+  currentMonthReport: null,
   selectedCategory: null,
   selectedMonth: null,
   selectedYear: null,
@@ -137,7 +140,11 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     try {
       const transactions = await databaseService.getTransactions();
       const processedTransactions = transactions.map(toProcessedTransaction);
-      const analyzer = new SpendingAnalyzer(processedTransactions);
+      // Filter out transactions with excludeReport=true for analysis
+      const reportableTransactions = processedTransactions.filter(
+        (t) => !t.excludeReport,
+      );
+      const analyzer = new SpendingAnalyzer(reportableTransactions);
 
       set({
         transactions,
@@ -166,7 +173,11 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
       const transaction = await databaseService.addTransaction(tx);
       const transactions = [...get().transactions, transaction];
       const processedTransactions = transactions.map(toProcessedTransaction);
-      const analyzer = new SpendingAnalyzer(processedTransactions);
+      // Filter out transactions with excludeReport=true for analysis
+      const reportableTransactions = processedTransactions.filter(
+        (t) => !t.excludeReport,
+      );
+      const analyzer = new SpendingAnalyzer(reportableTransactions);
 
       set({
         transactions,
@@ -197,7 +208,11 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
         t.id === updated.id ? updated : t,
       );
       const processedTransactions = transactions.map(toProcessedTransaction);
-      const analyzer = new SpendingAnalyzer(processedTransactions);
+      // Filter out transactions with excludeReport=true for analysis
+      const reportableTransactions = processedTransactions.filter(
+        (t) => !t.excludeReport,
+      );
+      const analyzer = new SpendingAnalyzer(reportableTransactions);
 
       set({
         transactions,
@@ -228,7 +243,11 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
       await databaseService.deleteTransaction(id);
       const transactions = get().transactions.filter((t) => t.id !== id);
       const processedTransactions = transactions.map(toProcessedTransaction);
-      const analyzer = new SpendingAnalyzer(processedTransactions);
+      // Filter out transactions with excludeReport=true for analysis
+      const reportableTransactions = processedTransactions.filter(
+        (t) => !t.excludeReport,
+      );
+      const analyzer = new SpendingAnalyzer(reportableTransactions);
 
       set({
         transactions,
@@ -279,7 +298,9 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
 
   // Legacy method for backward compatibility with existing CSV import flow
   loadTransactions: (transactions) => {
-    const analyzer = new SpendingAnalyzer(transactions);
+    // Filter out transactions with excludeReport=true for analysis
+    const reportableTransactions = transactions.filter((t) => !t.excludeReport);
+    const analyzer = new SpendingAnalyzer(reportableTransactions);
     set({
       processedTransactions: transactions,
       analyzer,
@@ -335,9 +356,10 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
       const bottlenecks = analyzer.detectBottlenecks(filteredProcessed);
 
       // Filter Transaction[] for display (same logic as analyzer.filterTransactions)
-      let filteredTransactions = transactions;
+      // Also exclude transactions with exclude_report=true to match analysis
+      let filteredTransactions = transactions.filter((t) => !t.exclude_report);
       if (filter.dateRange) {
-        filteredTransactions = transactions.filter((t) => {
+        filteredTransactions = filteredTransactions.filter((t) => {
           const date = new Date(t.date);
           return (
             date >= filter.dateRange!.startDate &&
@@ -385,6 +407,9 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
         }))
         .sort((a, b) => b.balance - a.balance);
 
+      // Calculate current month report
+      const currentMonthReport = analyzer.getMonthlyReport();
+
       set({
         statistics,
         filteredTransactions,
@@ -393,6 +418,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
         yearlyAnalysis,
         bottlenecks,
         walletBalances,
+        currentMonthReport,
         isLoading: false,
         error: null,
       });
@@ -418,6 +444,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
       yearlyAnalysis: [],
       bottlenecks: [],
       walletBalances: [],
+      currentMonthReport: null,
       selectedCategory: null,
       selectedMonth: null,
       selectedYear: null,

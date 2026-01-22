@@ -172,3 +172,36 @@ export interface ImportResult {
   imported_count: number;
   skipped_count: number;
 }
+
+// Daily spending for a single day
+export interface DailySpending {
+  date: string; // "YYYY-MM-DD"
+  dayOfMonth: number; // 1-31
+  displayDate: string; // "MM/DD"
+  expense: number;
+  income: number;
+  cumulativeExpense: number;
+  cumulativeIncome: number;
+}
+
+// Average daily spending pattern from previous months
+export interface DailyAverageSpending {
+  dayOfMonth: number;
+  displayDate: string;
+  averageExpense: number;
+  averageCumulativeExpense: number;
+}
+
+// Monthly report data
+export interface MonthlyReport {
+  yearMonth: string;
+  year: number;
+  month: number;
+  daysInMonth: number;
+  dailySpending: DailySpending[];
+  totalExpense: number;
+  totalIncome: number;
+  currentDayExpense: number;
+  previousThreeMonthAverage: number;
+  previousThreeMonthDailyPattern: DailyAverageSpending[];
+}

@@ -18,6 +18,7 @@ export function DashboardPage() {
     monthlyAnalysis,
     bottlenecks,
     walletBalances,
+    currentMonthReport,
     statistics,
     selectedCategory,
     filter,
@@ -114,6 +115,7 @@ export function DashboardPage() {
       monthlyAnalysis={monthlyAnalysis}
       bottlenecks={bottlenecks}
       walletBalances={walletBalances}
+      currentMonthReport={currentMonthReport}
       stats={statistics}
       selectedCategory={selectedCategory}
       filter={dashboardFilter}

@@ -3,6 +3,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { AddTransactionPage } from "./pages/AddTransactionPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { InitialSetupPage } from "./pages/InitialSetupPage";
+import { ReportsPage } from "./pages/ReportsPage";
 import { RootLayout } from "./layouts/RootLayout";
 
 /**
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
       {
         path: "setup",
         element: <InitialSetupPage />,
+      },
+      {
+        path: "reports",
+        element: <ReportsPage />,
       },
     ],
   },

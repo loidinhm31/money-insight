@@ -69,6 +69,15 @@ function processTransactions(data: any[]): ProcessedTransaction[] {
 
       const amount = parseFloat(row.amount) || 0;
 
+      // Robust boolean check for excludeReport - handles True, true, TRUE, 1, yes, etc.
+      const excludeReportValue = String(row.excludeReport || "")
+        .trim()
+        .toLowerCase();
+      const isExcluded =
+        excludeReportValue === "true" ||
+        excludeReportValue === "1" ||
+        excludeReportValue === "yes";
+
       const transaction: ProcessedTransaction = {
         id: parseInt(row.id) || index,
         note: row.note || "",
@@ -78,8 +87,7 @@ function processTransactions(data: any[]): ProcessedTransaction[] {
         currency: row.currency || "VND",
         date,
         event: row.event,
-        excludeReport:
-          row.excludeReport === "True" || row.excludeReport === "true",
+        excludeReport: isExcluded,
         expense: amount < 0 ? Math.abs(amount) : 0,
         income: amount > 0 ? amount : 0,
         yearMonth: formatYearMonth(date),
@@ -106,6 +114,15 @@ function processTransactionsForImport(data: any[]): NewTransaction[] {
 
       const amount = parseFloat(row.amount) || 0;
 
+      // Robust boolean check for excludeReport - handles True, true, TRUE, 1, yes, etc.
+      const excludeReportValue = String(row.excludeReport || "")
+        .trim()
+        .toLowerCase();
+      const isExcluded =
+        excludeReportValue === "true" ||
+        excludeReportValue === "1" ||
+        excludeReportValue === "yes";
+
       const transaction: NewTransaction = {
         note: row.note || "",
         amount,
@@ -114,8 +131,7 @@ function processTransactionsForImport(data: any[]): NewTransaction[] {
         currency: row.currency || "VND",
         date: format(date, "yyyy-MM-dd"), // ISO format for SQLite
         event: row.event || undefined,
-        exclude_report:
-          row.excludeReport === "True" || row.excludeReport === "true",
+        exclude_report: isExcluded,
         source: "csv_import",
       };
 

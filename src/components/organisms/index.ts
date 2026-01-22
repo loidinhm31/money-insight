@@ -26,3 +26,11 @@ export {
 } from "./MonthlyTrendChart";
 export { DisconnectedOverlay } from "./DisconnectedOverlay";
 export { SearchInput, type SearchInputProps } from "./SearchInput";
+export {
+  TrendingReportChart,
+  type TrendingReportChartProps,
+} from "./TrendingReportChart";
+export {
+  MonthlyReportSection,
+  type MonthlyReportSectionProps,
+} from "./MonthlyReportSection";

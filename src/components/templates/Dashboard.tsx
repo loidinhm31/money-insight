@@ -23,6 +23,7 @@ import {
   TransactionDetailModal,
   DateRangeFilter,
   SearchInput,
+  MonthlyReportSection,
 } from "@/components/organisms";
 import { formatCurrency } from "@/lib/utils";
 import { Eye, EyeOff, Wallet } from "lucide-react";
@@ -31,6 +32,7 @@ import type {
   CategorySpending,
   MonthlyAnalysis,
   SpendingBottleneck,
+  MonthlyReport,
 } from "@/types";
 
 interface WalletBalance {
@@ -46,6 +48,7 @@ export interface DashboardProps {
   monthlyAnalysis: MonthlyAnalysis[];
   bottlenecks: SpendingBottleneck[];
   walletBalances: WalletBalance[];
+  currentMonthReport: MonthlyReport | null;
   stats: {
     transactionCount: number;
     categoryCount: number;
@@ -77,6 +80,7 @@ export function Dashboard({
   monthlyAnalysis,
   bottlenecks,
   walletBalances,
+  currentMonthReport,
   stats,
   selectedCategory,
   filter,
@@ -267,6 +271,14 @@ export function Dashboard({
               </Accordion>
             </CardContent>
           </Card>
+        )}
+
+        {/* Monthly Report */}
+        {currentMonthReport && (
+          <MonthlyReportSection
+            report={currentMonthReport}
+            valuesHidden={valuesHidden}
+          />
         )}
 
         {/* Spending Insights */}

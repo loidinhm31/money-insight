@@ -5,6 +5,9 @@ import type {
   YearlyAnalysis,
   SpendingBottleneck,
   FilterState,
+  DailySpending,
+  DailyAverageSpending,
+  MonthlyReport,
 } from "@/types";
 import { matchesSearch } from "@/lib/utils";
 
@@ -222,5 +225,167 @@ export class SpendingAnalyzer {
       currency: "VND",
       maximumFractionDigits: 0,
     }).format(amount);
+  }
+
+  // Analyze daily spending for a given month
+  analyzeDailySpending(yearMonth: string): DailySpending[] {
+    const [year, month] = yearMonth.split("-").map(Number);
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    // Filter transactions for this month
+    const monthTransactions = this.transactions.filter(
+      (t) => t.yearMonth === yearMonth,
+    );
+
+    // Group by day
+    const dailyMap = new Map<number, { expense: number; income: number }>();
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      dailyMap.set(day, { expense: 0, income: 0 });
+    }
+
+    monthTransactions.forEach((t) => {
+      const day = t.date.getDate();
+      const current = dailyMap.get(day) || { expense: 0, income: 0 };
+      dailyMap.set(day, {
+        expense: current.expense + t.expense,
+        income: current.income + t.income,
+      });
+    });
+
+    // Build daily spending array with cumulative totals
+    const dailySpending: DailySpending[] = [];
+    let cumulativeExpense = 0;
+    let cumulativeIncome = 0;
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayData = dailyMap.get(day) || { expense: 0, income: 0 };
+      cumulativeExpense += dayData.expense;
+      cumulativeIncome += dayData.income;
+
+      const dateStr = `${yearMonth}-${day.toString().padStart(2, "0")}`;
+      const displayDate = `${month.toString().padStart(2, "0")}/${day.toString().padStart(2, "0")}`;
+
+      dailySpending.push({
+        date: dateStr,
+        dayOfMonth: day,
+        displayDate,
+        expense: dayData.expense,
+        income: dayData.income,
+        cumulativeExpense,
+        cumulativeIncome,
+      });
+    }
+
+    return dailySpending;
+  }
+
+  // Calculate average spending pattern across multiple months
+  calculateAverageSpendingPattern(
+    yearMonths: string[],
+  ): DailyAverageSpending[] {
+    if (yearMonths.length === 0) {
+      return [];
+    }
+
+    // Analyze each month
+    const monthlyPatterns = yearMonths.map((ym) =>
+      this.analyzeDailySpending(ym),
+    );
+
+    // Find max days (use 31 for consistent comparison)
+    const maxDays = 31;
+    const pattern: DailyAverageSpending[] = [];
+
+    for (let day = 1; day <= maxDays; day++) {
+      let totalExpense = 0;
+      let totalCumulativeExpense = 0;
+      let count = 0;
+
+      monthlyPatterns.forEach((daily) => {
+        const dayData = daily.find((d) => d.dayOfMonth === day);
+        if (dayData) {
+          totalExpense += dayData.expense;
+          totalCumulativeExpense += dayData.cumulativeExpense;
+          count++;
+        }
+      });
+
+      if (count > 0) {
+        pattern.push({
+          dayOfMonth: day,
+          displayDate: `${day.toString().padStart(2, "0")}`,
+          averageExpense: totalExpense / count,
+          averageCumulativeExpense: totalCumulativeExpense / count,
+        });
+      }
+    }
+
+    return pattern;
+  }
+
+  // Get monthly report with current month data and 3-month average comparison
+  getMonthlyReport(currentYearMonth?: string): MonthlyReport | null {
+    // Determine current year-month
+    const now = new Date();
+    const targetYearMonth =
+      currentYearMonth ||
+      `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}`;
+
+    const [year, month] = targetYearMonth.split("-").map(Number);
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    // Get daily spending for current month
+    const dailySpending = this.analyzeDailySpending(targetYearMonth);
+
+    // Calculate totals
+    const totalExpense = dailySpending.reduce((sum, d) => sum + d.expense, 0);
+    const totalIncome = dailySpending.reduce((sum, d) => sum + d.income, 0);
+
+    // Get current day expense (for today if viewing current month)
+    const today = new Date();
+    const isCurrentMonth =
+      today.getFullYear() === year && today.getMonth() + 1 === month;
+    const currentDay = isCurrentMonth ? today.getDate() : daysInMonth;
+    const currentDayData = dailySpending.find(
+      (d) => d.dayOfMonth === currentDay,
+    );
+    const currentDayExpense = currentDayData?.cumulativeExpense || totalExpense;
+
+    // Get previous 3 months
+    const previousMonths: string[] = [];
+    for (let i = 1; i <= 3; i++) {
+      const prevDate = new Date(year, month - 1 - i, 1);
+      const prevYearMonth = `${prevDate.getFullYear()}-${(prevDate.getMonth() + 1).toString().padStart(2, "0")}`;
+      previousMonths.push(prevYearMonth);
+    }
+
+    // Calculate 3-month average pattern
+    const previousThreeMonthDailyPattern =
+      this.calculateAverageSpendingPattern(previousMonths);
+
+    // Calculate 3-month average total expense
+    const previousMonthsExpenses = previousMonths.map((ym) => {
+      const daily = this.analyzeDailySpending(ym);
+      return daily.reduce((sum, d) => sum + d.expense, 0);
+    });
+    const validExpenses = previousMonthsExpenses.filter((e) => e > 0);
+    const previousThreeMonthAverage =
+      validExpenses.length > 0
+        ? validExpenses.reduce((sum, e) => sum + e, 0) / validExpenses.length
+        : 0;
+
+    return {
+      yearMonth: targetYearMonth,
+      year,
+      month,
+      daysInMonth,
+      dailySpending,
+      totalExpense,
+      totalIncome,
+      currentDayExpense,
+      previousThreeMonthAverage,
+      previousThreeMonthDailyPattern,
+    };
   }
 }
