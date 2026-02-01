@@ -7,8 +7,8 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
-import { CategorySpending } from "@/types";
-import { formatCurrency } from "@/lib/utils";
+import { CategorySpending } from "@money-insight/ui/types";
+import { formatCurrency } from "@money-insight/ui/lib";
 import { TransactionListModal } from "./TransactionListModal";
 
 // Payment gateway color palette (Stripe-inspired)
@@ -34,7 +34,8 @@ export function CategoryPieChart({
   data,
   valuesHidden = false,
 }: CategoryPieChartProps) {
-  const [selectedCategory, setSelectedCategory] = useState<CategorySpending | null>(null);
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategorySpending | null>(null);
 
   const chartData = data.slice(0, 10).map((cat) => ({
     name: cat.category,
@@ -73,7 +74,9 @@ export function CategoryPieChart({
               <Cell
                 key={`cell-${index}`}
                 fill={COLORS[index % COLORS.length]}
-                stroke={entry.name === selectedCategory?.category ? "#000" : "none"}
+                stroke={
+                  entry.name === selectedCategory?.category ? "#000" : "none"
+                }
                 strokeWidth={entry.name === selectedCategory?.category ? 3 : 0}
               />
             ))}
@@ -91,7 +94,10 @@ export function CategoryPieChart({
                     {data.name}
                   </p>
                   <p className="text-sm" style={{ color: "#111827" }}>
-                    Amount: {valuesHidden ? "*".repeat(formatCurrency(data.value).length) : formatCurrency(data.value)}
+                    Amount:{" "}
+                    {valuesHidden
+                      ? "*".repeat(formatCurrency(data.value).length)
+                      : formatCurrency(data.value)}
                   </p>
                   <p className="text-sm" style={{ color: "#111827" }}>
                     Percentage: {data.percentage.toFixed(1)}%

@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { ICategoryService } from "@/adapters/interfaces";
-import type { Category } from "@/types";
+import type { ICategoryService } from "@/adapters/factory/interfaces";
+import type { Category } from "@money-insight/ui/types";
 
 /**
  * Tauri adapter for category operations using invoke() calls

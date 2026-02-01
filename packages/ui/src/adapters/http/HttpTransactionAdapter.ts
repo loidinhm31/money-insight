@@ -1,11 +1,11 @@
 import { HttpAdapter } from "./HttpAdapter";
-import type { ITransactionService } from "@/adapters/interfaces";
+import type { ITransactionService } from "@/adapters/factory/interfaces";
 import type {
   Transaction,
   NewTransaction,
   TransactionFilter,
   ImportResult,
-} from "@/types";
+} from "@money-insight/ui/types";
 
 /**
  * HTTP adapter for transaction operations

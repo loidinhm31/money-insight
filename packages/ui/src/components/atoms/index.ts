@@ -32,7 +32,7 @@ export {
 } from "./dialog";
 export { Popover, PopoverTrigger, PopoverContent } from "./popover";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
-export { ScrollArea, ScrollBar } from "./scroll-area";
+export { ScrollArea, ScrollBar } from "./scrollArea";
 export { Calendar } from "./calendar";
 export { Input, type InputProps } from "./input";
 export {

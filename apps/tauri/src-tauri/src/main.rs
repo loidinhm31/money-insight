@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    spending_analyzer_lib::run()
+    money_insight_lib::run()
 }

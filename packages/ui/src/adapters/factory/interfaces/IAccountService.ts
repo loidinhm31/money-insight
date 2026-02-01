@@ -1,4 +1,4 @@
-import type { Account } from "@/types";
+import type { Account } from "@money-insight/ui/types";
 
 /**
  * Account service interface

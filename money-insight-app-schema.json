@@ -1,0 +1,43 @@
+{
+  "appId": "money-insight",
+  "schema": {
+    "transactions": {
+      "columns": [
+        { "name": "source", "type": "string", "nullable": false },
+        { "name": "note", "type": "string", "nullable": false },
+        { "name": "amount", "type": "number", "nullable": false },
+        { "name": "category", "type": "string", "nullable": false },
+        { "name": "account", "type": "string", "nullable": false },
+        { "name": "currency", "type": "string", "nullable": false },
+        { "name": "date", "type": "string", "nullable": false },
+        { "name": "event", "type": "string", "nullable": true },
+        { "name": "excludeReport", "type": "boolean", "nullable": false },
+        { "name": "expense", "type": "number", "nullable": false },
+        { "name": "income", "type": "number", "nullable": false },
+        { "name": "yearMonth", "type": "string", "nullable": false },
+        { "name": "year", "type": "integer", "nullable": false },
+        { "name": "month", "type": "integer", "nullable": false },
+        { "name": "createdAt", "type": "string", "nullable": false },
+        { "name": "updatedAt", "type": "string", "nullable": false }
+      ],
+      "primaryKey": "rowId"
+    },
+    "categories": {
+      "columns": [
+        { "name": "name", "type": "string", "nullable": false },
+        { "name": "icon", "type": "string", "nullable": true },
+        { "name": "color", "type": "string", "nullable": true },
+        { "name": "isExpense", "type": "boolean", "nullable": false }
+      ],
+      "primaryKey": "rowId"
+    },
+    "accounts": {
+      "columns": [
+        { "name": "name", "type": "string", "nullable": false },
+        { "name": "accountType", "type": "string", "nullable": true },
+        { "name": "icon", "type": "string", "nullable": true }
+      ],
+      "primaryKey": "rowId"
+    }
+  }
+}

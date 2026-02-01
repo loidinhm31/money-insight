@@ -1,17 +1,16 @@
 import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSpendingStore } from "@/stores/spending-store";
-import { FileUploadSection } from "@/components/templates";
-import { databaseService } from "@/lib/database-service";
-import { parseCSVForImport } from "@/lib/data-processing";
-import type { NewTransaction } from "@/types";
+import { useSpendingStore } from "@money-insight/ui/stores";
+import { useNav } from "@money-insight/ui/hooks";
+import { FileUploadSection } from "@money-insight/ui/components/templates";
+import { parseCSVForImport, databaseService } from "@money-insight/ui/lib";
+import type { NewTransaction } from "@money-insight/ui/types";
 
 /**
  * Initial setup page - shown when no transactions exist
  * Allows user to upload CSV or manually add first transaction
  */
 export function InitialSetupPage() {
-  const navigate = useNavigate();
+  const { nav } = useNav();
   const { isDbReady, addTransaction, importFromCSV } = useSpendingStore();
 
   // Handle CSV file processing
@@ -23,9 +22,9 @@ export function InitialSetupPage() {
       }
       await importFromCSV(transactions, file.name);
       // Navigate to dashboard after successful import
-      navigate("/dashboard");
+      nav("dashboard");
     },
-    [importFromCSV, navigate],
+    [importFromCSV, nav],
   );
 
   // Handle add transaction
@@ -33,9 +32,9 @@ export function InitialSetupPage() {
     async (tx: NewTransaction): Promise<void> => {
       await addTransaction(tx);
       // Navigate to dashboard after adding first transaction
-      navigate("/dashboard");
+      nav("dashboard");
     },
-    [addTransaction, navigate],
+    [addTransaction, nav],
   );
 
   // Get categories and accounts for form

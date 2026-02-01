@@ -12,8 +12,8 @@ import {
   TabsList,
   TabsTrigger,
   Button,
-} from "@/components/atoms";
-import { StatCard } from "@/components/molecules";
+} from "@money-insight/ui/components/atoms";
+import { StatCard } from "@money-insight/ui/components/molecules";
 import {
   CategoryPieChart,
   MonthlyTrendChart,
@@ -23,8 +23,8 @@ import {
   SearchInput,
   MonthlyReportSection,
   TopSpendingSection,
-} from "@/components/organisms";
-import { formatCurrency } from "@/lib/utils";
+} from "@money-insight/ui/components/organisms";
+import { formatCurrency } from "@money-insight/ui/lib";
 import { Eye, EyeOff, Wallet } from "lucide-react";
 import type {
   Transaction,
@@ -32,7 +32,7 @@ import type {
   MonthlyAnalysis,
   SpendingBottleneck,
   MonthlyReport,
-} from "@/types";
+} from "@money-insight/ui/types";
 
 interface WalletBalance {
   account: string;
@@ -111,10 +111,7 @@ export function Dashboard({
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-          <SearchInput
-            value={filter.search || ""}
-            onChange={onSearchChange}
-          />
+          <SearchInput value={filter.search || ""} onChange={onSearchChange} />
           <DateRangeFilter
             dateRange={filter.dateRange}
             onApply={onFilterApply}
@@ -278,10 +275,7 @@ export function Dashboard({
       )}
 
       {/* Spending Insights */}
-      <BottleneckAlerts
-        bottlenecks={bottlenecks}
-        valuesHidden={valuesHidden}
-      />
+      <BottleneckAlerts bottlenecks={bottlenecks} valuesHidden={valuesHidden} />
 
       {/* Main Visualizations */}
       <Tabs defaultValue="overview" className="space-y-3 sm:space-y-4">

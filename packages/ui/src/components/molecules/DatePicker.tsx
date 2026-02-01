@@ -7,8 +7,8 @@ import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-} from "@/components/atoms";
-import { cn } from "@/lib/utils";
+} from "@money-insight/ui/components/atoms";
+import { cn } from "@money-insight/ui/lib";
 
 export interface DatePickerProps {
   date: Date | undefined;

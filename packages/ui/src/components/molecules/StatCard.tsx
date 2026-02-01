@@ -1,6 +1,11 @@
 import { ReactNode } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/atoms";
-import { cn } from "@/lib/utils";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@money-insight/ui/components/atoms";
+import { cn } from "@money-insight/ui/lib";
 
 export interface StatCardProps {
   title: string;

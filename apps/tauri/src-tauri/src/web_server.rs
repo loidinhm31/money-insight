@@ -15,7 +15,7 @@ use crate::models::*;
 use crate::session::SharedSessionManager;
 
 /// Port for the embedded web server
-pub const WEB_SERVER_PORT: u16 = 25095;
+pub const WEB_SERVER_PORT: u16 = 25096;
 
 /// Embed the dist folder at compile time (only in release mode)
 /// In debug mode, assets are served by Vite dev server, so we provide a dummy implementation

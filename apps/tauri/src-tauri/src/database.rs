@@ -1,5 +1,4 @@
 use rusqlite::{params, Connection, Result};
-use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::Manager;
 
@@ -26,6 +25,7 @@ impl Database {
         };
 
         db.initialize_schema()?;
+        db.migrate_to_uuid_pks()?;
 
         Ok(db)
     }
@@ -34,7 +34,6 @@ impl Database {
     fn initialize_schema(&self) -> Result<(), Box<dyn std::error::Error>> {
         let conn = self.conn.lock().unwrap();
 
-        // Create transactions table
         conn.execute(
             "CREATE TABLE IF NOT EXISTS transactions (
                 id TEXT PRIMARY KEY,
@@ -54,35 +53,44 @@ impl Database {
                 year INTEGER,
                 month INTEGER,
                 created_at TEXT DEFAULT (datetime('now')),
-                updated_at TEXT DEFAULT (datetime('now'))
+                updated_at TEXT DEFAULT (datetime('now')),
+                sync_version INTEGER DEFAULT 1,
+                synced_at INTEGER,
+                deleted INTEGER DEFAULT 0,
+                deleted_at INTEGER
             )",
             [],
         )?;
 
-        // Create categories table
         conn.execute(
             "CREATE TABLE IF NOT EXISTS categories (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id TEXT PRIMARY KEY,
                 name TEXT UNIQUE NOT NULL,
                 icon TEXT,
                 color TEXT,
-                is_expense INTEGER DEFAULT 1
+                is_expense INTEGER DEFAULT 1,
+                sync_version INTEGER DEFAULT 1,
+                synced_at INTEGER,
+                deleted INTEGER DEFAULT 0,
+                deleted_at INTEGER
             )",
             [],
         )?;
 
-        // Create accounts table
         conn.execute(
             "CREATE TABLE IF NOT EXISTS accounts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id TEXT PRIMARY KEY,
                 name TEXT UNIQUE NOT NULL,
                 account_type TEXT,
-                icon TEXT
+                icon TEXT,
+                sync_version INTEGER DEFAULT 1,
+                synced_at INTEGER,
+                deleted INTEGER DEFAULT 0,
+                deleted_at INTEGER
             )",
             [],
         )?;
 
-        // Create import_batches table
         conn.execute(
             "CREATE TABLE IF NOT EXISTS import_batches (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -93,29 +101,135 @@ impl Database {
             [],
         )?;
 
-        // Create indexes
         conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date)",
+            "CREATE TABLE IF NOT EXISTS sync_metadata (
+                key TEXT PRIMARY KEY,
+                checkpoint_updated_at TEXT,
+                checkpoint_id TEXT
+            )",
             [],
         )?;
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category)",
-            [],
-        )?;
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_transactions_year_month ON transactions(year_month)",
-            [],
-        )?;
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_transactions_source ON transactions(source)",
-            [],
-        )?;
+
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date)", [])?;
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category)", [])?;
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_transactions_year_month ON transactions(year_month)", [])?;
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_transactions_source ON transactions(source)", [])?;
 
         println!("Database schema initialized");
         Ok(())
     }
 
-    /// Get all transactions with optional filter
+    /// Migrate categories/accounts from INTEGER AUTOINCREMENT PKs to UUID TEXT PKs
+    /// Also adds sync columns if missing on existing tables
+    fn migrate_to_uuid_pks(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+
+        // Check if categories table still has INTEGER pk
+        let needs_category_migration = {
+            let mut stmt = conn.prepare("PRAGMA table_info(categories)")?;
+            stmt.query_map([], |row| {
+                let name: String = row.get(1)?;
+                let col_type: String = row.get(2)?;
+                let pk: i32 = row.get(5)?;
+                Ok((name, col_type, pk))
+            })?.any(|r| {
+                if let Ok((name, col_type, pk)) = r {
+                    name == "id" && col_type.to_uppercase().contains("INTEGER") && pk == 1
+                } else {
+                    false
+                }
+            })
+        };
+
+        if needs_category_migration {
+            println!("Migrating categories table to UUID primary keys...");
+            conn.execute_batch("
+                CREATE TABLE categories_new (
+                    id TEXT PRIMARY KEY,
+                    name TEXT UNIQUE NOT NULL,
+                    icon TEXT,
+                    color TEXT,
+                    is_expense INTEGER DEFAULT 1,
+                    sync_version INTEGER DEFAULT 1,
+                    synced_at INTEGER,
+                    deleted INTEGER DEFAULT 0,
+                    deleted_at INTEGER
+                );
+                INSERT INTO categories_new (id, name, icon, color, is_expense)
+                    SELECT lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)),2) || '-' || hex(randomblob(6))),
+                           name, icon, color, is_expense
+                    FROM categories;
+                DROP TABLE categories;
+                ALTER TABLE categories_new RENAME TO categories;
+            ")?;
+            println!("Categories table migrated successfully");
+        }
+
+        let needs_account_migration = {
+            let mut stmt = conn.prepare("PRAGMA table_info(accounts)")?;
+            stmt.query_map([], |row| {
+                let name: String = row.get(1)?;
+                let col_type: String = row.get(2)?;
+                let pk: i32 = row.get(5)?;
+                Ok((name, col_type, pk))
+            })?.any(|r| {
+                if let Ok((name, col_type, pk)) = r {
+                    name == "id" && col_type.to_uppercase().contains("INTEGER") && pk == 1
+                } else {
+                    false
+                }
+            })
+        };
+
+        if needs_account_migration {
+            println!("Migrating accounts table to UUID primary keys...");
+            conn.execute_batch("
+                CREATE TABLE accounts_new (
+                    id TEXT PRIMARY KEY,
+                    name TEXT UNIQUE NOT NULL,
+                    account_type TEXT,
+                    icon TEXT,
+                    sync_version INTEGER DEFAULT 1,
+                    synced_at INTEGER,
+                    deleted INTEGER DEFAULT 0,
+                    deleted_at INTEGER
+                );
+                INSERT INTO accounts_new (id, name, account_type, icon)
+                    SELECT lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)),2) || '-' || hex(randomblob(6))),
+                           name, account_type, icon
+                    FROM accounts;
+                DROP TABLE accounts;
+                ALTER TABLE accounts_new RENAME TO accounts;
+            ")?;
+            println!("Accounts table migrated successfully");
+        }
+
+        // Add sync columns to transactions if missing
+        let has_sync_version = {
+            let mut stmt = conn.prepare("PRAGMA table_info(transactions)")?;
+            stmt.query_map([], |row| {
+                let name: String = row.get(1)?;
+                Ok(name)
+            })?.any(|r| r.map(|n| n == "sync_version").unwrap_or(false))
+        };
+
+        if !has_sync_version {
+            println!("Adding sync columns to transactions table...");
+            conn.execute_batch("
+                ALTER TABLE transactions ADD COLUMN sync_version INTEGER DEFAULT 1;
+                ALTER TABLE transactions ADD COLUMN synced_at INTEGER;
+                ALTER TABLE transactions ADD COLUMN deleted INTEGER DEFAULT 0;
+                ALTER TABLE transactions ADD COLUMN deleted_at INTEGER;
+            ")?;
+        }
+
+        Ok(())
+    }
+
+    // =========================================================================
+    // Transaction CRUD
+    // =========================================================================
+
     pub fn get_transactions(
         &self,
         filter: Option<TransactionFilter>,
@@ -125,8 +239,8 @@ impl Database {
         let mut sql = String::from(
             "SELECT id, source, import_batch_id, note, amount, category, account, currency,
                     date, event, exclude_report, expense, income, year_month, year, month,
-                    created_at, updated_at
-             FROM transactions WHERE 1=1",
+                    created_at, updated_at, sync_version, synced_at
+             FROM transactions WHERE deleted = 0",
         );
 
         let mut params_vec: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
@@ -166,42 +280,17 @@ impl Database {
 
         sql.push_str(" ORDER BY date DESC, created_at DESC");
 
-        let params_refs: Vec<&dyn rusqlite::ToSql> =
-            params_vec.iter().map(|p| p.as_ref()).collect();
-
+        let params_refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter().map(|p| p.as_ref()).collect();
         let mut stmt = conn.prepare(&sql)?;
-        let rows = stmt.query_map(params_refs.as_slice(), |row| {
-            Ok(Transaction {
-                id: row.get(0)?,
-                source: TransactionSource::from_str(&row.get::<_, String>(1)?),
-                import_batch_id: row.get(2)?,
-                note: row.get(3)?,
-                amount: row.get(4)?,
-                category: row.get(5)?,
-                account: row.get(6)?,
-                currency: row.get(7)?,
-                date: row.get(8)?,
-                event: row.get(9)?,
-                exclude_report: row.get::<_, i32>(10)? != 0,
-                expense: row.get(11)?,
-                income: row.get(12)?,
-                year_month: row.get(13)?,
-                year: row.get(14)?,
-                month: row.get(15)?,
-                created_at: row.get(16)?,
-                updated_at: row.get(17)?,
-            })
-        })?;
+        let rows = stmt.query_map(params_refs.as_slice(), Self::map_transaction)?;
 
         let mut transactions = Vec::new();
         for row in rows {
             transactions.push(row?);
         }
-
         Ok(transactions)
     }
 
-    /// Add a single transaction
     pub fn add_transaction(
         &self,
         new_tx: NewTransaction,
@@ -212,44 +301,32 @@ impl Database {
         conn.execute(
             "INSERT INTO transactions (id, source, import_batch_id, note, amount, category, account,
                 currency, date, event, exclude_report, expense, income, year_month, year, month,
-                created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
+                created_at, updated_at, sync_version, synced_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)",
             params![
-                tx.id,
-                tx.source.as_str(),
-                tx.import_batch_id,
-                tx.note,
-                tx.amount,
-                tx.category,
-                tx.account,
-                tx.currency,
-                tx.date,
-                tx.event,
-                tx.exclude_report as i32,
-                tx.expense,
-                tx.income,
-                tx.year_month,
-                tx.year,
-                tx.month,
-                tx.created_at,
-                tx.updated_at,
+                tx.id, tx.source.as_str(), tx.import_batch_id, tx.note, tx.amount,
+                tx.category, tx.account, tx.currency, tx.date, tx.event,
+                tx.exclude_report as i32, tx.expense, tx.income, tx.year_month,
+                tx.year, tx.month, tx.created_at, tx.updated_at,
+                tx.sync_version, tx.synced_at,
             ],
         )?;
 
-        // Update categories and accounts tables
+        // Auto-create categories and accounts with UUID PKs
+        let cat_id = uuid::Uuid::new_v4().to_string();
         let _ = conn.execute(
-            "INSERT OR IGNORE INTO categories (name, is_expense) VALUES (?1, ?2)",
-            params![tx.category, if tx.amount < 0.0 { 1 } else { 0 }],
+            "INSERT OR IGNORE INTO categories (id, name, is_expense) VALUES (?1, ?2, ?3)",
+            params![cat_id, tx.category, if tx.amount < 0.0 { 1 } else { 0 }],
         );
+        let acc_id = uuid::Uuid::new_v4().to_string();
         let _ = conn.execute(
-            "INSERT OR IGNORE INTO accounts (name) VALUES (?1)",
-            params![tx.account],
+            "INSERT OR IGNORE INTO accounts (id, name) VALUES (?1, ?2)",
+            params![acc_id, tx.account],
         );
 
         Ok(tx)
     }
 
-    /// Update an existing transaction
     pub fn update_transaction(
         &self,
         tx: Transaction,
@@ -261,38 +338,30 @@ impl Database {
             "UPDATE transactions SET
                 note = ?1, amount = ?2, category = ?3, account = ?4, currency = ?5,
                 date = ?6, event = ?7, exclude_report = ?8, expense = ?9, income = ?10,
-                year_month = ?11, year = ?12, month = ?13, updated_at = ?14
+                year_month = ?11, year = ?12, month = ?13, updated_at = ?14,
+                synced_at = NULL, sync_version = sync_version + 1
              WHERE id = ?15",
             params![
-                tx.note,
-                tx.amount,
-                tx.category,
-                tx.account,
-                tx.currency,
-                tx.date,
-                tx.event,
-                tx.exclude_report as i32,
-                tx.expense,
-                tx.income,
-                tx.year_month,
-                tx.year,
-                tx.month,
-                now,
-                tx.id,
+                tx.note, tx.amount, tx.category, tx.account, tx.currency,
+                tx.date, tx.event, tx.exclude_report as i32, tx.expense, tx.income,
+                tx.year_month, tx.year, tx.month, now, tx.id,
             ],
         )?;
 
         Ok(tx)
     }
 
-    /// Delete a transaction
     pub fn delete_transaction(&self, id: &str) -> Result<(), Box<dyn std::error::Error>> {
         let conn = self.conn.lock().unwrap();
-        conn.execute("DELETE FROM transactions WHERE id = ?1", params![id])?;
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64;
+        conn.execute(
+            "UPDATE transactions SET deleted = 1, deleted_at = ?1, synced_at = NULL WHERE id = ?2",
+            params![now, id],
+        )?;
         Ok(())
     }
 
-    /// Import multiple transactions in a batch
     pub fn import_transactions(
         &self,
         transactions: Vec<NewTransaction>,
@@ -300,7 +369,6 @@ impl Database {
     ) -> Result<ImportResult, Box<dyn std::error::Error>> {
         let mut conn = self.conn.lock().unwrap();
 
-        // Create import batch
         conn.execute(
             "INSERT INTO import_batches (filename, record_count) VALUES (?1, ?2)",
             params![filename, transactions.len() as i32],
@@ -315,45 +383,34 @@ impl Database {
         for mut new_tx in transactions {
             new_tx.import_batch_id = Some(batch_id);
             new_tx.source = Some(TransactionSource::CsvImport);
-
             let transaction = new_tx.into_transaction();
 
             match tx.execute(
                 "INSERT INTO transactions (id, source, import_batch_id, note, amount, category, account,
                     currency, date, event, exclude_report, expense, income, year_month, year, month,
-                    created_at, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
+                    created_at, updated_at, sync_version, synced_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)",
                 params![
-                    transaction.id,
-                    transaction.source.as_str(),
-                    transaction.import_batch_id,
-                    transaction.note,
-                    transaction.amount,
-                    transaction.category,
-                    transaction.account,
-                    transaction.currency,
-                    transaction.date,
-                    transaction.event,
-                    transaction.exclude_report as i32,
-                    transaction.expense,
-                    transaction.income,
-                    transaction.year_month,
-                    transaction.year,
-                    transaction.month,
-                    transaction.created_at,
-                    transaction.updated_at,
+                    transaction.id, transaction.source.as_str(), transaction.import_batch_id,
+                    transaction.note, transaction.amount, transaction.category, transaction.account,
+                    transaction.currency, transaction.date, transaction.event,
+                    transaction.exclude_report as i32, transaction.expense, transaction.income,
+                    transaction.year_month, transaction.year, transaction.month,
+                    transaction.created_at, transaction.updated_at,
+                    transaction.sync_version, transaction.synced_at,
                 ],
             ) {
                 Ok(_) => {
                     imported_count += 1;
-                    // Update categories and accounts
+                    let cat_id = uuid::Uuid::new_v4().to_string();
                     let _ = tx.execute(
-                        "INSERT OR IGNORE INTO categories (name, is_expense) VALUES (?1, ?2)",
-                        params![transaction.category, if transaction.amount < 0.0 { 1 } else { 0 }],
+                        "INSERT OR IGNORE INTO categories (id, name, is_expense) VALUES (?1, ?2, ?3)",
+                        params![cat_id, transaction.category, if transaction.amount < 0.0 { 1 } else { 0 }],
                     );
+                    let acc_id = uuid::Uuid::new_v4().to_string();
                     let _ = tx.execute(
-                        "INSERT OR IGNORE INTO accounts (name) VALUES (?1)",
-                        params![transaction.account],
+                        "INSERT OR IGNORE INTO accounts (id, name) VALUES (?1, ?2)",
+                        params![acc_id, transaction.account],
                     );
                 }
                 Err(_) => skipped_count += 1,
@@ -362,96 +419,285 @@ impl Database {
 
         tx.commit()?;
 
-        Ok(ImportResult {
-            batch_id,
-            imported_count,
-            skipped_count,
-        })
+        Ok(ImportResult { batch_id, imported_count, skipped_count })
     }
 
-    /// Get all categories
+    // =========================================================================
+    // Category / Account CRUD
+    // =========================================================================
+
     pub fn get_categories(&self) -> Result<Vec<Category>, Box<dyn std::error::Error>> {
         let conn = self.conn.lock().unwrap();
-        let mut stmt =
-            conn.prepare("SELECT id, name, icon, color, is_expense FROM categories ORDER BY name")?;
-
-        let rows = stmt.query_map([], |row| {
-            Ok(Category {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                icon: row.get(2)?,
-                color: row.get(3)?,
-                is_expense: row.get::<_, i32>(4)? != 0,
-            })
-        })?;
-
-        let mut categories = Vec::new();
-        for row in rows {
-            categories.push(row?);
-        }
-
-        Ok(categories)
+        let mut stmt = conn.prepare(
+            "SELECT id, name, icon, color, is_expense, sync_version, synced_at
+             FROM categories WHERE deleted = 0 ORDER BY name",
+        )?;
+        let rows = stmt.query_map([], Self::map_category)?;
+        rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.into())
     }
 
-    /// Get all accounts
     pub fn get_accounts(&self) -> Result<Vec<Account>, Box<dyn std::error::Error>> {
         let conn = self.conn.lock().unwrap();
-        let mut stmt =
-            conn.prepare("SELECT id, name, account_type, icon FROM accounts ORDER BY name")?;
-
-        let rows = stmt.query_map([], |row| {
-            Ok(Account {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                account_type: row.get(2)?,
-                icon: row.get(3)?,
-            })
-        })?;
-
-        let mut accounts = Vec::new();
-        for row in rows {
-            accounts.push(row?);
-        }
-
-        Ok(accounts)
+        let mut stmt = conn.prepare(
+            "SELECT id, name, account_type, icon, sync_version, synced_at
+             FROM accounts WHERE deleted = 0 ORDER BY name",
+        )?;
+        let rows = stmt.query_map([], Self::map_account)?;
+        rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.into())
     }
 
-    /// Get statistics
     pub fn get_statistics(
         &self,
         filter: Option<TransactionFilter>,
     ) -> Result<Statistics, Box<dyn std::error::Error>> {
         let transactions = self.get_transactions(filter)?;
-
         let total_expense: f64 = transactions.iter().map(|t| t.expense).sum();
         let total_income: f64 = transactions.iter().map(|t| t.income).sum();
         let net_savings = total_income - total_expense;
-        let savings_rate = if total_income > 0.0 {
-            (net_savings / total_income) * 100.0
-        } else {
-            0.0
-        };
+        let savings_rate = if total_income > 0.0 { (net_savings / total_income) * 100.0 } else { 0.0 };
 
         let conn = self.conn.lock().unwrap();
         let category_count: i64 = conn.query_row(
-            "SELECT COUNT(DISTINCT category) FROM transactions",
-            [],
-            |row| row.get(0),
+            "SELECT COUNT(DISTINCT category) FROM transactions WHERE deleted = 0", [], |row| row.get(0),
         )?;
         let account_count: i64 = conn.query_row(
-            "SELECT COUNT(DISTINCT account) FROM transactions",
-            [],
-            |row| row.get(0),
+            "SELECT COUNT(DISTINCT account) FROM transactions WHERE deleted = 0", [], |row| row.get(0),
         )?;
 
         Ok(Statistics {
-            total_expense,
-            total_income,
-            net_savings,
-            savings_rate,
-            transaction_count: transactions.len() as i64,
-            category_count,
-            account_count,
+            total_expense, total_income, net_savings, savings_rate,
+            transaction_count: transactions.len() as i64, category_count, account_count,
+        })
+    }
+
+    // =========================================================================
+    // Sync helpers
+    // =========================================================================
+
+    pub fn query_deleted_transactions(&self) -> Result<Vec<Transaction>, Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, source, import_batch_id, note, amount, category, account, currency,
+                    date, event, exclude_report, expense, income, year_month, year, month,
+                    created_at, updated_at, sync_version, synced_at
+             FROM transactions WHERE deleted = 1 AND synced_at IS NULL",
+        )?;
+        let rows = stmt.query_map([], Self::map_transaction)?;
+        rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.into())
+    }
+
+    pub fn query_deleted_categories(&self) -> Result<Vec<Category>, Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, name, icon, color, is_expense, sync_version, synced_at
+             FROM categories WHERE deleted = 1 AND synced_at IS NULL",
+        )?;
+        let rows = stmt.query_map([], Self::map_category)?;
+        rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.into())
+    }
+
+    pub fn query_deleted_accounts(&self) -> Result<Vec<Account>, Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, name, account_type, icon, sync_version, synced_at
+             FROM accounts WHERE deleted = 1 AND synced_at IS NULL",
+        )?;
+        let rows = stmt.query_map([], Self::map_account)?;
+        rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.into())
+    }
+
+    pub fn hard_delete_transaction(&self, id: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute("DELETE FROM transactions WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
+    pub fn hard_delete_category(&self, id: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute("DELETE FROM categories WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
+    pub fn hard_delete_account(&self, id: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute("DELETE FROM accounts WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
+    pub fn execute_sql(&self, query: &str, sql_params: &[&str]) -> Result<(), Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(query)?;
+        stmt.execute(rusqlite::params_from_iter(sql_params.iter()))?;
+        Ok(())
+    }
+
+    pub fn query_count(&self, query: &str) -> Result<usize, Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(query)?;
+        let count: i64 = stmt.query_row([], |row| row.get(0))?;
+        Ok(count as usize)
+    }
+
+    pub fn get_checkpoint(&self) -> Result<Option<(String, String)>, Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        let result = conn.query_row(
+            "SELECT checkpoint_updated_at, checkpoint_id FROM sync_metadata WHERE key = 'global'",
+            [],
+            |row| {
+                let updated_at: Option<String> = row.get(0)?;
+                let id: Option<String> = row.get(1)?;
+                Ok((updated_at, id))
+            },
+        );
+        match result {
+            Ok((Some(updated_at), Some(id))) => Ok(Some((updated_at, id))),
+            Ok(_) => Ok(None),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    pub fn save_checkpoint(&self, updated_at: &str, id: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "INSERT OR REPLACE INTO sync_metadata (key, checkpoint_updated_at, checkpoint_id) VALUES ('global', ?1, ?2)",
+            params![updated_at, id],
+        )?;
+        Ok(())
+    }
+
+    pub fn get_transaction(&self, id: &str) -> Result<Option<Transaction>, Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        let result = conn.query_row(
+            "SELECT id, source, import_batch_id, note, amount, category, account, currency,
+                    date, event, exclude_report, expense, income, year_month, year, month,
+                    created_at, updated_at, sync_version, synced_at
+             FROM transactions WHERE id = ?1",
+            params![id],
+            Self::map_transaction,
+        );
+        match result {
+            Ok(tx) => Ok(Some(tx)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    pub fn get_category(&self, id: &str) -> Result<Option<Category>, Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        let result = conn.query_row(
+            "SELECT id, name, icon, color, is_expense, sync_version, synced_at FROM categories WHERE id = ?1",
+            params![id], Self::map_category,
+        );
+        match result {
+            Ok(c) => Ok(Some(c)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    pub fn get_account(&self, id: &str) -> Result<Option<Account>, Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        let result = conn.query_row(
+            "SELECT id, name, account_type, icon, sync_version, synced_at FROM accounts WHERE id = ?1",
+            params![id], Self::map_account,
+        );
+        match result {
+            Ok(a) => Ok(Some(a)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    pub fn create_category(&self, category: &Category) -> Result<(), Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "INSERT OR REPLACE INTO categories (id, name, icon, color, is_expense, sync_version, synced_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![category.id, category.name, category.icon, category.color,
+                    category.is_expense as i32, category.sync_version, category.synced_at],
+        )?;
+        Ok(())
+    }
+
+    pub fn create_account(&self, account: &Account) -> Result<(), Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "INSERT OR REPLACE INTO accounts (id, name, account_type, icon, sync_version, synced_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![account.id, account.name, account.account_type, account.icon,
+                    account.sync_version, account.synced_at],
+        )?;
+        Ok(())
+    }
+
+    pub fn create_transaction(&self, tx: &Transaction) -> Result<(), Box<dyn std::error::Error>> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "INSERT OR REPLACE INTO transactions (id, source, import_batch_id, note, amount, category, account,
+                currency, date, event, exclude_report, expense, income, year_month, year, month,
+                created_at, updated_at, sync_version, synced_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)",
+            params![
+                tx.id, tx.source.as_str(), tx.import_batch_id, tx.note, tx.amount,
+                tx.category, tx.account, tx.currency, tx.date, tx.event,
+                tx.exclude_report as i32, tx.expense, tx.income, tx.year_month,
+                tx.year, tx.month, tx.created_at, tx.updated_at,
+                tx.sync_version, tx.synced_at,
+            ],
+        )?;
+        Ok(())
+    }
+
+    // =========================================================================
+    // Row mappers
+    // =========================================================================
+
+    fn map_transaction(row: &rusqlite::Row) -> rusqlite::Result<Transaction> {
+        Ok(Transaction {
+            id: row.get(0)?,
+            source: TransactionSource::from_str(&row.get::<_, String>(1)?),
+            import_batch_id: row.get(2)?,
+            note: row.get(3)?,
+            amount: row.get(4)?,
+            category: row.get(5)?,
+            account: row.get(6)?,
+            currency: row.get(7)?,
+            date: row.get(8)?,
+            event: row.get(9)?,
+            exclude_report: row.get::<_, i32>(10)? != 0,
+            expense: row.get(11)?,
+            income: row.get(12)?,
+            year_month: row.get(13)?,
+            year: row.get(14)?,
+            month: row.get(15)?,
+            created_at: row.get(16)?,
+            updated_at: row.get(17)?,
+            sync_version: row.get(18)?,
+            synced_at: row.get(19)?,
+        })
+    }
+
+    fn map_category(row: &rusqlite::Row) -> rusqlite::Result<Category> {
+        Ok(Category {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            icon: row.get(2)?,
+            color: row.get(3)?,
+            is_expense: row.get::<_, i32>(4)? != 0,
+            sync_version: row.get(5)?,
+            synced_at: row.get(6)?,
+        })
+    }
+
+    fn map_account(row: &rusqlite::Row) -> rusqlite::Result<Account> {
+        Ok(Account {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            account_type: row.get(2)?,
+            icon: row.get(3)?,
+            sync_version: row.get(4)?,
+            synced_at: row.get(5)?,
         })
     }
 }

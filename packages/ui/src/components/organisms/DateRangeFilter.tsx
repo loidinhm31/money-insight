@@ -5,7 +5,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/atoms";
+} from "@money-insight/ui/components/atoms";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 

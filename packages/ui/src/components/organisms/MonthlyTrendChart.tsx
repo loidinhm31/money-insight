@@ -9,8 +9,8 @@ import {
   Area,
   ComposedChart,
 } from "recharts";
-import { MonthlyAnalysis } from "@/types";
-import { formatCurrency } from "@/lib/utils";
+import { MonthlyAnalysis } from "@money-insight/ui/types";
+import { formatCurrency } from "@money-insight/ui/lib";
 
 export interface MonthlyTrendChartProps {
   data: MonthlyAnalysis[];

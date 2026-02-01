@@ -1,5 +1,12 @@
-import { FileUpload, AddTransactionForm } from "@/components/organisms";
-import type { NewTransaction, Category, Account } from "@/types";
+import {
+  FileUpload,
+  AddTransactionForm,
+} from "@money-insight/ui/components/organisms";
+import type {
+  NewTransaction,
+  Category,
+  Account,
+} from "@money-insight/ui/types";
 
 export interface FileUploadSectionProps {
   isDbReady: boolean;

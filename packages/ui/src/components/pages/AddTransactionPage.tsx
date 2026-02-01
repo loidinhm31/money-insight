@@ -1,16 +1,16 @@
 import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSpendingStore } from "@/stores/spending-store";
-import { AddTransactionPage as AddTransactionTemplate } from "@/components/templates";
-import { databaseService } from "@/lib/database-service";
-import { parseCSVForImport } from "@/lib/data-processing";
-import type { NewTransaction } from "@/types";
+import { useSpendingStore } from "@money-insight/ui/stores";
+import { useNav } from "@money-insight/ui/hooks";
+import { AddTransactionEntry } from "@money-insight/ui/components/templates";
+import { databaseService } from "@money-insight/ui/lib";
+import { parseCSVForImport } from "@money-insight/ui/lib";
+import type { NewTransaction } from "@money-insight/ui/types";
 
 /**
  * Add Transaction page - allows manual transaction entry or CSV import
  */
 export function AddTransactionPage() {
-  const navigate = useNavigate();
+  const { nav } = useNav();
   const { isDbReady, addTransaction, importFromCSV } = useSpendingStore();
 
   // Handle add transaction
@@ -30,22 +30,22 @@ export function AddTransactionPage() {
       }
       await importFromCSV(transactions, file.name);
       // Navigate to dashboard after successful import
-      navigate("/dashboard");
+      nav("dashboard");
     },
-    [importFromCSV, navigate],
+    [importFromCSV, nav],
   );
 
   // Success handler - navigate to dashboard
   const handleSuccess = useCallback(() => {
-    navigate("/dashboard");
-  }, [navigate]);
+    nav("dashboard");
+  }, [nav]);
 
   // Get categories and accounts for form
   const getCategories = useCallback(() => databaseService.getCategories(), []);
   const getAccounts = useCallback(() => databaseService.getAccounts(), []);
 
   return (
-    <AddTransactionTemplate
+    <AddTransactionEntry
       onAddTransaction={handleAddTransaction}
       onImportCSV={handleFileProcess}
       getCategories={getCategories}

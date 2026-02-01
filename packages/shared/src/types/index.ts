@@ -1,3 +1,7 @@
+// Auth & Sync types
+export * from "./auth";
+export * from "./sync";
+
 // Base transaction interface from Money Lover CSV
 export interface MoneyLoverTransaction {
   id: number;
@@ -116,23 +120,29 @@ export interface Transaction {
   month: number;
   created_at: string;
   updated_at: string;
+  sync_version: number;
+  synced_at: number | null;
 }
 
 // Category definition
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   icon?: string;
   color?: string;
   is_expense: boolean;
+  sync_version: number;
+  synced_at: number | null;
 }
 
 // Account definition
 export interface Account {
-  id: number;
+  id: string;
   name: string;
   account_type?: string;
   icon?: string;
+  sync_version: number;
+  synced_at: number | null;
 }
 
 // Import batch tracking

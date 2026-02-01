@@ -1,6 +1,6 @@
 import { HttpAdapter } from "./HttpAdapter";
-import type { IAccountService } from "@/adapters/interfaces";
-import type { Account } from "@/types";
+import type { IAccountService } from "@/adapters/factory/interfaces";
+import type { Account } from "@money-insight/ui/types";
 
 /**
  * HTTP adapter for account operations

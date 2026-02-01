@@ -1,4 +1,4 @@
-import { getSessionToken, WEB_APP_PORT } from "@/utils/platform";
+import { getSessionToken, WEB_APP_PORT } from "@money-insight/ui/utils";
 
 /**
  * API response wrapper

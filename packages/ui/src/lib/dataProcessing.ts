@@ -1,6 +1,9 @@
 import Papa from "papaparse";
 import { parse, isValid, format } from "date-fns";
-import type { ProcessedTransaction, NewTransaction } from "@/types";
+import type {
+  ProcessedTransaction,
+  NewTransaction,
+} from "@money-insight/ui/types";
 
 export async function parseCSV(file: File): Promise<ProcessedTransaction[]> {
   return new Promise((resolve, reject) => {

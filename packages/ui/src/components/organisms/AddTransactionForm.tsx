@@ -16,10 +16,14 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/atoms";
-import { DatePicker, FormField } from "@/components/molecules";
-import { cn } from "@/lib/utils";
-import type { NewTransaction, Category, Account } from "@/types";
+} from "@money-insight/ui/components/atoms";
+import { DatePicker, FormField } from "@money-insight/ui/components/molecules";
+import { cn } from "@money-insight/ui/lib";
+import type {
+  NewTransaction,
+  Category,
+  Account,
+} from "@money-insight/ui/types";
 
 export interface AddTransactionFormProps {
   onSubmit: (transaction: NewTransaction) => Promise<void>;

@@ -42,3 +42,5 @@ export {
   TransactionListModal,
   type TransactionListModalProps,
 } from "./TransactionListModal";
+export { SyncSettings } from "./SyncSettings";
+export { BrowserSyncInitializer } from "./BrowserSyncInitializer";

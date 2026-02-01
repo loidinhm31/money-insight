@@ -1,6 +1,6 @@
-import type { ICategoryService } from "@/adapters/interfaces";
-import type { Category } from "@/types";
-import { db } from "./database";
+import type { ICategoryService } from "@/adapters/factory/interfaces";
+import type { Category } from "@money-insight/ui/types";
+import { db, generateId } from "./database";
 
 export class IndexedDBCategoryAdapter implements ICategoryService {
   async getCategories(): Promise<Category[]> {
@@ -24,10 +24,18 @@ export class IndexedDBCategoryAdapter implements ICategoryService {
       }
     }
 
-    return Array.from(categoryMap.entries()).map(([name, info], index) => ({
-      id: index + 1,
-      name,
-      is_expense: info.isExpense,
-    }));
+    return Array.from(categoryMap.entries()).map(([name, info]) => {
+      // Check if there's a stored category with this name to get its UUID
+      const stored = storedCategories.find((c) => c.name === name);
+      return {
+        id: stored?.id || generateId(),
+        name,
+        icon: stored?.icon,
+        color: stored?.color,
+        is_expense: info.isExpense,
+        sync_version: stored?.sync_version ?? 0,
+        synced_at: stored?.synced_at ?? null,
+      };
+    });
   }
 }

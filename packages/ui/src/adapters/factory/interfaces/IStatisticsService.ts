@@ -1,4 +1,4 @@
-import type { Statistics, TransactionFilter } from "@/types";
+import type { Statistics, TransactionFilter } from "@money-insight/ui/types";
 
 /**
  * Statistics service interface

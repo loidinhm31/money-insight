@@ -1,4 +1,4 @@
 export { cn, formatCurrency, matchesSearch } from "./utils";
-export { SpendingAnalyzer } from "./analysis";
-export { databaseService } from "./database-service";
-export { parseCSV, parseCSVForImport } from "./data-processing";
+export { MoneyInsightAnalyzer } from "./analysis";
+export { databaseService } from "./databaseService";
+export { parseCSV, parseCSVForImport } from "./dataProcessing";

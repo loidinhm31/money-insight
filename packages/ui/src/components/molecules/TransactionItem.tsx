@@ -1,6 +1,6 @@
 import { format } from "date-fns";
-import { Badge } from "@/components/atoms";
-import { formatCurrency } from "@/lib/utils";
+import { Badge } from "@money-insight/ui/components/atoms";
+import { formatCurrency } from "@money-insight/ui/lib";
 
 export interface TransactionItemProps {
   id: string | number;

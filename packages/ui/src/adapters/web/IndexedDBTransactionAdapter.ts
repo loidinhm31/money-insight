@@ -1,22 +1,18 @@
-import type { ITransactionService } from "@/adapters/interfaces";
+import type { ITransactionService } from "@/adapters/factory/interfaces";
 import type {
   Transaction,
   NewTransaction,
   TransactionFilter,
   ImportResult,
-} from "@/types";
+} from "@money-insight/ui/types";
 import { db, generateId } from "./database";
-import type { Collection } from "dexie";
-
+import { trackDelete } from "./indexedDbHelpers";
 export class IndexedDBTransactionAdapter implements ITransactionService {
   async getTransactions(filter?: TransactionFilter): Promise<Transaction[]> {
-    let collection: Collection<Transaction, string> =
-      db.transactions.toCollection();
+    let collection = db.transactions.toCollection();
 
     if (filter?.categories?.length) {
-      collection = db.transactions
-        .where("category")
-        .anyOf(filter.categories);
+      collection = db.transactions.where("category").anyOf(filter.categories);
     }
 
     let results = await collection.toArray();
@@ -79,6 +75,8 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
       month: parsedDate.getMonth() + 1,
       created_at: now,
       updated_at: now,
+      sync_version: 1,
+      synced_at: null,
     };
 
     await db.transactions.add(transaction);
@@ -86,15 +84,22 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
   }
 
   async updateTransaction(tx: Transaction): Promise<Transaction> {
+    const existing = await db.transactions.get(tx.id);
     const updated = {
       ...tx,
       updated_at: new Date().toISOString(),
+      sync_version: (existing?.sync_version || 0) + 1,
+      synced_at: null,
     };
     await db.transactions.put(updated);
     return updated;
   }
 
   async deleteTransaction(id: string): Promise<void> {
+    const existing = await db.transactions.get(id);
+    if (existing) {
+      await trackDelete("transactions", id, existing.sync_version || 0);
+    }
     await db.transactions.delete(id);
   }
 

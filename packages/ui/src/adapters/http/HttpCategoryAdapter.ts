@@ -1,6 +1,6 @@
 import { HttpAdapter } from "./HttpAdapter";
-import type { ICategoryService } from "@/adapters/interfaces";
-import type { Category } from "@/types";
+import type { ICategoryService } from "@/adapters/factory/interfaces";
+import type { Category } from "@money-insight/ui/types";
 
 /**
  * HTTP adapter for category operations

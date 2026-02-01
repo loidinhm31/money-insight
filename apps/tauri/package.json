@@ -1,5 +1,5 @@
 {
-  "name": "@spending-analyzer/tauri",
+  "name": "@money-insight/tauri",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,8 +11,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@spending-analyzer/ui": "workspace:*",
-    "@spending-analyzer/shared": "workspace:*",
+    "@money-insight/ui": "workspace:*",
+    "@money-insight/shared": "workspace:*",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

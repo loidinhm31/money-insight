@@ -1,6 +1,6 @@
 import { HttpAdapter } from "./HttpAdapter";
-import type { IStatisticsService } from "@/adapters/interfaces";
-import type { Statistics, TransactionFilter } from "@/types";
+import type { IStatisticsService } from "@/adapters/factory/interfaces";
+import type { Statistics, TransactionFilter } from "@money-insight/ui/types";
 
 /**
  * HTTP adapter for statistics operations

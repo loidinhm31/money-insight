@@ -1,4 +1,4 @@
-import { isTauri } from "@/utils/platform";
+import { isTauri } from "@money-insight/ui/utils";
 
 // Interfaces
 import type {
@@ -14,15 +14,9 @@ import {
   TauriCategoryAdapter,
   TauriAccountAdapter,
   TauriStatisticsAdapter,
-} from "./tauri";
-
-// HTTP Adapters (browser debug mode via desktop server)
-import {
-  HttpTransactionAdapter,
-  HttpCategoryAdapter,
-  HttpAccountAdapter,
-  HttpStatisticsAdapter,
-} from "./http";
+  TauriAuthAdapter,
+  TauriSyncAdapter,
+} from "@money-insight/ui/adapters/tauri";
 
 // IndexedDB Adapters (standalone web mode)
 import {
@@ -30,13 +24,21 @@ import {
   IndexedDBCategoryAdapter,
   IndexedDBAccountAdapter,
   IndexedDBStatisticsAdapter,
-} from "./web";
+} from "@money-insight/ui/adapters/web";
+
+// Shared adapters
+import { QmServerAuthAdapter } from "@money-insight/ui/adapters/shared";
+import { createIndexedDBSyncAdapter } from "@money-insight/ui/adapters/web";
+import { env } from "@money-insight/shared/utils";
+import type { ISyncService, IAuthService } from "./interfaces";
 
 // Singleton instances (lazy initialized or injected via setters)
 let transactionService: ITransactionService | null = null;
 let categoryService: ICategoryService | null = null;
 let accountService: IAccountService | null = null;
 let statisticsService: IStatisticsService | null = null;
+let authService: IAuthService | null = null;
+let syncService: ISyncService | null = null;
 
 // Setter functions for dependency injection from embed component
 export const setTransactionService = (svc: ITransactionService): void => {
@@ -53,6 +55,14 @@ export const setAccountService = (svc: IAccountService): void => {
 
 export const setStatisticsService = (svc: IStatisticsService): void => {
   statisticsService = svc;
+};
+
+export const setAuthService = (svc: IAuthService): void => {
+  authService = svc;
+};
+
+export const setSyncService = (svc: ISyncService): void => {
+  syncService = svc;
 };
 
 /**
@@ -78,6 +88,25 @@ function autoCreateAccountService(): IAccountService {
 function autoCreateStatisticsService(): IStatisticsService {
   if (isTauri()) return new TauriStatisticsAdapter();
   return new IndexedDBStatisticsAdapter();
+}
+
+function autoCreateAuthService(): IAuthService {
+  if (isTauri()) return new TauriAuthAdapter();
+  return new QmServerAuthAdapter();
+}
+
+function autoCreateSyncService(): ISyncService {
+  if (isTauri()) return new TauriSyncAdapter();
+  const auth = getAuthService();
+  return createIndexedDBSyncAdapter({
+    serverUrl: env.serverUrl,
+    appId: env.appId,
+    apiKey: env.apiKey,
+    getTokens: () => auth.getTokens(),
+    saveTokens: auth.saveTokensExternal
+      ? (a: string, r: string, u: string) => auth.saveTokensExternal!(a, r, u)
+      : undefined,
+  });
 }
 
 export const getTransactionService = (): ITransactionService => {
@@ -108,11 +137,27 @@ export const getStatisticsService = (): IStatisticsService => {
   return statisticsService;
 };
 
+export const getAuthService = (): IAuthService => {
+  if (!authService) {
+    authService = autoCreateAuthService();
+  }
+  return authService;
+};
+
+export const getSyncService = (): ISyncService => {
+  if (!syncService) {
+    syncService = autoCreateSyncService();
+  }
+  return syncService;
+};
+
 export const getAllServices = () => ({
   transaction: getTransactionService(),
   category: getCategoryService(),
   account: getAccountService(),
   statistics: getStatisticsService(),
+  auth: getAuthService(),
+  sync: getSyncService(),
 });
 
 export const resetServices = (): void => {
@@ -120,4 +165,6 @@ export const resetServices = (): void => {
   categoryService = null;
   accountService = null;
   statisticsService = null;
+  authService = null;
+  syncService = null;
 };

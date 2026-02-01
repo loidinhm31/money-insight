@@ -6,10 +6,10 @@ import {
   DialogDescription,
   ScrollArea,
   Badge,
-} from "@/components/atoms";
+} from "@money-insight/ui/components/atoms";
 import { format } from "date-fns";
-import { formatCurrency } from "@/lib/utils";
-import type { CategorySpending } from "@/types";
+import { formatCurrency } from "@money-insight/ui/lib";
+import type { CategorySpending } from "@money-insight/ui/types";
 
 export interface TransactionDetailModalProps {
   isOpen: boolean;

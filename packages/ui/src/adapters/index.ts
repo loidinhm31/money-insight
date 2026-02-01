@@ -1,46 +1,7 @@
-// Re-export interfaces
-export type {
-  ITransactionService,
-  ICategoryService,
-  IAccountService,
-  IStatisticsService,
-} from "./interfaces";
+export * from "./factory";
 
-// Re-export factory functions and setters
-export {
-  getTransactionService,
-  getCategoryService,
-  getAccountService,
-  getStatisticsService,
-  getAllServices,
-  resetServices,
-  setTransactionService,
-  setCategoryService,
-  setAccountService,
-  setStatisticsService,
-} from "./ServiceFactory";
+export * from "./tauri";
 
-// Re-export Tauri adapters
-export {
-  TauriTransactionAdapter,
-  TauriCategoryAdapter,
-  TauriAccountAdapter,
-  TauriStatisticsAdapter,
-} from "./tauri";
+export * from "./http";
 
-// Re-export HTTP adapters
-export {
-  HttpAdapter,
-  HttpTransactionAdapter,
-  HttpCategoryAdapter,
-  HttpAccountAdapter,
-  HttpStatisticsAdapter,
-} from "./http";
-
-// Re-export IndexedDB adapters
-export {
-  IndexedDBTransactionAdapter,
-  IndexedDBCategoryAdapter,
-  IndexedDBAccountAdapter,
-  IndexedDBStatisticsAdapter,
-} from "./web";
+export * from "./web";

@@ -1,1 +1,1 @@
-export { SpendingAnalyzerApp, type SpendingAnalyzerAppProps } from "./SpendingAnalyzerApp";
+export { MoneyInsightApp, type MoneyInsightAppProps } from "./MoneyInsightApp";

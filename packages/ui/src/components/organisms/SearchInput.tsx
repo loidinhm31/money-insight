@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Input } from "@/components/atoms";
+import { Input } from "@money-insight/ui/components/atoms";
 import { Search, X } from "lucide-react";
 
 export interface SearchInputProps {

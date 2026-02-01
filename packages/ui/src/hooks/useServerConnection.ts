@@ -3,7 +3,7 @@ import {
   isOpenedFromDesktop,
   getSessionToken,
   WEB_APP_PORT,
-} from "@/utils/platform";
+} from "@money-insight/ui/utils";
 
 interface ServerConnectionState {
   isConnected: boolean;

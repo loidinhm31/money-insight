@@ -1,7 +1,7 @@
 import { ReactNode, useCallback, useState } from "react";
 import { Upload } from "lucide-react";
-import { Button, Spinner } from "@/components/atoms";
-import { cn } from "@/lib/utils";
+import { Button, Spinner } from "@money-insight/ui/components/atoms";
+import { cn } from "@money-insight/ui/lib";
 
 export interface DropZoneProps {
   onFileDrop: (file: File) => void;

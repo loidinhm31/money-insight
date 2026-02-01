@@ -1,11 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { ITransactionService } from "@/adapters/interfaces";
+import type { ITransactionService } from "@/adapters/factory/interfaces";
 import type {
   Transaction,
   NewTransaction,
   TransactionFilter,
   ImportResult,
-} from "@/types";
+} from "@money-insight/ui/types";
 
 /**
  * Tauri adapter for transaction operations using invoke() calls

@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
-import { Label, Input } from "@/components/atoms";
-import { cn } from "@/lib/utils";
+import { Label, Input } from "@money-insight/ui/components/atoms";
+import { cn } from "@money-insight/ui/lib";
 
 export interface FormFieldProps {
   label: string;

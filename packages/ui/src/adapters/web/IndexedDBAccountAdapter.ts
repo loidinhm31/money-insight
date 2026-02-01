@@ -1,6 +1,6 @@
-import type { IAccountService } from "@/adapters/interfaces";
-import type { Account } from "@/types";
-import { db } from "./database";
+import type { IAccountService } from "@/adapters/factory/interfaces";
+import type { Account } from "@money-insight/ui/types";
+import { db, generateId } from "./database";
 
 export class IndexedDBAccountAdapter implements IAccountService {
   async getAccounts(): Promise<Account[]> {
@@ -18,9 +18,16 @@ export class IndexedDBAccountAdapter implements IAccountService {
       accountSet.add(acc.name);
     }
 
-    return Array.from(accountSet).map((name, index) => ({
-      id: index + 1,
-      name,
-    }));
+    return Array.from(accountSet).map((name) => {
+      const stored = storedAccounts.find((a) => a.name === name);
+      return {
+        id: stored?.id || generateId(),
+        name,
+        account_type: stored?.account_type,
+        icon: stored?.icon,
+        sync_version: stored?.sync_version ?? 0,
+        synced_at: stored?.synced_at ?? null,
+      };
+    });
   }
 }

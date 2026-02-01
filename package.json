@@ -1,18 +1,20 @@
 {
-  "name": "spending-analyzer-monorepo",
+  "name": "money-insight-monorepo",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "packageManager": "pnpm@9.1.0",
   "scripts": {
-    "dev:tauri": "turbo run dev --filter=@spending-analyzer/tauri",
-    "dev:web": "turbo run dev --filter=@spending-analyzer/web",
+    "dev:tauri": "turbo run dev --filter=@money-insight/tauri",
+    "dev:web": "turbo run dev --filter=@money-insight/web",
     "build": "turbo run build",
     "clean": "turbo run clean",
     "type-check": "turbo run type-check",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\""
   },
   "devDependencies": {
-    "turbo": "^2.0.0"
+    "turbo": "^2.0.0",
+    "prettier": "^3.2.5"
   }
 }

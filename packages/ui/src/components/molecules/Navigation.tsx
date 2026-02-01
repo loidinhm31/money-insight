@@ -1,7 +1,8 @@
 import { Home, Settings, PlusCircle, X } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import { Button } from "@/components/atoms";
-import { cn } from "@/lib/utils";
+import { Button } from "@money-insight/ui/components/atoms";
+import { cn } from "@money-insight/ui/lib";
+import { useNav } from "@money-insight/ui/hooks";
 
 interface BottomNavProps {
   hasTransactions: boolean;
@@ -12,6 +13,8 @@ interface BottomNavProps {
  * Shows on mobile, transforms to sidebar on larger screens
  */
 export function BottomNav({ hasTransactions }: BottomNavProps) {
+  const { to } = useNav();
+
   const navItems: {
     path: string;
     label: string;
@@ -19,19 +22,19 @@ export function BottomNav({ hasTransactions }: BottomNavProps) {
     show: boolean;
   }[] = [
     {
-      path: "/dashboard",
+      path: to("dashboard"),
       label: "Dashboard",
       icon: <Home className="h-5 w-5" />,
       show: hasTransactions,
     },
     {
-      path: "/add",
+      path: to("add"),
       label: "Add",
       icon: <PlusCircle className="h-5 w-5" />,
       show: true,
     },
     {
-      path: "/settings",
+      path: to("settings"),
       label: "Settings",
       icon: <Settings className="h-5 w-5" />,
       show: true,
@@ -70,7 +73,7 @@ export function BottomNav({ hasTransactions }: BottomNavProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo/Brand */}
-            <NavLink to="/dashboard" className="flex items-center gap-3">
+            <NavLink to={to("dashboard")} className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-sm">
                   $

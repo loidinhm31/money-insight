@@ -8,10 +8,10 @@ import type {
   DailySpending,
   DailyAverageSpending,
   MonthlyReport,
-} from "@/types";
-import { matchesSearch } from "@/lib/utils";
+} from "@money-insight/ui/types";
+import { matchesSearch } from "@money-insight/ui/lib";
 
-export class SpendingAnalyzer {
+export class MoneyInsightAnalyzer {
   private transactions: ProcessedTransaction[];
 
   constructor(transactions: ProcessedTransaction[]) {

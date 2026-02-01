@@ -8,16 +8,19 @@ importers:
 
   .:
     devDependencies:
+      prettier:
+        specifier: ^3.2.5
+        version: 3.8.1
       turbo:
         specifier: ^2.0.0
         version: 2.8.0
 
   apps/tauri:
     dependencies:
-      '@spending-analyzer/shared':
+      '@money-insight/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@spending-analyzer/ui':
+      '@money-insight/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       react:
@@ -54,10 +57,10 @@ importers:
 
   apps/web:
     dependencies:
-      '@spending-analyzer/shared':
+      '@money-insight/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@spending-analyzer/ui':
+      '@money-insight/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       react:
@@ -91,6 +94,9 @@ importers:
 
   packages/shared:
     dependencies:
+      '@qm-center/sync-client-types':
+        specifier: ^0.2.0
+        version: 0.2.0
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -104,6 +110,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@money-insight/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -128,9 +137,6 @@ importers:
       '@radix-ui/react-tabs':
         specifier: ^1.1.13
         version: 1.1.13(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@spending-analyzer/shared':
-        specifier: workspace:*
-        version: link:../shared
       '@tauri-apps/api':
         specifier: ^2
         version: 2.9.1
@@ -461,6 +467,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@qm-center/sync-client-types@0.2.0':
+    resolution: {integrity: sha512-7ApnlePZAACqTvCNwFwZgszVsKvcKqJjsdMPZ1F9QhJrhLTs5n3YtV3GZM0PLYcAPKgmcCgHIequ6SYtFjqEKg==}
 
   '@radix-ui/number@1.1.1':
     resolution: {integrity: sha512-MkKCwxlXTgz6CFoJx3pCwn07GKp36+aZyu/u2Ln2VrA5DcdyCZkASEDBTd8x5whTQQL5CiYf4prXKLcgQdv29g==}
@@ -1512,6 +1521,11 @@ packages:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
+  prettier@3.8.1:
+    resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
+    engines: {node: '>=14'}
+    hasBin: true
+
   react-dom@19.2.3:
     resolution: {integrity: sha512-yELu4WmLPw5Mr/lmeEpox5rw3RETacE++JgHqQzd2dg+YbJuat3jH4ingc+WPZhxaoFzdv9y33G+F7Nl5O0GBg==}
     peerDependencies:
@@ -2002,6 +2016,8 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@qm-center/sync-client-types@0.2.0': {}
 
   '@radix-ui/number@1.1.1': {}
 
@@ -2925,6 +2941,8 @@ snapshots:
       nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
+
+  prettier@3.8.1: {}
 
   react-dom@19.2.3(react@19.2.3):
     dependencies:

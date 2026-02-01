@@ -1,15 +1,16 @@
 {
-  "name": "@spending-analyzer/shared",
+  "name": "@money-insight/shared",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./types": "./src/types/index.ts",
-    "./services": "./src/services/index.ts",
-    "./utils": "./src/utils/index.ts"
+    "./utils": "./src/utils/index.ts",
+    "./constants": "./src/constants/index.ts"
   },
   "dependencies": {
+    "@qm-center/sync-client-types": "^0.2.0",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.4.0"
   },

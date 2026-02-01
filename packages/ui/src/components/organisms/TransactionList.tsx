@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { TransactionItem } from "@/components/molecules";
-import { Pagination } from "@/components/molecules";
-import type { Transaction } from "@/types";
+import {
+  Pagination,
+  TransactionItem,
+} from "@money-insight/ui/components/molecules";
+import type { Transaction } from "@money-insight/ui/types";
 
 export interface TransactionListProps {
   transactions: Transaction[];

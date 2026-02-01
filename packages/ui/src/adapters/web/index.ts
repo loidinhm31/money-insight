@@ -1,5 +1,7 @@
-export { db, SpendingAnalyzerDatabase, generateId, getCurrentTimestamp } from "./database";
-export { withSyncTracking, trackDelete } from "./indexedDbHelpers";
+export * from "./database";
+export * from "./indexedDbHelpers";
+// Sync adapters
+export * from "./sync";
 export { IndexedDBTransactionAdapter } from "./IndexedDBTransactionAdapter";
 export { IndexedDBCategoryAdapter } from "./IndexedDBCategoryAdapter";
 export { IndexedDBAccountAdapter } from "./IndexedDBAccountAdapter";

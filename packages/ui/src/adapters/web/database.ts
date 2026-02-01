@@ -4,7 +4,7 @@ import type {
   Category,
   Account,
   ImportBatch,
-} from "@/types";
+} from "@money-insight/ui/types";
 
 export interface SyncMeta {
   key: string;
@@ -21,7 +21,7 @@ export interface PendingChange {
   createdAt: number;
 }
 
-export class SpendingAnalyzerDatabase extends Dexie {
+export class MoneyInsightDatabase extends Dexie {
   transactions!: EntityTable<Transaction, "id">;
   categories!: EntityTable<Category, "id">;
   accounts!: EntityTable<Account, "id">;
@@ -30,13 +30,24 @@ export class SpendingAnalyzerDatabase extends Dexie {
   _pendingChanges!: Table<PendingChange, number>;
 
   constructor() {
-    super("SpendingAnalyzerDB");
+    super("MoneyInsightDB");
 
     this.version(1).stores({
       transactions:
         "id, category, account, date, year_month, year, month, source, import_batch_id",
       categories: "id, name",
       accounts: "id, name",
+      importBatches: "id, filename, imported_at",
+      _syncMeta: "key",
+      _pendingChanges: "++id, tableName, rowId",
+    });
+
+    // Version 2: Add sync indexes
+    this.version(2).stores({
+      transactions:
+        "id, category, account, date, year_month, year, month, source, import_batch_id, sync_version, synced_at",
+      categories: "id, name, sync_version, synced_at",
+      accounts: "id, name, sync_version, synced_at",
       importBatches: "id, filename, imported_at",
       _syncMeta: "key",
       _pendingChanges: "++id, tableName, rowId",
@@ -49,9 +60,22 @@ export class SpendingAnalyzerDatabase extends Dexie {
     this._syncMeta = this.table("_syncMeta");
     this._pendingChanges = this.table("_pendingChanges");
   }
+
+  async getSyncMeta(key: string): Promise<string | undefined> {
+    const record = await this._syncMeta.get(key);
+    return record?.value;
+  }
+
+  async setSyncMeta(key: string, value: string): Promise<void> {
+    await this._syncMeta.put({ key, value });
+  }
+
+  async deleteSyncMeta(key: string): Promise<void> {
+    await this._syncMeta.delete(key);
+  }
 }
 
-export const db = new SpendingAnalyzerDatabase();
+export const db = new MoneyInsightDatabase();
 
 export function generateId(): string {
   return crypto.randomUUID();
@@ -60,3 +84,8 @@ export function generateId(): string {
 export function getCurrentTimestamp(): number {
   return Math.floor(Date.now() / 1000);
 }
+
+export const SYNC_META_KEYS = {
+  CHECKPOINT: "checkpoint",
+  LAST_SYNC_AT: "lastSyncAt",
+} as const;

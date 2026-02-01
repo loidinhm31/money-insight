@@ -1,8 +1,8 @@
-import { SpendingAnalyzerApp } from "@spending-analyzer/ui/embed";
-import "@spending-analyzer/ui/styles";
+import { MoneyInsightApp } from "@money-insight/ui/embed";
+import "@money-insight/ui/styles";
 
 function App() {
-  return <SpendingAnalyzerApp />;
+  return <MoneyInsightApp />;
 }
 
 export default App;

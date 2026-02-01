@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { IStatisticsService } from "@/adapters/interfaces";
-import type { Statistics, TransactionFilter } from "@/types";
+import type { IStatisticsService } from "@/adapters/factory/interfaces";
+import type { Statistics, TransactionFilter } from "@money-insight/ui/types";
 
 /**
  * Tauri adapter for statistics operations using invoke() calls

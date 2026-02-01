@@ -7,11 +7,11 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/atoms";
-import { TransactionListModal } from "./TransactionListModal";
+} from "@money-insight/ui/components/atoms";
+import { TransactionListModal } from "@money-insight/ui/components/organisms";
 import { AlertCircle, TrendingUp, Repeat } from "lucide-react";
-import { SpendingBottleneck } from "@/types";
-import { formatCurrency } from "@/lib/utils";
+import { SpendingBottleneck } from "@money-insight/ui/types";
+import { formatCurrency } from "@money-insight/ui/lib";
 
 export interface BottleneckAlertsProps {
   bottlenecks: SpendingBottleneck[];
@@ -22,7 +22,8 @@ export function BottleneckAlerts({
   bottlenecks,
   valuesHidden = false,
 }: BottleneckAlertsProps) {
-  const [selectedBottleneck, setSelectedBottleneck] = useState<SpendingBottleneck | null>(null);
+  const [selectedBottleneck, setSelectedBottleneck] =
+    useState<SpendingBottleneck | null>(null);
 
   if (bottlenecks.length === 0) {
     return null;

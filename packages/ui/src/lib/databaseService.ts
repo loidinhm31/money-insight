@@ -3,7 +3,7 @@ import {
   getCategoryService,
   getAccountService,
   getStatisticsService,
-} from "@/adapters";
+} from "@money-insight/ui/adapters";
 import type {
   Transaction,
   NewTransaction,
@@ -12,7 +12,7 @@ import type {
   Account,
   Statistics,
   ImportResult,
-} from "@/types";
+} from "@money-insight/ui/types";
 
 /**
  * Database service facade that abstracts platform-specific implementations.

@@ -1,10 +1,11 @@
-import { useMemo, useCallback } from "react";
-import { useSpendingStore } from "@/stores/spending-store";
-import { Dashboard } from "@/components/templates";
-import { FileUploadSection } from "@/components/templates";
-import { databaseService } from "@/lib/database-service";
-import { parseCSVForImport } from "@/lib/data-processing";
-import type { NewTransaction } from "@/types";
+import { useCallback, useMemo } from "react";
+import { useSpendingStore } from "@money-insight/ui/stores";
+import {
+  Dashboard,
+  FileUploadSection,
+} from "@money-insight/ui/components/templates";
+import { databaseService, parseCSVForImport } from "@money-insight/ui/lib";
+import type { NewTransaction } from "@money-insight/ui/types";
 
 /**
  * Dashboard page - shows spending analytics and transaction overview
@@ -75,9 +76,9 @@ export function DashboardPage() {
     () => ({
       dateRange: filter.dateRange
         ? {
-          startDate: filter.dateRange.startDate,
-          endDate: filter.dateRange.endDate,
-        }
+            startDate: filter.dateRange.startDate,
+            endDate: filter.dateRange.endDate,
+          }
         : undefined,
       search: filter.search,
     }),
@@ -100,9 +101,9 @@ export function DashboardPage() {
   // Use filtered transactions if filter is active, otherwise use all transactions
   const displayTransactions =
     filter.dateRange ||
-      filter.categories.length > 0 ||
-      filter.accounts.length > 0 ||
-      filter.search?.trim()
+    filter.categories.length > 0 ||
+    filter.accounts.length > 0 ||
+    filter.search?.trim()
       ? filteredTransactions
       : transactions;
 

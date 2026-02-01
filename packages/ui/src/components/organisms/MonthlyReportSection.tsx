@@ -1,9 +1,15 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms";
-import { TrendingReportChart } from "./TrendingReportChart";
-import { formatCurrency } from "@/lib/utils";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@money-insight/ui/components/atoms";
+import { TrendingReportChart } from "@money-insight/ui/components/organisms";
+import { formatCurrency } from "@money-insight/ui/lib";
 import { TrendingUp, TrendingDown, Calendar } from "lucide-react";
-import type { MonthlyReport } from "@/types";
+import type { MonthlyReport } from "@money-insight/ui/types";
 import { Link } from "react-router-dom";
+import { useNav } from "@money-insight/ui/hooks";
 
 export interface MonthlyReportSectionProps {
   report: MonthlyReport;
@@ -14,6 +20,7 @@ export function MonthlyReportSection({
   report,
   valuesHidden = false,
 }: MonthlyReportSectionProps) {
+  const { to } = useNav();
   const maskValue = (value: string) => "*".repeat(value.length);
 
   const monthNames = [
@@ -65,7 +72,7 @@ export function MonthlyReportSection({
             </CardTitle>
           </div>
           <Link
-            to="/reports"
+            to={to("reports")}
             className="text-sm cursor-pointer hover:underline"
             style={{ color: "#635BFF" }}
           >

@@ -1,19 +1,26 @@
 import { useCallback, useState } from "react";
-import { AddTransactionForm, FileUpload } from "@/components/organisms";
-import { MobileHeader } from "@/components/molecules/Navigation";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/atoms";
-import { Upload, PenLine } from "lucide-react";
-import type { NewTransaction, Category, Account } from "@/types";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@money-insight/ui/components/atoms";
+import { PenLine, Upload } from "lucide-react";
+import type {
+  Account,
+  Category,
+  NewTransaction,
+} from "@money-insight/ui/types";
+import {
+  AddTransactionForm,
+  FileUpload,
+} from "@money-insight/ui/components/organisms";
+import { MobileHeader } from "@money-insight/ui/components/molecules";
 
 interface AddTransactionPageProps {
   onAddTransaction: (tx: NewTransaction) => Promise<void>;
@@ -28,7 +35,7 @@ interface AddTransactionPageProps {
 /**
  * Add Transaction page - supports both manual entry and CSV import
  */
-export function AddTransactionPage({
+export function AddTransactionEntry({
   onAddTransaction,
   onImportCSV,
   getCategories,

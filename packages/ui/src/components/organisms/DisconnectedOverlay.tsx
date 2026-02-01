@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/atoms";
+} from "@money-insight/ui/components/atoms";
 
 /**
  * Full-screen overlay shown when the desktop server disconnects.

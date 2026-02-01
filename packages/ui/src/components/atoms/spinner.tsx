@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@money-insight/ui/lib";
 
 const spinnerVariants = cva(
   "animate-spin rounded-full border-b-2 border-[#635BFF]",

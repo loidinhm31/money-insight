@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git mv:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(pnpm -r exec:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(node_modules/.bin/tsc:*)",
+      "Bash(node node_modules/typescript/bin/tsc:*)",
+      "Bash(pnpm -C packages/ui tsc:*)"
+    ]
+  }
+}

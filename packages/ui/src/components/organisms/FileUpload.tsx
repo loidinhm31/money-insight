@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { FileText, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/atoms";
-import { DropZone } from "@/components/molecules";
+import { Alert, AlertDescription } from "@money-insight/ui/components/atoms";
+import { DropZone } from "@money-insight/ui/components/molecules";
 
 export interface FileUploadProps {
   onFileProcess: (file: File) => Promise<void>;

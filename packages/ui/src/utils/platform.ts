@@ -5,7 +5,7 @@
 /**
  * Port for the embedded web server
  */
-export const WEB_APP_PORT = 25095;
+export const WEB_APP_PORT = 25096;
 
 /**
  * Check if running inside Tauri webview
@@ -135,7 +135,7 @@ export const initializeSessionToken = (): string | null => {
 
   if (urlToken) {
     console.log(
-      "[Session] ✅ Found token in URL:",
+      "[Session] Found token in URL:",
       urlToken.substring(0, 8) + "...",
     );
     sessionStorage.setItem(SESSION_TOKEN_KEY, urlToken);
@@ -147,7 +147,7 @@ export const initializeSessionToken = (): string | null => {
   const storedToken = sessionStorage.getItem(SESSION_TOKEN_KEY);
   if (storedToken) {
     console.log(
-      "[Session] ✅ Found token in sessionStorage:",
+      "[Session] Found token in sessionStorage:",
       storedToken.substring(0, 8) + "...",
     );
     sessionStorage.setItem(DESKTOP_MODE_KEY, "true");
@@ -155,7 +155,7 @@ export const initializeSessionToken = (): string | null => {
   }
 
   // No token found
-  console.error("[Session] ❌ No session token found!");
+  console.error("[Session] No session token found!");
   console.error("[Session] Browser mode requires session token.");
   console.error("[Session] Please open the app from the desktop application.");
   sessionStorage.setItem(DESKTOP_MODE_KEY, "false");

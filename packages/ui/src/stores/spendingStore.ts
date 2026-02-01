@@ -9,10 +9,10 @@ import type {
   SpendingBottleneck,
   ProcessedTransaction,
   MonthlyReport,
-} from "@/types";
-import { SpendingAnalyzer } from "@/lib/analysis";
-import { databaseService } from "@/lib/database-service";
-import { matchesSearch } from "@/lib/utils";
+} from "@money-insight/ui/types";
+import { MoneyInsightAnalyzer } from "@money-insight/ui/lib";
+import { databaseService } from "@money-insight/ui/lib";
+import { matchesSearch } from "@money-insight/ui/lib";
 
 // Convert Transaction (from DB) to ProcessedTransaction (for analysis)
 function toProcessedTransaction(tx: Transaction): ProcessedTransaction {
@@ -58,7 +58,7 @@ interface SpendingStore {
   // Data
   transactions: Transaction[];
   processedTransactions: ProcessedTransaction[];
-  analyzer: SpendingAnalyzer | null;
+  analyzer: MoneyInsightAnalyzer | null;
 
   // Filter state
   filter: FilterState;
@@ -144,7 +144,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
       const reportableTransactions = processedTransactions.filter(
         (t) => !t.excludeReport,
       );
-      const analyzer = new SpendingAnalyzer(reportableTransactions);
+      const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
 
       set({
         transactions,
@@ -177,7 +177,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
       const reportableTransactions = processedTransactions.filter(
         (t) => !t.excludeReport,
       );
-      const analyzer = new SpendingAnalyzer(reportableTransactions);
+      const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
 
       set({
         transactions,
@@ -212,7 +212,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
       const reportableTransactions = processedTransactions.filter(
         (t) => !t.excludeReport,
       );
-      const analyzer = new SpendingAnalyzer(reportableTransactions);
+      const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
 
       set({
         transactions,
@@ -247,7 +247,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
       const reportableTransactions = processedTransactions.filter(
         (t) => !t.excludeReport,
       );
-      const analyzer = new SpendingAnalyzer(reportableTransactions);
+      const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
 
       set({
         transactions,
@@ -300,7 +300,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
   loadTransactions: (transactions) => {
     // Filter out transactions with excludeReport=true for analysis
     const reportableTransactions = transactions.filter((t) => !t.excludeReport);
-    const analyzer = new SpendingAnalyzer(reportableTransactions);
+    const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
     set({
       processedTransactions: transactions,
       analyzer,

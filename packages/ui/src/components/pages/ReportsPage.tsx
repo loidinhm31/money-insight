@@ -1,10 +1,17 @@
-import { useSpendingStore } from "@/stores/spending-store";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms";
-import { formatCurrency } from "@/lib/utils";
+import { useSpendingStore } from "@money-insight/ui/stores";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@money-insight/ui/components/atoms";
+import { formatCurrency } from "@money-insight/ui/lib";
 import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useNav } from "@money-insight/ui/hooks";
 
 export function ReportsPage() {
+  const { to } = useNav();
   const { transactions, valuesHidden } = useSpendingStore();
   const maskValue = (value: string) => "*".repeat(value.length);
 
@@ -54,7 +61,7 @@ export function ReportsPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link
-          to="/dashboard"
+          to={to("dashboard")}
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" style={{ color: "#374151" }} />

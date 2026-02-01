@@ -1,4 +1,4 @@
-import { Button } from "@/components/atoms";
+import { Button } from "@money-insight/ui/components/atoms";
 
 export interface PaginationProps {
   currentPage: number;

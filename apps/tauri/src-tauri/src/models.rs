@@ -1,7 +1,6 @@
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{Datelike, NaiveDate};
 use serde::{Deserialize, Serialize};
 
-/// Source of the transaction
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum TransactionSource {
@@ -25,36 +24,31 @@ impl TransactionSource {
     }
 }
 
-/// Main transaction model
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Transaction {
     pub id: String,
     pub source: TransactionSource,
     pub import_batch_id: Option<i64>,
-
-    // Core fields from Money Lover CSV
     pub note: String,
     pub amount: f64,
     pub category: String,
     pub account: String,
     pub currency: String,
-    pub date: String, // ISO format YYYY-MM-DD
+    pub date: String,
     pub event: Option<String>,
     pub exclude_report: bool,
-
-    // Computed fields
     pub expense: f64,
     pub income: f64,
     pub year_month: String,
     pub year: i32,
     pub month: i32,
-
-    // Metadata
     pub created_at: String,
     pub updated_at: String,
+    // Sync fields
+    pub sync_version: i64,
+    pub synced_at: Option<i64>,
 }
 
-/// New transaction for creation (without computed fields)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NewTransaction {
     pub note: String,
@@ -70,24 +64,17 @@ pub struct NewTransaction {
 }
 
 impl NewTransaction {
-    /// Compute derived fields and create a full Transaction
     pub fn into_transaction(self) -> Transaction {
         let id = uuid::Uuid::new_v4().to_string();
         let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S").to_string();
 
-        // Parse date to extract year/month
         let (year, month, year_month) =
             if let Ok(date) = NaiveDate::parse_from_str(&self.date, "%Y-%m-%d") {
-                (
-                    date.year(),
-                    date.month() as i32,
-                    date.format("%Y-%m").to_string(),
-                )
+                (date.year(), date.month() as i32, date.format("%Y-%m").to_string())
             } else {
                 (0, 0, String::new())
             };
 
-        // Compute expense/income
         let (expense, income) = if self.amount < 0.0 {
             (self.amount.abs(), 0.0)
         } else {
@@ -113,30 +100,35 @@ impl NewTransaction {
             month,
             created_at: now.clone(),
             updated_at: now,
+            sync_version: 1,
+            synced_at: None,
         }
     }
 }
 
-/// Category definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Category {
-    pub id: i64,
+    pub id: String,
     pub name: String,
     pub icon: Option<String>,
     pub color: Option<String>,
     pub is_expense: bool,
+    // Sync fields
+    pub sync_version: i64,
+    pub synced_at: Option<i64>,
 }
 
-/// Account definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Account {
-    pub id: i64,
+    pub id: String,
     pub name: String,
     pub account_type: Option<String>,
     pub icon: Option<String>,
+    // Sync fields
+    pub sync_version: i64,
+    pub synced_at: Option<i64>,
 }
 
-/// Import batch tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImportBatch {
     pub id: i64,
@@ -145,7 +137,6 @@ pub struct ImportBatch {
     pub imported_at: String,
 }
 
-/// Filter for querying transactions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TransactionFilter {
     pub start_date: Option<String>,
@@ -158,7 +149,6 @@ pub struct TransactionFilter {
     pub search: Option<String>,
 }
 
-/// Statistics summary
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Statistics {
     pub total_expense: f64,
@@ -170,12 +160,9 @@ pub struct Statistics {
     pub account_count: i64,
 }
 
-/// Result of import operation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImportResult {
     pub batch_id: i64,
     pub imported_count: i32,
     pub skipped_count: i32,
 }
-
-use chrono::Datelike;
