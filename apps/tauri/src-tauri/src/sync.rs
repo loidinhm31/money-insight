@@ -8,6 +8,7 @@ use qm_sync_client::{Checkpoint, ReqwestHttpClient, QmSyncClient, SyncClientConf
 use crate::auth::AuthService;
 use crate::database::Database;
 use crate::models::*;
+use crate::sync_table_map;
 
 #[derive(Clone)]
 pub struct SyncService {
@@ -333,9 +334,10 @@ impl SyncService {
                     _ => Ok(()),
                 }.map_err(|e| e.to_string())?;
             } else {
+                let db_table = sync_table_map::sync_to_db(&record.table_name);
                 let query = format!(
                     "UPDATE {} SET synced_at = ?, sync_version = sync_version + 1 WHERE id = ?",
-                    record.table_name
+                    db_table
                 );
                 self.db.execute_sql(&query, &[&synced_at.to_string(), &record.row_id])
                     .map_err(|e| e.to_string())?;

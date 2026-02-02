@@ -25,7 +25,6 @@ impl Database {
         };
 
         db.initialize_schema()?;
-        db.migrate_to_uuid_pks()?;
 
         Ok(db)
     }
@@ -116,113 +115,6 @@ impl Database {
         conn.execute("CREATE INDEX IF NOT EXISTS idx_transactions_source ON transactions(source)", [])?;
 
         println!("Database schema initialized");
-        Ok(())
-    }
-
-    /// Migrate categories/accounts from INTEGER AUTOINCREMENT PKs to UUID TEXT PKs
-    /// Also adds sync columns if missing on existing tables
-    fn migrate_to_uuid_pks(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let conn = self.conn.lock().unwrap();
-
-        // Check if categories table still has INTEGER pk
-        let needs_category_migration = {
-            let mut stmt = conn.prepare("PRAGMA table_info(categories)")?;
-            stmt.query_map([], |row| {
-                let name: String = row.get(1)?;
-                let col_type: String = row.get(2)?;
-                let pk: i32 = row.get(5)?;
-                Ok((name, col_type, pk))
-            })?.any(|r| {
-                if let Ok((name, col_type, pk)) = r {
-                    name == "id" && col_type.to_uppercase().contains("INTEGER") && pk == 1
-                } else {
-                    false
-                }
-            })
-        };
-
-        if needs_category_migration {
-            println!("Migrating categories table to UUID primary keys...");
-            conn.execute_batch("
-                CREATE TABLE categories_new (
-                    id TEXT PRIMARY KEY,
-                    name TEXT UNIQUE NOT NULL,
-                    icon TEXT,
-                    color TEXT,
-                    is_expense INTEGER DEFAULT 1,
-                    sync_version INTEGER DEFAULT 1,
-                    synced_at INTEGER,
-                    deleted INTEGER DEFAULT 0,
-                    deleted_at INTEGER
-                );
-                INSERT INTO categories_new (id, name, icon, color, is_expense)
-                    SELECT lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)),2) || '-' || hex(randomblob(6))),
-                           name, icon, color, is_expense
-                    FROM categories;
-                DROP TABLE categories;
-                ALTER TABLE categories_new RENAME TO categories;
-            ")?;
-            println!("Categories table migrated successfully");
-        }
-
-        let needs_account_migration = {
-            let mut stmt = conn.prepare("PRAGMA table_info(accounts)")?;
-            stmt.query_map([], |row| {
-                let name: String = row.get(1)?;
-                let col_type: String = row.get(2)?;
-                let pk: i32 = row.get(5)?;
-                Ok((name, col_type, pk))
-            })?.any(|r| {
-                if let Ok((name, col_type, pk)) = r {
-                    name == "id" && col_type.to_uppercase().contains("INTEGER") && pk == 1
-                } else {
-                    false
-                }
-            })
-        };
-
-        if needs_account_migration {
-            println!("Migrating accounts table to UUID primary keys...");
-            conn.execute_batch("
-                CREATE TABLE accounts_new (
-                    id TEXT PRIMARY KEY,
-                    name TEXT UNIQUE NOT NULL,
-                    account_type TEXT,
-                    icon TEXT,
-                    sync_version INTEGER DEFAULT 1,
-                    synced_at INTEGER,
-                    deleted INTEGER DEFAULT 0,
-                    deleted_at INTEGER
-                );
-                INSERT INTO accounts_new (id, name, account_type, icon)
-                    SELECT lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)),2) || '-' || hex(randomblob(6))),
-                           name, account_type, icon
-                    FROM accounts;
-                DROP TABLE accounts;
-                ALTER TABLE accounts_new RENAME TO accounts;
-            ")?;
-            println!("Accounts table migrated successfully");
-        }
-
-        // Add sync columns to transactions if missing
-        let has_sync_version = {
-            let mut stmt = conn.prepare("PRAGMA table_info(transactions)")?;
-            stmt.query_map([], |row| {
-                let name: String = row.get(1)?;
-                Ok(name)
-            })?.any(|r| r.map(|n| n == "sync_version").unwrap_or(false))
-        };
-
-        if !has_sync_version {
-            println!("Adding sync columns to transactions table...");
-            conn.execute_batch("
-                ALTER TABLE transactions ADD COLUMN sync_version INTEGER DEFAULT 1;
-                ALTER TABLE transactions ADD COLUMN synced_at INTEGER;
-                ALTER TABLE transactions ADD COLUMN deleted INTEGER DEFAULT 0;
-                ALTER TABLE transactions ADD COLUMN deleted_at INTEGER;
-            ")?;
-        }
-
         Ok(())
     }
 

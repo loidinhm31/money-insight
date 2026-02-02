@@ -34,17 +34,6 @@ export class MoneyInsightDatabase extends Dexie {
 
     this.version(1).stores({
       transactions:
-        "id, category, account, date, year_month, year, month, source, import_batch_id",
-      categories: "id, name",
-      accounts: "id, name",
-      importBatches: "id, filename, imported_at",
-      _syncMeta: "key",
-      _pendingChanges: "++id, tableName, rowId",
-    });
-
-    // Version 2: Add sync indexes
-    this.version(2).stores({
-      transactions:
         "id, category, account, date, year_month, year, month, source, import_batch_id, sync_version, synced_at",
       categories: "id, name, sync_version, synced_at",
       accounts: "id, name, sync_version, synced_at",

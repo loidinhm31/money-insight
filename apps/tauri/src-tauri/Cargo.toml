@@ -59,3 +59,4 @@ mime_guess = "2"
 [target.'cfg(not(target_os = "android"))'.dependencies]
 machine-uid = "0.5"
 
+[workspace]

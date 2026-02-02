@@ -4,7 +4,7 @@ import {
   type HttpClientFn,
   QmSyncClient,
 } from "@money-insight/shared/types";
-import { IndexedDBSyncStorage } from "./IndexedDBSyncStorage";
+import { IndexedDBSyncStorage } from "@money-insight/ui/adapters/web";
 import { getCurrentTimestamp } from "@money-insight/ui/adapters/web";
 import { ISyncService } from "@money-insight/ui/adapters/factory/interfaces";
 
