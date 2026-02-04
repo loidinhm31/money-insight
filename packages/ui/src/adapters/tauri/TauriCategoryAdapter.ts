@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { ICategoryService } from "@/adapters/factory/interfaces";
+import type { ICategoryService } from "@money-insight/ui/adapters/factory/interfaces";
 import type { Category } from "@money-insight/ui/types";
 
 /**

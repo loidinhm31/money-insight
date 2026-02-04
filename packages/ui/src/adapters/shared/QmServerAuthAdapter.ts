@@ -6,6 +6,7 @@ import type {
 import { AUTH_STORAGE_KEYS } from "@money-insight/shared/constants";
 import { env } from "@money-insight/shared/utils";
 import { IAuthService } from "@money-insight/ui/adapters/factory/interfaces";
+import { serviceLogger } from "@money-insight/ui/utils";
 
 export interface QmServerAuthConfig {
   baseUrl?: string;
@@ -54,6 +55,8 @@ export class QmServerAuthAdapter implements IAuthService {
       config?.apiKey ||
       this.getStoredValue(STORAGE_KEYS.API_KEY) ||
       getDefaultApiKey();
+
+    serviceLogger.qmServer(`Initialized with baseUrl: ${this.baseUrl}`);
   }
 
   private getStoredValue(key: string): string | null {
@@ -77,6 +80,8 @@ export class QmServerAuthAdapter implements IAuthService {
     includeAuth = false,
   ): Promise<TRes> {
     const url = `${this.baseUrl}${endpoint}`;
+    serviceLogger.qmServer(`POST ${endpoint}`);
+
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -103,6 +108,7 @@ export class QmServerAuthAdapter implements IAuthService {
     }
 
     const result = await response.json();
+    serviceLogger.qmServerDebug("Response received");
     if ("success" in result) {
       const apiResponse = result as ApiResponse<TRes>;
       if (!apiResponse.success) {
@@ -118,6 +124,8 @@ export class QmServerAuthAdapter implements IAuthService {
     includeAuth = false,
   ): Promise<TRes> {
     const url = `${this.baseUrl}${endpoint}`;
+    serviceLogger.qmServer(`GET ${endpoint}`);
+
     const headers: Record<string, string> = {
       Accept: "application/json",
       "X-App-Id": this.appId,
@@ -138,6 +146,7 @@ export class QmServerAuthAdapter implements IAuthService {
     }
 
     const result = await response.json();
+    serviceLogger.qmServerDebug("Response received");
     if ("success" in result) {
       const apiResponse = result as ApiResponse<TRes>;
       if (!apiResponse.success) {
@@ -161,6 +170,7 @@ export class QmServerAuthAdapter implements IAuthService {
       this.apiKey = config.apiKey;
       this.setStoredValue(STORAGE_KEYS.API_KEY, config.apiKey);
     }
+    serviceLogger.qmServer(`Sync configured: ${this.baseUrl}`);
   }
 
   async register(
@@ -168,22 +178,32 @@ export class QmServerAuthAdapter implements IAuthService {
     email: string,
     password: string,
   ): Promise<AuthResponse> {
-    const response = await this.post<
-      { username: string; email: string; password: string },
-      AuthResponse
-    >("/api/v1/auth/register", { username, email, password });
-    this.storeAuthData(response);
-    return response;
+    try {
+      const response = await this.post<
+        { username: string; email: string; password: string },
+        AuthResponse
+      >("/api/v1/auth/register", { username, email, password });
+      this.storeAuthData(response);
+      return response;
+    } catch (error) {
+      serviceLogger.qmServerError("Register failed");
+      throw error;
+    }
   }
 
   async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await this.post<
-      { email: string; password: string },
-      AuthResponse
-    >("/api/v1/auth/login", { email, password });
-    this.storeAuthData(response);
-    this.invalidateStatusCache();
-    return response;
+    try {
+      const response = await this.post<
+        { email: string; password: string },
+        AuthResponse
+      >("/api/v1/auth/login", { email, password });
+      this.storeAuthData(response);
+      this.invalidateStatusCache();
+      return response;
+    } catch (error) {
+      serviceLogger.qmServerError("Login failed");
+      throw error;
+    }
   }
 
   async logout(): Promise<void> {
@@ -193,6 +213,7 @@ export class QmServerAuthAdapter implements IAuthService {
     this.removeStoredValue(STORAGE_KEYS.APPS);
     this.removeStoredValue(STORAGE_KEYS.IS_ADMIN);
     this.invalidateStatusCache();
+    serviceLogger.qmServer("Logged out");
   }
 
   async refreshToken(): Promise<void> {
@@ -207,7 +228,9 @@ export class QmServerAuthAdapter implements IAuthService {
       >("/api/v1/auth/refresh", { refreshToken });
       this.setStoredValue(STORAGE_KEYS.ACCESS_TOKEN, response.accessToken);
       this.setStoredValue(STORAGE_KEYS.REFRESH_TOKEN, response.refreshToken);
+      serviceLogger.qmServerDebug("Token refreshed");
     } catch (error) {
+      serviceLogger.qmServerError("Token refresh failed");
       await this.logout();
       throw error;
     }
@@ -228,6 +251,7 @@ export class QmServerAuthAdapter implements IAuthService {
 
   async getStatus(): Promise<AuthStatus> {
     if (this.isStatusCacheValid()) {
+      serviceLogger.qmServerDebug("Returning cached status");
       return this.statusCache!;
     }
 
@@ -364,5 +388,6 @@ export class QmServerAuthAdapter implements IAuthService {
     this.setStoredValue(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
     this.setStoredValue(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
     this.setStoredValue(STORAGE_KEYS.USER_ID, userId);
+    serviceLogger.qmServerDebug("Tokens saved from external source");
   }
 }

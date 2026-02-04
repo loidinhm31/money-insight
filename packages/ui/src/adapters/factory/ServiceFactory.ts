@@ -1,4 +1,4 @@
-import { isTauri } from "@money-insight/ui/utils";
+import { isTauri, serviceLogger } from "@money-insight/ui/utils";
 
 // Interfaces
 import type {
@@ -43,26 +43,32 @@ let syncService: ISyncService | null = null;
 // Setter functions for dependency injection from embed component
 export const setTransactionService = (svc: ITransactionService): void => {
   transactionService = svc;
+  serviceLogger.factory("Set custom TransactionService");
 };
 
 export const setCategoryService = (svc: ICategoryService): void => {
   categoryService = svc;
+  serviceLogger.factory("Set custom CategoryService");
 };
 
 export const setAccountService = (svc: IAccountService): void => {
   accountService = svc;
+  serviceLogger.factory("Set custom AccountService");
 };
 
 export const setStatisticsService = (svc: IStatisticsService): void => {
   statisticsService = svc;
+  serviceLogger.factory("Set custom StatisticsService");
 };
 
 export const setAuthService = (svc: IAuthService): void => {
   authService = svc;
+  serviceLogger.factory("Set custom AuthService");
 };
 
 export const setSyncService = (svc: ISyncService): void => {
   syncService = svc;
+  serviceLogger.factory("Set custom SyncService");
 };
 
 /**
@@ -112,6 +118,9 @@ function autoCreateSyncService(): ISyncService {
 export const getTransactionService = (): ITransactionService => {
   if (!transactionService) {
     transactionService = autoCreateTransactionService();
+    serviceLogger.factory(
+      `Created TransactionService for ${isTauri() ? "Tauri" : "IndexedDB"}`,
+    );
   }
   return transactionService;
 };
@@ -119,6 +128,9 @@ export const getTransactionService = (): ITransactionService => {
 export const getCategoryService = (): ICategoryService => {
   if (!categoryService) {
     categoryService = autoCreateCategoryService();
+    serviceLogger.factory(
+      `Created CategoryService for ${isTauri() ? "Tauri" : "IndexedDB"}`,
+    );
   }
   return categoryService;
 };
@@ -126,6 +138,9 @@ export const getCategoryService = (): ICategoryService => {
 export const getAccountService = (): IAccountService => {
   if (!accountService) {
     accountService = autoCreateAccountService();
+    serviceLogger.factory(
+      `Created AccountService for ${isTauri() ? "Tauri" : "IndexedDB"}`,
+    );
   }
   return accountService;
 };
@@ -133,6 +148,9 @@ export const getAccountService = (): IAccountService => {
 export const getStatisticsService = (): IStatisticsService => {
   if (!statisticsService) {
     statisticsService = autoCreateStatisticsService();
+    serviceLogger.factory(
+      `Created StatisticsService for ${isTauri() ? "Tauri" : "IndexedDB"}`,
+    );
   }
   return statisticsService;
 };
@@ -140,6 +158,9 @@ export const getStatisticsService = (): IStatisticsService => {
 export const getAuthService = (): IAuthService => {
   if (!authService) {
     authService = autoCreateAuthService();
+    serviceLogger.factory(
+      `Created AuthService for ${isTauri() ? "Tauri" : "QmSyncServer"}`,
+    );
   }
   return authService;
 };
@@ -147,6 +168,9 @@ export const getAuthService = (): IAuthService => {
 export const getSyncService = (): ISyncService => {
   if (!syncService) {
     syncService = autoCreateSyncService();
+    serviceLogger.factory(
+      `Created SyncService for ${isTauri() ? "Tauri" : "IndexedDB"}`,
+    );
   }
   return syncService;
 };
@@ -167,4 +191,5 @@ export const resetServices = (): void => {
   statisticsService = null;
   authService = null;
   syncService = null;
+  serviceLogger.factory("Reset all services");
 };

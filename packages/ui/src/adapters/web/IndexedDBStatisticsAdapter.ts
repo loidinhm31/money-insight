@@ -1,4 +1,4 @@
-import type { IStatisticsService } from "@/adapters/factory/interfaces";
+import type { IStatisticsService } from "@money-insight/ui/adapters/factory/interfaces";
 import type { Statistics, TransactionFilter } from "@money-insight/ui/types";
 import { db } from "./database";
 

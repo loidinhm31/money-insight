@@ -1,5 +1,5 @@
 import type { SyncResult, SyncStatus } from "@money-insight/shared/types";
-import type { ISyncService } from "@/adapters/factory/interfaces";
+import type { ISyncService } from "@money-insight/ui/adapters/factory/interfaces";
 import { invoke } from "@tauri-apps/api/core";
 
 export class TauriSyncAdapter implements ISyncService {

@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { IStatisticsService } from "@/adapters/factory/interfaces";
+import type { IStatisticsService } from "@money-insight/ui/adapters/factory/interfaces";
 import type { Statistics, TransactionFilter } from "@money-insight/ui/types";
 
 /**

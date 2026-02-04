@@ -3,13 +3,10 @@ import { KeyRound, Lock, Mail, ShieldCheck, User } from "lucide-react";
 import { getAuthService } from "@money-insight/ui/adapters";
 import {
   Button,
-  Input,
-  Label,
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
+  Input,
+  Label,
 } from "@money-insight/ui/components/atoms";
 
 interface LoginPageProps {

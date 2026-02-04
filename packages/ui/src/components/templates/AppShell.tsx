@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { LoginPage } from "@money-insight/ui/components/pages";
 import { Spinner } from "@money-insight/ui/components/atoms";
+import { BrowserSyncInitializer } from "@money-insight/ui/components/organisms";
 import { RootLayout } from "./RootLayout";
 import { useAuth, useNav } from "@money-insight/ui/hooks";
 
@@ -83,30 +84,32 @@ export function AppShell({
   };
 
   return (
-    <Suspense
-      fallback={
-        <div
-          className="min-h-screen flex items-center justify-center"
-          style={{ backgroundColor: "#F8F9FA" }}
-        >
-          <Spinner className="w-8 h-8 text-[#635BFF]" />
-        </div>
-      }
-    >
-      <Routes>
-        <Route path="/" element={<RootLayout />}>
-          <Route index element={<Navigate to={to("dashboard")} replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="add" element={<AddTransactionPage />} />
-          <Route
-            path="settings"
-            element={<SettingsPage onLogout={handleLogout} />}
-          />
-          <Route path="setup" element={<InitialSetupPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-        </Route>
-        <Route path="*" element={<Navigate to={to("dashboard")} replace />} />
-      </Routes>
-    </Suspense>
+    <BrowserSyncInitializer>
+      <Suspense
+        fallback={
+          <div
+            className="min-h-screen flex items-center justify-center"
+            style={{ backgroundColor: "#F8F9FA" }}
+          >
+            <Spinner className="w-8 h-8 text-[#635BFF]" />
+          </div>
+        }
+      >
+        <Routes>
+          <Route path="/" element={<RootLayout />}>
+            <Route index element={<Navigate to={to("dashboard")} replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="add" element={<AddTransactionPage />} />
+            <Route
+              path="settings"
+              element={<SettingsPage onLogout={handleLogout} />}
+            />
+            <Route path="setup" element={<InitialSetupPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to={to("dashboard")} replace />} />
+        </Routes>
+      </Suspense>
+    </BrowserSyncInitializer>
   );
 }

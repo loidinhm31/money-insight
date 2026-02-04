@@ -3,7 +3,7 @@ import type {
   AuthStatus,
   SyncConfig,
 } from "@money-insight/shared/types";
-import type { IAuthService } from "@/adapters/factory/interfaces";
+import type { IAuthService } from "@money-insight/ui/adapters/factory/interfaces";
 import { invoke } from "@tauri-apps/api/core";
 
 export class TauriAuthAdapter implements IAuthService {

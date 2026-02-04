@@ -1,12 +1,16 @@
 import { Outlet } from "react-router-dom";
 import { useSpendingStore } from "@money-insight/ui/stores";
-import { BottomNav } from "@money-insight/ui/components/molecules";
-import { BrowserSyncInitializer } from "@money-insight/ui/components/organisms";
+import {
+  Sidebar,
+  BottomNavigation,
+} from "@money-insight/ui/components/organisms";
 import {
   isOpenedFromDesktop,
   initializeSessionToken,
 } from "@money-insight/ui/utils";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
+
+const SIDEBAR_COLLAPSED_KEY = "money-insight-sidebar-collapsed";
 
 /**
  * Root layout component that wraps all pages
@@ -15,6 +19,23 @@ import { useEffect } from "react";
  */
 export function RootLayout() {
   const { transactions, initFromDatabase } = useSpendingStore();
+
+  // Sidebar collapsed state with localStorage persistence
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+      return stored === "true";
+    }
+    return false;
+  });
+
+  const handleToggleCollapse = useCallback(() => {
+    setSidebarCollapsed((prev) => {
+      const newValue = !prev;
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(newValue));
+      return newValue;
+    });
+  }, []);
 
   // CRITICAL: Initialize session token FIRST, then database
   // This must happen synchronously to avoid race conditions
@@ -48,19 +69,27 @@ export function RootLayout() {
   const hasTransactions = transactions.length > 0;
 
   return (
-    <BrowserSyncInitializer>
-      <div
-        className="min-h-screen font-body antialiased"
-        style={{ backgroundColor: "#F8F9FA" }}
-      >
-        {/* Navigation */}
-        <BottomNav hasTransactions={hasTransactions} />
+    <div
+      className="min-h-screen font-body antialiased flex"
+      style={{ backgroundColor: "#F8F9FA" }}
+    >
+      {/* Desktop Sidebar */}
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={handleToggleCollapse}
+        hasTransactions={hasTransactions}
+      />
 
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-h-screen">
         {/* Page content with bottom padding for mobile nav */}
-        <main className="pb-16 md:pb-0">
+        <main className="flex-1 pb-16 md:pb-0">
           <Outlet />
         </main>
       </div>
-    </BrowserSyncInitializer>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNavigation hasTransactions={hasTransactions} />
+    </div>
   );
 }

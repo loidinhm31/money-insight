@@ -1,4 +1,4 @@
-import type { IAccountService } from "@/adapters/factory/interfaces";
+import type { IAccountService } from "@money-insight/ui/adapters/factory/interfaces";
 import type { Account } from "@money-insight/ui/types";
 import { db, generateId } from "./database";
 

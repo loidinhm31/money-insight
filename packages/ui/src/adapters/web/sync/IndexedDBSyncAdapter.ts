@@ -51,6 +51,11 @@ export class IndexedDBSyncAdapter implements ISyncService {
     const { accessToken, refreshToken, userId } = await this.config.getTokens();
     if (accessToken && refreshToken) {
       this.client.setTokens(accessToken, refreshToken, userId);
+      console.log("[IndexedDBSyncAdapter] Tokens loaded from auth service");
+    } else {
+      console.log(
+        "[IndexedDBSyncAdapter] No tokens available from auth service",
+      );
     }
     this.initialized = true;
   }
@@ -59,10 +64,14 @@ export class IndexedDBSyncAdapter implements ISyncService {
     const { accessToken, refreshToken, userId } = await this.config.getTokens();
     if (accessToken && refreshToken) {
       this.client.setTokens(accessToken, refreshToken, userId);
+      console.log(
+        "[IndexedDBSyncAdapter] Tokens refreshed from auth service for sync",
+      );
     }
     this.initialized = true;
 
     if (!this.client.isAuthenticated()) {
+      console.log("[IndexedDBSyncAdapter] Not authenticated - cannot sync");
       return {
         pushed: 0,
         pulled: 0,

@@ -24,6 +24,10 @@ import {
   PortalContainerContext,
 } from "@money-insight/ui/hooks";
 import { isTauri } from "@money-insight/ui/utils";
+import {
+  PlatformProvider,
+  type IPlatformServices,
+} from "@money-insight/ui/platform";
 
 export interface AuthTokens {
   accessToken?: string;
@@ -59,13 +63,19 @@ export function MoneyInsightApp({
     }
   }, []);
 
-  const services = useMemo(() => {
+  const services: IPlatformServices = useMemo(() => {
+    // Create auth and sync services first (they may be needed by other services)
+    const auth = getAuthService();
+    const sync = getSyncService();
+
     if (isTauri()) {
       return {
         transaction: new TauriTransactionAdapter(),
         category: new TauriCategoryAdapter(),
         account: new TauriAccountAdapter(),
         statistics: new TauriStatisticsAdapter(),
+        auth,
+        sync,
       };
     }
     return {
@@ -73,18 +83,19 @@ export function MoneyInsightApp({
       category: new IndexedDBCategoryAdapter(),
       account: new IndexedDBAccountAdapter(),
       statistics: new IndexedDBStatisticsAdapter(),
+      auth,
+      sync,
     };
   }, []);
 
   useEffect(() => {
+    // Inject all services into factory singletons
     setTransactionService(services.transaction);
     setCategoryService(services.category);
     setAccountService(services.account);
     setStatisticsService(services.statistics);
-
-    // Ensure auth + sync services are initialized (lazy-created by ServiceFactory)
-    setAuthService(getAuthService());
-    setSyncService(getSyncService());
+    setAuthService(services.auth);
+    setSyncService(services.sync);
   }, [services]);
 
   // If external auth tokens are provided, save them to the auth service
@@ -113,15 +124,17 @@ export function MoneyInsightApp({
 
   return (
     <div ref={containerRef} className={className}>
-      <PortalContainerContext.Provider value={portalContainer}>
-        <BasePathContext.Provider value={basePath || ""}>
-          {useRouter ? (
-            <BrowserRouter basename={basePath}>{content}</BrowserRouter>
-          ) : (
-            content
-          )}
-        </BasePathContext.Provider>
-      </PortalContainerContext.Provider>
+      <PlatformProvider services={services}>
+        <PortalContainerContext.Provider value={portalContainer}>
+          <BasePathContext.Provider value={basePath || ""}>
+            {useRouter ? (
+              <BrowserRouter basename={basePath}>{content}</BrowserRouter>
+            ) : (
+              content
+            )}
+          </BasePathContext.Provider>
+        </PortalContainerContext.Provider>
+      </PlatformProvider>
     </div>
   );
 }

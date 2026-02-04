@@ -19,10 +19,11 @@
     "./adapters": "./src/adapters/index.ts",
     "./hooks": "./src/hooks/index.ts",
     "./stores": "./src/stores/spendingStore.ts",
-    "./utils": "./src/utils/platform.ts",
+    "./utils": "./src/utils/index.ts",
     "./types": "./src/types/index.ts",
     "./lib": "./src/lib/index.ts",
-    "./embed": "./src/embed/index.ts"
+    "./embed": "./src/embed/index.ts",
+    "./platform": "./src/platform/index.ts"
   },
   "dependencies": {
     "@money-insight/shared": "workspace:*",

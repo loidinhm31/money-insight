@@ -44,3 +44,9 @@ export {
 } from "./TransactionListModal";
 export { SyncSettings } from "./SyncSettings";
 export { BrowserSyncInitializer } from "./BrowserSyncInitializer";
+export { Sidebar, type SidebarProps, type NavItem } from "./Sidebar";
+export {
+  BottomNavigation,
+  type BottomNavigationProps,
+  type BottomNavItem,
+} from "./BottomNavigation";

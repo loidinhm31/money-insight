@@ -1,5 +1,5 @@
 import { HttpAdapter } from "./HttpAdapter";
-import type { ITransactionService } from "@/adapters/factory/interfaces";
+import type { ITransactionService } from "@money-insight/ui/adapters/factory/interfaces";
 import type {
   Transaction,
   NewTransaction,

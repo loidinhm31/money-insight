@@ -15,6 +15,13 @@
     "type-check": {
       "dependsOn": ["^build"]
     },
+    "test": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:run": {
+      "dependsOn": ["^build"]
+    },
     "clean": {
       "cache": false
     }

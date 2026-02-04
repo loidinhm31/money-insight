@@ -6,3 +6,4 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export { env, type AppEnvironment } from "./env";
+export { Logger, LogLevel, logger } from "./logger";
