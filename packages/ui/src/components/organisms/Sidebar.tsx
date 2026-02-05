@@ -3,7 +3,7 @@ import {
   Home,
   PlusCircle,
   Settings,
-  BarChart3,
+  List,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -46,9 +46,9 @@ export function Sidebar({
       show: hasTransactions,
     },
     {
-      path: to("reports"),
-      label: "Reports",
-      icon: <BarChart3 className="h-5 w-5" />,
+      path: to("transactions"),
+      label: "Transactions",
+      icon: <List className="h-5 w-5" />,
       show: hasTransactions,
     },
     {
@@ -136,7 +136,6 @@ export function Sidebar({
             ) : (
               <>
                 <ChevronLeft className="h-4 w-4" />
-                <span className="ml-2">Collapse</span>
               </>
             )}
           </Button>

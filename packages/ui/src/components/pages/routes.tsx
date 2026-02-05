@@ -4,6 +4,7 @@ import { AddTransactionPage } from "./AddTransactionPage";
 import { SettingsPage } from "./SettingsPage";
 import { InitialSetupPage } from "./InitialSetupPage";
 import { ReportsPage } from "./ReportsPage";
+import { TransactionPage } from "./TransactionPage";
 import { RootLayout } from "../templates/RootLayout";
 
 /**
@@ -47,6 +48,10 @@ export const router = createBrowserRouter([
       {
         path: "reports",
         element: <ReportsPage />,
+      },
+      {
+        path: "transactions",
+        element: <TransactionPage />,
       },
     ],
   },

@@ -72,11 +72,11 @@ export function MonthlyReportSection({
             </CardTitle>
           </div>
           <Link
-            to={to("reports")}
+            to={to("transactions")}
             className="text-sm cursor-pointer hover:underline"
             style={{ color: "#635BFF" }}
           >
-            See reports
+            See all transactions
           </Link>
         </div>
         <p className="text-sm mt-1" style={{ color: "#6B7280" }}>

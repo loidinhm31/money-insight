@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, PlusCircle, Settings, BarChart3 } from "lucide-react";
+import { Home, PlusCircle, Settings, List } from "lucide-react";
 import { cn } from "@money-insight/ui/lib";
 import { useNav } from "@money-insight/ui/hooks";
 
@@ -35,9 +35,9 @@ export function BottomNavigation({
       show: hasTransactions,
     },
     {
-      path: to("reports"),
-      label: "Reports",
-      icon: <BarChart3 className="h-5 w-5" />,
+      path: to("transactions"),
+      label: "Transactions",
+      icon: <List className="h-5 w-5" />,
       show: hasTransactions,
     },
     {

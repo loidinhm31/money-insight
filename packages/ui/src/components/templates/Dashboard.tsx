@@ -23,6 +23,7 @@ import {
   SearchInput,
   MonthlyReportSection,
   TopSpendingSection,
+  ReportsSection,
 } from "@money-insight/ui/components/organisms";
 import { formatCurrency } from "@money-insight/ui/lib";
 import { Eye, EyeOff, Wallet } from "lucide-react";
@@ -292,6 +293,9 @@ export function Dashboard({
           <TabsTrigger value="transactions" className="text-xs sm:text-sm">
             Transactions
           </TabsTrigger>
+          <TabsTrigger value="reports" className="text-xs sm:text-sm">
+            Reports
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-3 sm:space-y-4">
@@ -378,6 +382,13 @@ export function Dashboard({
               <TransactionList transactions={transactions} />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <ReportsSection
+            transactions={transactions}
+            valuesHidden={valuesHidden}
+          />
         </TabsContent>
       </Tabs>
     </div>
