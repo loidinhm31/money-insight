@@ -80,7 +80,7 @@ export function BottomNav({ hasTransactions }: BottomNavProps) {
                 </span>
               </div>
               <span className="font-heading text-lg text-foreground">
-                Spending Analyzer
+                Money Insight
               </span>
             </NavLink>
 

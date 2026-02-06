@@ -8,7 +8,9 @@ import {
   Info,
   Loader2,
   Monitor,
+  LogIn,
 } from "lucide-react";
+import { useAuth, useNav } from "@money-insight/ui/hooks";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
@@ -40,6 +42,8 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
   const [isOpeningBrowser, setIsOpeningBrowser] = useState(false);
   const [browserUrl, setBrowserUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { nav } = useNav();
+  const { isAuthenticated, logout } = useAuth();
 
   const platform = getPlatformName();
   const canOpenInBrowser = isTauri() && isDesktop();
@@ -187,7 +191,7 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
           </Card>
         )}
 
-        {/* Browser Connection Status - Only show in browser mode opened from desktop */}
+        {/* Desktop Connection */}
         {isFromDesktop && !isTauri() && (
           <Card>
             <CardHeader className="pb-3">
@@ -214,8 +218,49 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
           </Card>
         )}
 
+        {/* Login Settings */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-primary/10 rounded-full">
+                <LogIn className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">
+                  {isAuthenticated ? "Account" : "Login to connect to server"}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {isAuthenticated
+                    ? "Manage your account connection"
+                    : "Connect your account to sync data across devices"}
+                </p>
+              </div>
+            </div>
+            {isAuthenticated ? (
+              <Button
+                variant="ghost"
+                className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                onClick={async () => {
+                  await logout();
+                  onLogout?.();
+                }}
+              >
+                Logout
+              </Button>
+            ) : (
+              <Button
+                variant="default"
+                className="w-full"
+                onClick={() => nav("/login")}
+              >
+                Login / Register
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Sync Settings */}
-        <SyncSettings onLogout={onLogout} />
+        <SyncSettings />
 
         {/* App Info */}
         <Card>
@@ -226,7 +271,7 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
               </div>
               <div>
                 <CardTitle className="text-base">About</CardTitle>
-                <CardDescription>Spending Analyzer</CardDescription>
+                <CardDescription>Money Insight</CardDescription>
               </div>
             </div>
           </CardHeader>

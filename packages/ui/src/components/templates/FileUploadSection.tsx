@@ -30,7 +30,7 @@ export function FileUploadSection({
           className="text-2xl sm:text-3xl md:text-4xl font-bold font-heading"
           style={{ color: "#111827" }}
         >
-          Spending Analyzer
+          Money Insight
         </h1>
         <p
           className="text-sm sm:text-base max-w-xl sm:max-w-2xl px-4"

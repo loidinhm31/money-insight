@@ -50,11 +50,9 @@ export function AppShell({
   const { to } = useNav();
   const [localSkipAuth, setLocalSkipAuth] = useState(false);
 
-  const {
-    isAuthenticated,
-    isLoading: isAuthLoading,
-    checkAuthStatus,
-  } = useAuth({ skipInitialCheck: skipAuthProp });
+  const { isLoading: isAuthLoading, checkAuthStatus } = useAuth({
+    skipInitialCheck: skipAuthProp,
+  });
 
   const skipAuth = skipAuthProp || localSkipAuth;
 
@@ -66,17 +64,6 @@ export function AppShell({
       >
         <Spinner className="w-8 h-8 text-[#635BFF]" />
       </div>
-    );
-  }
-
-  if (!isAuthenticated && !skipAuth) {
-    return (
-      <LoginPage
-        onLoginSuccess={() => {
-          checkAuthStatus();
-        }}
-        onSkip={() => setLocalSkipAuth(true)}
-      />
     );
   }
 
@@ -108,6 +95,21 @@ export function AppShell({
             <Route
               path="settings"
               element={<SettingsPage onLogout={handleLogout} />}
+            />
+            <Route
+              path="login"
+              element={
+                <LoginPage
+                  onLoginSuccess={() => {
+                    checkAuthStatus();
+                    to("dashboard");
+                  }}
+                  onSkip={() => {
+                    setLocalSkipAuth(true);
+                    to("dashboard");
+                  }}
+                />
+              }
             />
             <Route path="setup" element={<InitialSetupPage />} />
             <Route path="reports" element={<ReportsPage />} />
