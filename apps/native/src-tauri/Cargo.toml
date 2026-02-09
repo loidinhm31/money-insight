@@ -28,7 +28,7 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 
 # Sync client library (uses reqwest internally)
-qm-sync-client = { version = "0.1.0", features = ["reqwest-client"] }
+qm-sync-client = { version = "0.1.1", features = ["reqwest-client"] }
 
 # HTTP client for auth service
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
