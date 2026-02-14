@@ -10,9 +10,8 @@ import type {
   ProcessedTransaction,
   MonthlyReport,
 } from "@money-insight/ui/types";
-import { MoneyInsightAnalyzer } from "@money-insight/ui/lib";
-import { databaseService } from "@money-insight/ui/lib";
-import { matchesSearch } from "@money-insight/ui/lib";
+import { matchesSearch, MoneyInsightAnalyzer } from "@money-insight/ui/lib";
+import * as transactionService from "@money-insight/ui/services/transactionService";
 
 // Convert Transaction (from DB) to ProcessedTransaction (for analysis)
 function toProcessedTransaction(tx: Transaction): ProcessedTransaction {
@@ -25,10 +24,10 @@ function toProcessedTransaction(tx: Transaction): ProcessedTransaction {
     currency: tx.currency,
     date: new Date(tx.date),
     event: tx.event,
-    excludeReport: tx.exclude_report,
+    excludeReport: tx.excludeReport,
     expense: tx.expense,
     income: tx.income,
-    yearMonth: tx.year_month,
+    yearMonth: tx.yearMonth,
     year: tx.year,
     month: tx.month,
     monthName: new Date(tx.date).toLocaleString("default", { month: "long" }),
@@ -138,11 +137,11 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const transactions = await databaseService.getTransactions();
+      const transactions = await transactionService.getTransactions();
       const processedTransactions = transactions.map(toProcessedTransaction);
       // Filter out transactions with excludeReport=true for analysis
       const reportableTransactions = processedTransactions.filter(
-        (t) => !t.excludeReport,
+        (t: ProcessedTransaction) => !t.excludeReport,
       );
       const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
 
@@ -170,7 +169,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     set({ isLoading: true });
 
     try {
-      const transaction = await databaseService.addTransaction(tx);
+      const transaction = await transactionService.addTransaction(tx);
       const transactions = [...get().transactions, transaction];
       const processedTransactions = transactions.map(toProcessedTransaction);
       // Filter out transactions with excludeReport=true for analysis
@@ -203,7 +202,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     set({ isLoading: true });
 
     try {
-      const updated = await databaseService.updateTransaction(tx);
+      const updated = await transactionService.updateTransaction(tx);
       const transactions = get().transactions.map((t) =>
         t.id === updated.id ? updated : t,
       );
@@ -240,7 +239,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     set({ isLoading: true });
 
     try {
-      await databaseService.deleteTransaction(id);
+      await transactionService.deleteTransaction(id);
       const transactions = get().transactions.filter((t) => t.id !== id);
       const processedTransactions = transactions.map(toProcessedTransaction);
       // Filter out transactions with excludeReport=true for analysis
@@ -274,12 +273,12 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     set({ isLoading: true });
 
     try {
-      const result = await databaseService.importTransactions(
+      const result = await transactionService.importTransactions(
         transactions,
         filename,
       );
       console.log(
-        `Imported ${result.imported_count} transactions, skipped ${result.skipped_count}`,
+        `Imported ${result.importedCount} transactions, skipped ${result.skippedCount}`,
       );
 
       // Reload all transactions from database
@@ -356,8 +355,8 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
       const bottlenecks = analyzer.detectBottlenecks(filteredProcessed);
 
       // Filter Transaction[] for display (same logic as analyzer.filterTransactions)
-      // Also exclude transactions with exclude_report=true to match analysis
-      let filteredTransactions = transactions.filter((t) => !t.exclude_report);
+      // Also exclude transactions with excludeReport=true to match analysis
+      let filteredTransactions = transactions.filter((t) => !t.excludeReport);
       if (filter.dateRange) {
         filteredTransactions = filteredTransactions.filter((t) => {
           const date = new Date(t.date);

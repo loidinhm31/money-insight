@@ -23,10 +23,10 @@ export class IndexedDBAccountAdapter implements IAccountService {
       return {
         id: stored?.id || generateId(),
         name,
-        account_type: stored?.account_type,
+        accountType: stored?.accountType,
         icon: stored?.icon,
-        sync_version: stored?.sync_version ?? 0,
-        synced_at: stored?.synced_at ?? null,
+        syncVersion: stored?.syncVersion ?? 0,
+        syncedAt: stored?.syncedAt ?? null,
       };
     });
   }

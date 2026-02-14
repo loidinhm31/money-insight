@@ -103,7 +103,7 @@ export function AddTransactionForm({
         account: account || "Cash",
         currency,
         date: format(date, "yyyy-MM-dd"),
-        exclude_report: false,
+        excludeReport: false,
         source: "manual",
       };
 

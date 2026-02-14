@@ -2,7 +2,9 @@ import { useCallback } from "react";
 import { useSpendingStore } from "@money-insight/ui/stores";
 import { useNav } from "@money-insight/ui/hooks";
 import { FileUploadSection } from "@money-insight/ui/components/templates";
-import { parseCSVForImport, databaseService } from "@money-insight/ui/lib";
+import { parseCSVForImport } from "@money-insight/ui/lib";
+import * as categoryService from "@money-insight/ui/services/categoryService";
+import * as accountService from "@money-insight/ui/services/accountService";
 import type { NewTransaction } from "@money-insight/ui/types";
 
 /**
@@ -38,8 +40,8 @@ export function InitialSetupPage() {
   );
 
   // Get categories and accounts for form
-  const getCategories = useCallback(() => databaseService.getCategories(), []);
-  const getAccounts = useCallback(() => databaseService.getAccounts(), []);
+  const getCategories = useCallback(() => categoryService.getCategories(), []);
+  const getAccounts = useCallback(() => accountService.getAccounts(), []);
 
   return (
     <FileUploadSection

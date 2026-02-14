@@ -1,26 +1,17 @@
-mod commands;
-mod database;
-mod models;
 mod session;
 mod web_server;
 mod auth;
-mod sync;
-mod sync_table_map;
 mod shared_auth;
 mod shared_sync;
 
-use database::Database;
 use auth::{AuthService, AuthResponse, AuthStatus};
-use sync::{SyncService, SyncResult, SyncStatus};
 use session::{SessionManager, SharedSessionManager};
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
 use web_server::{ServerHandle, WEB_SERVER_PORT};
 
 pub struct AppState {
-    db: Arc<Database>,
     auth: Arc<Mutex<AuthService>>,
-    sync: Arc<Mutex<SyncService>>,
 }
 
 struct WebServerState {
@@ -125,45 +116,16 @@ async fn auth_get_access_token(
     auth.get_access_token(&app_handle).await
 }
 
-// Sync commands
-#[tauri::command]
-async fn sync_now(
-    app_handle: tauri::AppHandle,
-    state: tauri::State<'_, AppState>,
-) -> Result<SyncResult, String> {
-    let sync = state.sync.lock().map_err(|e| format!("Failed to lock sync: {}", e))?.clone();
-    sync.sync_now(&app_handle).await
-}
-
-#[tauri::command]
-async fn sync_get_status(
-    app_handle: tauri::AppHandle,
-    state: tauri::State<'_, AppState>,
-    sync_status_holder: tauri::State<'_, shared_sync::SharedSyncStatusHolder>,
-) -> Result<SyncStatus, String> {
-    let sync = state.sync.lock().map_err(|e| format!("Failed to lock sync: {}", e))?.clone();
-    let status = sync.get_sync_status(&app_handle).await?;
-    sync_status_holder.update(shared_sync::SharedSyncStatus {
-        configured: status.configured,
-        authenticated: status.authenticated,
-        server_url: status.server_url.clone(),
-        last_sync_at: status.last_sync_at,
-        pending_changes: status.pending_changes as i32,
-    });
-    Ok(status)
-}
-
 // Browser mode commands
 #[tauri::command]
 fn open_in_browser(
-    db: tauri::State<AppState>,
     session_manager: tauri::State<SharedSessionManager>,
     web_state: tauri::State<WebServerState>,
 ) -> Result<String, String> {
     let mut handle_guard = web_state.handle.lock().map_err(|e| e.to_string())?;
 
     if handle_guard.is_none() {
-        let handle = web_server::start_web_server(db.db.clone(), session_manager.inner().clone());
+        let handle = web_server::start_web_server(session_manager.inner().clone());
         *handle_guard = Some(handle);
     }
 
@@ -201,10 +163,6 @@ pub fn run() {
             let sync_center_api_key = std::env::var("SYNC_CENTER_API_KEY")
                 .unwrap_or_else(|_| "your_api_key_here".to_string());
 
-            // Initialize database
-            let db = Database::new(app.handle()).expect("Failed to initialize database");
-            let db = Arc::new(db);
-
             // Initialize auth service
             let auth = Arc::new(Mutex::new(AuthService::new(
                 sync_server_url,
@@ -212,10 +170,7 @@ pub fn run() {
                 sync_center_api_key,
             )));
 
-            // Initialize sync service
-            let sync = Arc::new(Mutex::new(SyncService::new(db.clone(), auth.clone())));
-
-            let app_state = AppState { db, auth, sync };
+            let app_state = AppState { auth };
             app.handle().manage(app_state);
 
             // Initialize session manager
@@ -234,15 +189,6 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            // CRUD commands
-            commands::get_transactions,
-            commands::add_transaction,
-            commands::update_transaction,
-            commands::delete_transaction,
-            commands::import_transactions,
-            commands::get_categories,
-            commands::get_accounts,
-            commands::get_statistics,
             // Auth commands
             auth_configure_sync,
             auth_register,
@@ -251,9 +197,6 @@ pub fn run() {
             auth_get_status,
             auth_is_authenticated,
             auth_get_access_token,
-            // Sync commands
-            sync_now,
-            sync_get_status,
             // Browser mode
             open_in_browser,
             stop_browser_server,

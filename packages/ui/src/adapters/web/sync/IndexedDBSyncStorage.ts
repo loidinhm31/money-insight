@@ -16,7 +16,7 @@ export class IndexedDBSyncStorage {
     // Unsynced transactions
     const transactions = await db.transactions.toArray();
     for (const tx of transactions) {
-      if (tx.synced_at === undefined || tx.synced_at === null) {
+      if (tx.syncedAt === undefined || tx.syncedAt === null) {
         records.push({
           tableName: "transactions",
           rowId: tx.id,
@@ -29,16 +29,16 @@ export class IndexedDBSyncStorage {
             currency: tx.currency,
             date: tx.date,
             event: tx.event,
-            excludeReport: tx.exclude_report,
+            excludeReport: tx.excludeReport,
             expense: tx.expense,
             income: tx.income,
-            yearMonth: tx.year_month,
+            yearMonth: tx.yearMonth,
             year: tx.year,
             month: tx.month,
-            createdAt: tx.created_at,
-            updatedAt: tx.updated_at,
+            createdAt: tx.createdAt,
+            updatedAt: tx.updatedAt,
           },
-          version: tx.sync_version || 1,
+          version: tx.syncVersion || 1,
           deleted: false,
         });
       }
@@ -47,7 +47,7 @@ export class IndexedDBSyncStorage {
     // Unsynced categories
     const categories = await db.categories.toArray();
     for (const cat of categories) {
-      if (cat.synced_at === undefined || cat.synced_at === null) {
+      if (cat.syncedAt === undefined || cat.syncedAt === null) {
         records.push({
           tableName: "categories",
           rowId: cat.id,
@@ -55,9 +55,9 @@ export class IndexedDBSyncStorage {
             name: cat.name,
             icon: cat.icon,
             color: cat.color,
-            isExpense: cat.is_expense,
+            isExpense: cat.isExpense,
           },
-          version: cat.sync_version || 1,
+          version: cat.syncVersion || 1,
           deleted: false,
         });
       }
@@ -66,16 +66,16 @@ export class IndexedDBSyncStorage {
     // Unsynced accounts
     const accounts = await db.accounts.toArray();
     for (const acc of accounts) {
-      if (acc.synced_at === undefined || acc.synced_at === null) {
+      if (acc.syncedAt === undefined || acc.syncedAt === null) {
         records.push({
           tableName: "accounts",
           rowId: acc.id,
           data: {
             name: acc.name,
-            accountType: acc.account_type,
+            accountType: acc.accountType,
             icon: acc.icon,
           },
-          version: acc.sync_version || 1,
+          version: acc.syncVersion || 1,
           deleted: false,
         });
       }
@@ -103,17 +103,17 @@ export class IndexedDBSyncStorage {
 
     const transactions = await db.transactions.toArray();
     count += transactions.filter(
-      (t) => t.synced_at === undefined || t.synced_at === null,
+      (t) => t.syncedAt === undefined || t.syncedAt === null,
     ).length;
 
     const categories = await db.categories.toArray();
     count += categories.filter(
-      (c) => c.synced_at === undefined || c.synced_at === null,
+      (c) => c.syncedAt === undefined || c.syncedAt === null,
     ).length;
 
     const accounts = await db.accounts.toArray();
     count += accounts.filter(
-      (a) => a.synced_at === undefined || a.synced_at === null,
+      (a) => a.syncedAt === undefined || a.syncedAt === null,
     ).length;
 
     count += await db._pendingChanges
@@ -139,7 +139,7 @@ export class IndexedDBSyncStorage {
           if (table) {
             const exists = await table.get(rowId);
             if (exists) {
-              await table.update(rowId, { synced_at: now });
+              await table.update(rowId, { syncedAt: now });
             }
           }
         }
@@ -190,35 +190,16 @@ export class IndexedDBSyncStorage {
     const data: Record<string, unknown> = {
       ...record.data,
       id: record.rowId,
-      sync_version: record.version,
-      synced_at: syncedAt,
+      syncVersion: record.version,
+      syncedAt: syncedAt,
     };
 
-    // Convert camelCase server fields to snake_case local fields
-    this.convertCamelToSnake(data, "createdAt", "created_at");
-    this.convertCamelToSnake(data, "updatedAt", "updated_at");
-    this.convertCamelToSnake(data, "excludeReport", "exclude_report");
-    this.convertCamelToSnake(data, "yearMonth", "year_month");
-    this.convertCamelToSnake(data, "isExpense", "is_expense");
-    this.convertCamelToSnake(data, "accountType", "account_type");
-
-    if (!data.created_at) {
-      data.created_at = new Date(syncedAt * 1000).toISOString();
+    if (!data.createdAt) {
+      data.createdAt = new Date(syncedAt * 1000).toISOString();
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await table.put(data as any);
-  }
-
-  private convertCamelToSnake(
-    data: Record<string, unknown>,
-    camelKey: string,
-    snakeKey: string,
-  ): void {
-    if (data[camelKey] !== undefined && data[snakeKey] === undefined) {
-      data[snakeKey] = data[camelKey];
-      delete data[camelKey];
-    }
   }
 
   private async deleteRecord(record: PullRecord): Promise<void> {

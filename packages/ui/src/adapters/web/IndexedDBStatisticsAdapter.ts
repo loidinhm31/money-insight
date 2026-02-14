@@ -6,11 +6,11 @@ export class IndexedDBStatisticsAdapter implements IStatisticsService {
   async getStatistics(filter?: TransactionFilter): Promise<Statistics> {
     let transactions = await db.transactions.toArray();
 
-    if (filter?.start_date) {
-      transactions = transactions.filter((t) => t.date >= filter.start_date!);
+    if (filter?.startDate) {
+      transactions = transactions.filter((t) => t.date >= filter.startDate!);
     }
-    if (filter?.end_date) {
-      transactions = transactions.filter((t) => t.date <= filter.end_date!);
+    if (filter?.endDate) {
+      transactions = transactions.filter((t) => t.date <= filter.endDate!);
     }
     if (filter?.categories?.length) {
       transactions = transactions.filter((t) =>
@@ -30,13 +30,13 @@ export class IndexedDBStatisticsAdapter implements IStatisticsService {
     const accounts = new Set(transactions.map((t) => t.account));
 
     return {
-      total_expense: totalExpense,
-      total_income: totalIncome,
-      net_savings: netSavings,
-      savings_rate: totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0,
-      transaction_count: transactions.length,
-      category_count: categories.size,
-      account_count: accounts.size,
+      totalExpense: totalExpense,
+      totalIncome: totalIncome,
+      netSavings: netSavings,
+      savingsRate: totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0,
+      transactionCount: transactions.length,
+      categoryCount: categories.size,
+      accountCount: accounts.size,
     };
   }
 }

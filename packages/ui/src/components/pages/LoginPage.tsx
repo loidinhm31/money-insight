@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { KeyRound, Lock, Mail, ShieldCheck, User } from "lucide-react";
-import { getAuthService } from "@money-insight/ui/adapters";
+import { login, register } from "@money-insight/ui/services/authService";
 import {
   Button,
   Card,
@@ -38,7 +38,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     setIsLoading(true);
 
     try {
-      await getAuthService().login(loginEmail, loginPassword);
+      await login(loginEmail, loginPassword);
       onLoginSuccess();
     } catch (err) {
       setError(
@@ -71,11 +71,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     setIsLoading(true);
 
     try {
-      await getAuthService().register(
-        registerUsername,
-        registerEmail,
-        registerPassword,
-      );
+      await register(registerUsername, registerEmail, registerPassword);
       onLoginSuccess();
     } catch (err) {
       setError(

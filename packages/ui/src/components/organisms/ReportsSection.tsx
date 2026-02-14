@@ -29,7 +29,7 @@ export function ReportsSection({
 
   // Filter transactions for current month, excluding those marked as excludeReport
   const currentMonthTransactions = transactions.filter((t) => {
-    return t.year_month === yearMonth && !t.exclude_report;
+    return t.yearMonth === yearMonth && !t.excludeReport;
   });
 
   // Separate into spending and income

@@ -142,9 +142,9 @@ function processTransactionsForImport(data: any[]): NewTransaction[] {
         category: row.category || "Uncategorized",
         account: row.account || "Unknown",
         currency: row.currency || "VND",
-        date: format(date, "yyyy-MM-dd"), // ISO format for SQLite
+        date: format(date, "yyyy-MM-dd"),
         event: row.event || undefined,
-        exclude_report: isExcluded,
+        excludeReport: isExcluded,
         source: "csv_import",
       };
 

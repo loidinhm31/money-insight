@@ -1,17 +1,15 @@
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Query, State},
     http::StatusCode,
-    routing::{delete, get, post, put},
+    routing::get,
     Json, Router,
 };
+#[cfg(not(debug_assertions))]
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tokio::sync::broadcast;
 use tower_http::cors::{Any, CorsLayer};
 
-use crate::database::Database;
-use crate::models::*;
 use crate::session::SharedSessionManager;
 
 /// Port for the embedded web server
@@ -39,7 +37,6 @@ impl Asset {
 /// Shared application state
 #[derive(Clone)]
 pub struct AppState {
-    pub db: Arc<Database>,
     pub session_manager: SharedSessionManager,
     pub shutdown_tx: broadcast::Sender<String>,
 }
@@ -85,12 +82,11 @@ pub struct ServerHandle {
 }
 
 /// Start the embedded web server
-pub fn start_web_server(db: Arc<Database>, session_manager: SharedSessionManager) -> ServerHandle {
+pub fn start_web_server(session_manager: SharedSessionManager) -> ServerHandle {
     let token = session_manager.generate_token();
     let (shutdown_tx, _) = broadcast::channel::<String>(1);
 
     let state = AppState {
-        db,
         session_manager,
         shutdown_tx: shutdown_tx.clone(),
     };
@@ -107,17 +103,6 @@ pub fn start_web_server(db: Arc<Database>, session_manager: SharedSessionManager
                 .allow_headers(Any);
 
             let app = Router::new()
-                // Transaction routes
-                .route("/api/transactions", get(get_transactions))
-                .route("/api/transactions", post(add_transaction))
-                .route("/api/transactions", put(update_transaction))
-                .route("/api/transactions/{id}", delete(delete_transaction))
-                .route("/api/transactions/import", post(import_transactions))
-                // Category and account routes
-                .route("/api/categories", get(get_categories))
-                .route("/api/accounts", get(get_accounts))
-                // Statistics route
-                .route("/api/statistics", get(get_statistics))
                 // Health check
                 .route("/api/health", get(health_check))
                 // SSE for shutdown notification
@@ -171,157 +156,6 @@ fn validate_token(
 
 async fn health_check() -> Json<ApiResponse<&'static str>> {
     Json(ApiResponse::success("OK"))
-}
-
-#[derive(Deserialize)]
-struct GetTransactionsQuery {
-    token: String,
-    filter: Option<String>, // JSON-encoded TransactionFilter
-}
-
-async fn get_transactions(
-    State(state): State<AppState>,
-    Query(query): Query<GetTransactionsQuery>,
-) -> Result<Json<ApiResponse<Vec<Transaction>>>, (StatusCode, Json<ApiResponse<()>>)> {
-    validate_token(&state, &TokenQuery { token: query.token })?;
-
-    let filter: Option<TransactionFilter> =
-        query.filter.and_then(|f| serde_json::from_str(&f).ok());
-
-    match state.db.get_transactions(filter) {
-        Ok(transactions) => Ok(Json(ApiResponse::success(transactions))),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::error(e.to_string())),
-        )),
-    }
-}
-
-async fn add_transaction(
-    State(state): State<AppState>,
-    Query(query): Query<TokenQuery>,
-    Json(transaction): Json<NewTransaction>,
-) -> Result<Json<ApiResponse<Transaction>>, (StatusCode, Json<ApiResponse<()>>)> {
-    validate_token(&state, &query)?;
-
-    match state.db.add_transaction(transaction) {
-        Ok(tx) => Ok(Json(ApiResponse::success(tx))),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::error(e.to_string())),
-        )),
-    }
-}
-
-async fn update_transaction(
-    State(state): State<AppState>,
-    Query(query): Query<TokenQuery>,
-    Json(transaction): Json<Transaction>,
-) -> Result<Json<ApiResponse<Transaction>>, (StatusCode, Json<ApiResponse<()>>)> {
-    validate_token(&state, &query)?;
-
-    match state.db.update_transaction(transaction) {
-        Ok(tx) => Ok(Json(ApiResponse::success(tx))),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::error(e.to_string())),
-        )),
-    }
-}
-
-async fn delete_transaction(
-    State(state): State<AppState>,
-    Query(query): Query<TokenQuery>,
-    Path(id): Path<String>,
-) -> Result<Json<ApiResponse<()>>, (StatusCode, Json<ApiResponse<()>>)> {
-    validate_token(&state, &query)?;
-
-    match state.db.delete_transaction(&id) {
-        Ok(()) => Ok(Json(ApiResponse::success(()))),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::error(e.to_string())),
-        )),
-    }
-}
-
-#[derive(Deserialize)]
-struct ImportRequest {
-    transactions: Vec<NewTransaction>,
-    filename: String,
-}
-
-async fn import_transactions(
-    State(state): State<AppState>,
-    Query(query): Query<TokenQuery>,
-    Json(req): Json<ImportRequest>,
-) -> Result<Json<ApiResponse<ImportResult>>, (StatusCode, Json<ApiResponse<()>>)> {
-    validate_token(&state, &query)?;
-
-    match state
-        .db
-        .import_transactions(req.transactions, &req.filename)
-    {
-        Ok(result) => Ok(Json(ApiResponse::success(result))),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::error(e.to_string())),
-        )),
-    }
-}
-
-async fn get_categories(
-    State(state): State<AppState>,
-    Query(query): Query<TokenQuery>,
-) -> Result<Json<ApiResponse<Vec<Category>>>, (StatusCode, Json<ApiResponse<()>>)> {
-    validate_token(&state, &query)?;
-
-    match state.db.get_categories() {
-        Ok(categories) => Ok(Json(ApiResponse::success(categories))),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::error(e.to_string())),
-        )),
-    }
-}
-
-async fn get_accounts(
-    State(state): State<AppState>,
-    Query(query): Query<TokenQuery>,
-) -> Result<Json<ApiResponse<Vec<Account>>>, (StatusCode, Json<ApiResponse<()>>)> {
-    validate_token(&state, &query)?;
-
-    match state.db.get_accounts() {
-        Ok(accounts) => Ok(Json(ApiResponse::success(accounts))),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::error(e.to_string())),
-        )),
-    }
-}
-
-#[derive(Deserialize)]
-struct GetStatisticsQuery {
-    token: String,
-    filter: Option<String>, // JSON-encoded TransactionFilter
-}
-
-async fn get_statistics(
-    State(state): State<AppState>,
-    Query(query): Query<GetStatisticsQuery>,
-) -> Result<Json<ApiResponse<Statistics>>, (StatusCode, Json<ApiResponse<()>>)> {
-    validate_token(&state, &TokenQuery { token: query.token })?;
-
-    let filter: Option<TransactionFilter> =
-        query.filter.and_then(|f| serde_json::from_str(&f).ok());
-
-    match state.db.get_statistics(filter) {
-        Ok(stats) => Ok(Json(ApiResponse::success(stats))),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::error(e.to_string())),
-        )),
-    }
 }
 
 // SSE handler for shutdown notifications

@@ -95,16 +95,16 @@ export interface NewTransaction {
   currency: string;
   date: string; // ISO format YYYY-MM-DD
   event?: string;
-  exclude_report: boolean;
+  excludeReport: boolean;
   source?: TransactionSource;
-  import_batch_id?: number;
+  importBatchId?: number;
 }
 
 // Full transaction from database (matches Rust Transaction)
 export interface Transaction {
   id: string;
   source: TransactionSource;
-  import_batch_id?: number;
+  importBatchId?: number;
   note: string;
   amount: number;
   category: string;
@@ -112,16 +112,16 @@ export interface Transaction {
   currency: string;
   date: string;
   event?: string;
-  exclude_report: boolean;
+  excludeReport: boolean;
   expense: number;
   income: number;
-  year_month: string;
+  yearMonth: string;
   year: number;
   month: number;
-  created_at: string;
-  updated_at: string;
-  sync_version: number;
-  synced_at: number | null;
+  createdAt: string;
+  updatedAt: string;
+  syncVersion: number;
+  syncedAt: number | null;
 }
 
 // Category definition
@@ -130,57 +130,57 @@ export interface Category {
   name: string;
   icon?: string;
   color?: string;
-  is_expense: boolean;
-  sync_version: number;
-  synced_at: number | null;
+  isExpense: boolean;
+  syncVersion: number;
+  syncedAt: number | null;
 }
 
 // Account definition
 export interface Account {
   id: string;
   name: string;
-  account_type?: string;
+  accountType?: string;
   icon?: string;
-  sync_version: number;
-  synced_at: number | null;
+  syncVersion: number;
+  syncedAt: number | null;
 }
 
 // Import batch tracking
 export interface ImportBatch {
   id: number;
   filename: string;
-  record_count: number;
-  imported_at: string;
+  recordCount: number;
+  importedAt: string;
 }
 
 // Filter for querying transactions (matches Rust TransactionFilter)
 export interface TransactionFilter {
-  start_date?: string;
-  end_date?: string;
+  startDate?: string;
+  endDate?: string;
   categories?: string[];
   accounts?: string[];
-  min_amount?: number;
-  max_amount?: number;
+  minAmount?: number;
+  maxAmount?: number;
   source?: TransactionSource;
   search?: string;
 }
 
 // Statistics summary
 export interface Statistics {
-  total_expense: number;
-  total_income: number;
-  net_savings: number;
-  savings_rate: number;
-  transaction_count: number;
-  category_count: number;
-  account_count: number;
+  totalExpense: number;
+  totalIncome: number;
+  netSavings: number;
+  savingsRate: number;
+  transactionCount: number;
+  categoryCount: number;
+  accountCount: number;
 }
 
 // Result of import operation
 export interface ImportResult {
-  batch_id: number;
-  imported_count: number;
-  skipped_count: number;
+  batchId: number;
+  importedCount: number;
+  skippedCount: number;
 }
 
 // Daily spending for a single day

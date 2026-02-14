@@ -1,4 +1,8 @@
-import { SyncResult, SyncStatus } from "@money-insight/shared/types";
+import {
+  SyncProgress,
+  SyncResult,
+  SyncStatus,
+} from "@money-insight/shared/types";
 
 export interface ISyncService {
   /**
@@ -11,4 +15,12 @@ export interface ISyncService {
    * Get current sync status
    */
   getStatus(): Promise<SyncStatus>;
+
+  /**
+   * Trigger a sync operation with progress updates
+   * Optional method for platforms that support progress reporting
+   */
+  syncWithProgress?(
+    onProgress: (progress: SyncProgress) => void,
+  ): Promise<SyncResult>;
 }

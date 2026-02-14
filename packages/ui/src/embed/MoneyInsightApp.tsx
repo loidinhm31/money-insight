@@ -3,19 +3,17 @@ import {
   IndexedDBCategoryAdapter,
   IndexedDBStatisticsAdapter,
   IndexedDBTransactionAdapter,
-  getAuthService,
-  getSyncService,
+  createIndexedDBSyncAdapter,
   setAccountService,
   setAuthService,
   setCategoryService,
   setStatisticsService,
   setSyncService,
   setTransactionService,
-  TauriAccountAdapter,
-  TauriCategoryAdapter,
-  TauriStatisticsAdapter,
-  TauriTransactionAdapter,
 } from "@money-insight/ui/adapters";
+import { QmServerAuthAdapter } from "@money-insight/ui/adapters/shared";
+import { TauriAuthAdapter } from "@money-insight/ui/adapters/tauri";
+import { isTauri } from "@money-insight/ui/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { AppShell } from "@money-insight/ui/components/templates";
@@ -23,7 +21,6 @@ import {
   BasePathContext,
   PortalContainerContext,
 } from "@money-insight/ui/hooks";
-import { isTauri } from "@money-insight/ui/utils";
 import {
   PlatformProvider,
   type IPlatformServices,
@@ -63,21 +60,30 @@ export function MoneyInsightApp({
     }
   }, []);
 
+  // Initialize services synchronously before first render
   const services: IPlatformServices = useMemo(() => {
-    // Create auth and sync services first (they may be needed by other services)
-    const auth = getAuthService();
-    const sync = getSyncService();
+    // Initialize data services
+    setTransactionService(new IndexedDBTransactionAdapter());
+    setCategoryService(new IndexedDBCategoryAdapter());
+    setAccountService(new IndexedDBAccountAdapter());
+    setStatisticsService(new IndexedDBStatisticsAdapter());
 
-    if (isTauri()) {
-      return {
-        transaction: new TauriTransactionAdapter(),
-        category: new TauriCategoryAdapter(),
-        account: new TauriAccountAdapter(),
-        statistics: new TauriStatisticsAdapter(),
-        auth,
-        sync,
-      };
-    }
+    // Initialize auth service based on platform
+    const auth = isTauri() ? new TauriAuthAdapter() : new QmServerAuthAdapter();
+    setAuthService(auth);
+
+    // Initialize sync service (depends on auth)
+    const sync = createIndexedDBSyncAdapter({
+      getConfig: () => auth.getSyncConfig(),
+      getTokens: () => auth.getTokens(),
+      saveTokens:
+        "saveTokensExternal" in auth && auth.saveTokensExternal
+          ? (accessToken, refreshToken, userId) =>
+              auth.saveTokensExternal!(accessToken, refreshToken, userId)
+          : undefined,
+    });
+    setSyncService(sync);
+
     return {
       transaction: new IndexedDBTransactionAdapter(),
       category: new IndexedDBCategoryAdapter(),
@@ -88,29 +94,23 @@ export function MoneyInsightApp({
     };
   }, []);
 
-  useEffect(() => {
-    // Inject all services into factory singletons
-    setTransactionService(services.transaction);
-    setCategoryService(services.category);
-    setAccountService(services.account);
-    setStatisticsService(services.statistics);
-    setAuthService(services.auth);
-    setSyncService(services.sync);
-  }, [services]);
-
   // If external auth tokens are provided, save them to the auth service
   useEffect(() => {
-    if (authTokens?.accessToken && authTokens?.refreshToken) {
-      const authSvc = getAuthService();
-      authSvc
-        .saveTokensExternal?.(
+    if (
+      authTokens?.accessToken &&
+      authTokens?.refreshToken &&
+      "saveTokensExternal" in services.auth &&
+      services.auth.saveTokensExternal
+    ) {
+      services.auth
+        .saveTokensExternal(
           authTokens.accessToken,
           authTokens.refreshToken,
           authTokens.userId || "",
         )
-        ?.catch(console.error);
+        .catch(console.error);
     }
-  }, [authTokens]);
+  }, [authTokens, services.auth]);
 
   const skipAuth = !!(authTokens?.accessToken && authTokens?.refreshToken);
 

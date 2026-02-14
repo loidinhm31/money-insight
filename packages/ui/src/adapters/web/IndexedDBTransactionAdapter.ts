@@ -20,17 +20,17 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
     if (filter?.accounts?.length) {
       results = results.filter((t) => filter.accounts!.includes(t.account));
     }
-    if (filter?.start_date) {
-      results = results.filter((t) => t.date >= filter.start_date!);
+    if (filter?.startDate) {
+      results = results.filter((t) => t.date >= filter.startDate!);
     }
-    if (filter?.end_date) {
-      results = results.filter((t) => t.date <= filter.end_date!);
+    if (filter?.endDate) {
+      results = results.filter((t) => t.date <= filter.endDate!);
     }
-    if (filter?.min_amount !== undefined) {
-      results = results.filter((t) => t.amount >= filter.min_amount!);
+    if (filter?.minAmount !== undefined) {
+      results = results.filter((t) => t.amount >= filter.minAmount!);
     }
-    if (filter?.max_amount !== undefined) {
-      results = results.filter((t) => t.amount <= filter.max_amount!);
+    if (filter?.maxAmount !== undefined) {
+      results = results.filter((t) => t.amount <= filter.maxAmount!);
     }
     if (filter?.source) {
       results = results.filter((t) => t.source === filter.source);
@@ -59,7 +59,7 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
     const transaction: Transaction = {
       id: generateId(),
       source: tx.source || "manual",
-      import_batch_id: tx.import_batch_id,
+      importBatchId: tx.importBatchId,
       note: tx.note,
       amount,
       category: tx.category,
@@ -67,16 +67,16 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
       currency: tx.currency,
       date,
       event: tx.event,
-      exclude_report: tx.exclude_report,
+      excludeReport: tx.excludeReport,
       expense: amount < 0 ? Math.abs(amount) : 0,
       income: amount > 0 ? amount : 0,
-      year_month: `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, "0")}`,
+      yearMonth: `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, "0")}`,
       year: parsedDate.getFullYear(),
       month: parsedDate.getMonth() + 1,
-      created_at: now,
-      updated_at: now,
-      sync_version: 1,
-      synced_at: null,
+      createdAt: now,
+      updatedAt: now,
+      syncVersion: 1,
+      syncedAt: null,
     };
 
     await db.transactions.add(transaction);
@@ -87,9 +87,9 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
     const existing = await db.transactions.get(tx.id);
     const updated = {
       ...tx,
-      updated_at: new Date().toISOString(),
-      sync_version: (existing?.sync_version || 0) + 1,
-      synced_at: null,
+      updatedAt: new Date().toISOString(),
+      syncVersion: (existing?.syncVersion || 0) + 1,
+      syncedAt: null,
     };
     await db.transactions.put(updated);
     return updated;
@@ -98,7 +98,7 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
   async deleteTransaction(id: string): Promise<void> {
     const existing = await db.transactions.get(id);
     if (existing) {
-      await trackDelete("transactions", id, existing.sync_version || 0);
+      await trackDelete("transactions", id, existing.syncVersion || 0);
     }
     await db.transactions.delete(id);
   }
@@ -117,7 +117,7 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
           const newTx: NewTransaction = {
             ...tx,
             source: "csv_import",
-            import_batch_id: batchId,
+            importBatchId: batchId,
           };
           await this.addTransaction(newTx);
           importedCount++;
@@ -129,15 +129,15 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
       await db.importBatches.add({
         id: batchId,
         filename,
-        record_count: importedCount,
-        imported_at: new Date().toISOString(),
+        recordCount: importedCount,
+        importedAt: new Date().toISOString(),
       });
     });
 
     return {
-      batch_id: batchId,
-      imported_count: importedCount,
-      skipped_count: skippedCount,
+      batchId: batchId,
+      importedCount: importedCount,
+      skippedCount: skippedCount,
     };
   }
 }

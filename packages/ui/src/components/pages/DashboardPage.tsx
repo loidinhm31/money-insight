@@ -4,7 +4,9 @@ import {
   Dashboard,
   FileUploadSection,
 } from "@money-insight/ui/components/templates";
-import { databaseService, parseCSVForImport } from "@money-insight/ui/lib";
+import { parseCSVForImport } from "@money-insight/ui/lib";
+import * as categoryService from "@money-insight/ui/services/categoryService";
+import * as accountService from "@money-insight/ui/services/accountService";
 import type { NewTransaction } from "@money-insight/ui/types";
 
 /**
@@ -68,8 +70,8 @@ export function DashboardPage() {
   );
 
   // Get categories and accounts for form
-  const getCategories = useCallback(() => databaseService.getCategories(), []);
-  const getAccounts = useCallback(() => databaseService.getAccounts(), []);
+  const getCategories = useCallback(() => categoryService.getCategories(), []);
+  const getAccounts = useCallback(() => accountService.getAccounts(), []);
 
   // Convert filter to expected format for Dashboard
   const dashboardFilter = useMemo(

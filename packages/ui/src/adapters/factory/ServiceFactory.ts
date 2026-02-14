@@ -1,4 +1,4 @@
-import { isTauri, serviceLogger } from "@money-insight/ui/utils";
+import { serviceLogger } from "@money-insight/ui/utils";
 
 // Interfaces
 import type {
@@ -6,31 +6,9 @@ import type {
   ICategoryService,
   IAccountService,
   IStatisticsService,
+  ISyncService,
+  IAuthService,
 } from "./interfaces";
-
-// Tauri Adapters
-import {
-  TauriTransactionAdapter,
-  TauriCategoryAdapter,
-  TauriAccountAdapter,
-  TauriStatisticsAdapter,
-  TauriAuthAdapter,
-  TauriSyncAdapter,
-} from "@money-insight/ui/adapters/tauri";
-
-// IndexedDB Adapters (standalone web mode)
-import {
-  IndexedDBTransactionAdapter,
-  IndexedDBCategoryAdapter,
-  IndexedDBAccountAdapter,
-  IndexedDBStatisticsAdapter,
-} from "@money-insight/ui/adapters/web";
-
-// Shared adapters
-import { QmServerAuthAdapter } from "@money-insight/ui/adapters/shared";
-import { createIndexedDBSyncAdapter } from "@money-insight/ui/adapters/web";
-import { env } from "@money-insight/shared/utils";
-import type { ISyncService, IAuthService } from "./interfaces";
 
 // Singleton instances (lazy initialized or injected via setters)
 let transactionService: ITransactionService | null = null;
@@ -71,55 +49,10 @@ export const setSyncService = (svc: ISyncService): void => {
   serviceLogger.factory("Set custom SyncService");
 };
 
-/**
- * Auto-detect platform and create appropriate adapter.
- * Priority: Tauri > HTTP (desktop browser mode) > IndexedDB (standalone web)
- */
-function autoCreateTransactionService(): ITransactionService {
-  if (isTauri()) return new TauriTransactionAdapter();
-  // Default to IndexedDB for standalone web
-  return new IndexedDBTransactionAdapter();
-}
-
-function autoCreateCategoryService(): ICategoryService {
-  if (isTauri()) return new TauriCategoryAdapter();
-  return new IndexedDBCategoryAdapter();
-}
-
-function autoCreateAccountService(): IAccountService {
-  if (isTauri()) return new TauriAccountAdapter();
-  return new IndexedDBAccountAdapter();
-}
-
-function autoCreateStatisticsService(): IStatisticsService {
-  if (isTauri()) return new TauriStatisticsAdapter();
-  return new IndexedDBStatisticsAdapter();
-}
-
-function autoCreateAuthService(): IAuthService {
-  if (isTauri()) return new TauriAuthAdapter();
-  return new QmServerAuthAdapter();
-}
-
-function autoCreateSyncService(): ISyncService {
-  if (isTauri()) return new TauriSyncAdapter();
-  const auth = getAuthService();
-  return createIndexedDBSyncAdapter({
-    serverUrl: env.serverUrl,
-    appId: env.appId,
-    apiKey: env.apiKey,
-    getTokens: () => auth.getTokens(),
-    saveTokens: auth.saveTokensExternal
-      ? (a: string, r: string, u: string) => auth.saveTokensExternal!(a, r, u)
-      : undefined,
-  });
-}
-
 export const getTransactionService = (): ITransactionService => {
   if (!transactionService) {
-    transactionService = autoCreateTransactionService();
-    serviceLogger.factory(
-      `Created TransactionService for ${isTauri() ? "Tauri" : "IndexedDB"}`,
+    throw new Error(
+      "TransactionService not initialized. Call setTransactionService() first.",
     );
   }
   return transactionService;
@@ -127,9 +60,8 @@ export const getTransactionService = (): ITransactionService => {
 
 export const getCategoryService = (): ICategoryService => {
   if (!categoryService) {
-    categoryService = autoCreateCategoryService();
-    serviceLogger.factory(
-      `Created CategoryService for ${isTauri() ? "Tauri" : "IndexedDB"}`,
+    throw new Error(
+      "CategoryService not initialized. Call setCategoryService() first.",
     );
   }
   return categoryService;
@@ -137,9 +69,8 @@ export const getCategoryService = (): ICategoryService => {
 
 export const getAccountService = (): IAccountService => {
   if (!accountService) {
-    accountService = autoCreateAccountService();
-    serviceLogger.factory(
-      `Created AccountService for ${isTauri() ? "Tauri" : "IndexedDB"}`,
+    throw new Error(
+      "AccountService not initialized. Call setAccountService() first.",
     );
   }
   return accountService;
@@ -147,9 +78,8 @@ export const getAccountService = (): IAccountService => {
 
 export const getStatisticsService = (): IStatisticsService => {
   if (!statisticsService) {
-    statisticsService = autoCreateStatisticsService();
-    serviceLogger.factory(
-      `Created StatisticsService for ${isTauri() ? "Tauri" : "IndexedDB"}`,
+    throw new Error(
+      "StatisticsService not initialized. Call setStatisticsService() first.",
     );
   }
   return statisticsService;
@@ -157,9 +87,8 @@ export const getStatisticsService = (): IStatisticsService => {
 
 export const getAuthService = (): IAuthService => {
   if (!authService) {
-    authService = autoCreateAuthService();
-    serviceLogger.factory(
-      `Created AuthService for ${isTauri() ? "Tauri" : "QmSyncServer"}`,
+    throw new Error(
+      "AuthService not initialized. Call setAuthService() first.",
     );
   }
   return authService;
@@ -167,9 +96,8 @@ export const getAuthService = (): IAuthService => {
 
 export const getSyncService = (): ISyncService => {
   if (!syncService) {
-    syncService = autoCreateSyncService();
-    serviceLogger.factory(
-      `Created SyncService for ${isTauri() ? "Tauri" : "IndexedDB"}`,
+    throw new Error(
+      "SyncService not initialized. Call setSyncService() first.",
     );
   }
   return syncService;

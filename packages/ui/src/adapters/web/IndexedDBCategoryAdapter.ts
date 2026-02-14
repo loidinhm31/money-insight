@@ -20,7 +20,7 @@ export class IndexedDBCategoryAdapter implements ICategoryService {
     const storedCategories = await db.categories.toArray();
     for (const cat of storedCategories) {
       if (!categoryMap.has(cat.name)) {
-        categoryMap.set(cat.name, { isExpense: cat.is_expense });
+        categoryMap.set(cat.name, { isExpense: cat.isExpense });
       }
     }
 
@@ -32,9 +32,9 @@ export class IndexedDBCategoryAdapter implements ICategoryService {
         name,
         icon: stored?.icon,
         color: stored?.color,
-        is_expense: info.isExpense,
-        sync_version: stored?.sync_version ?? 0,
-        synced_at: stored?.synced_at ?? null,
+        isExpense: info.isExpense,
+        syncVersion: stored?.syncVersion ?? 0,
+        syncedAt: stored?.syncedAt ?? null,
       };
     });
   }

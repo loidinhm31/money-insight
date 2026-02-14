@@ -230,7 +230,7 @@ function calculateTopSpending(
   // Filter transactions within the date range (expenses only, excluding report-excluded transactions)
   const filtered = transactions.filter((t) => {
     if (t.expense <= 0) return false;
-    if (t.exclude_report) return false;
+    if (t.excludeReport) return false;
     const txDate = new Date(t.date);
     return isWithinInterval(txDate, { start: startDate, end: endDate });
   });

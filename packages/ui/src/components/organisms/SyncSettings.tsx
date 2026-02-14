@@ -21,12 +21,15 @@ import {
   Input,
   Label,
 } from "@money-insight/ui/components/atoms";
-import { getAuthService, getSyncService } from "@money-insight/ui/adapters";
+import * as authService from "@money-insight/ui/services/authService";
+import * as syncService from "@money-insight/ui/services/syncService";
 import type {
   AuthStatus,
+  SyncProgress,
   SyncResult,
   SyncStatus,
 } from "@money-insight/shared/types";
+import { isTauri } from "@money-insight/ui/utils";
 
 interface SyncSettingsProps {
   onLogout?: () => void;
@@ -37,6 +40,7 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
   const [serverUrl, setServerUrl] = useState("http://localhost:3000");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
@@ -49,8 +53,8 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
     setIsLoadingStatus(true);
     try {
       const [auth, sync] = await Promise.all([
-        getAuthService().getStatus(),
-        getSyncService().getStatus(),
+        authService.getStatus(),
+        syncService.getStatus(),
       ]);
       setAuthStatus(auth);
       setSyncStatus(sync);
@@ -67,7 +71,7 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
 
   const handleConfigureSync = async () => {
     try {
-      await getAuthService().configureSync({
+      await authService.configureSync({
         serverUrl,
         appId: "money-insight",
         apiKey: "",
@@ -88,15 +92,22 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
     setIsSyncing(true);
     setError(null);
     setSyncResult(null);
+    setSyncProgress(null);
 
     try {
-      const result = await getSyncService().syncNow();
+      const result = await syncService.syncWithProgress(
+        (progress: SyncProgress) => {
+          setSyncProgress(progress);
+        },
+      );
       setSyncResult(result);
+
       await loadStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sync failed");
     } finally {
       setIsSyncing(false);
+      setSyncProgress(null);
     }
   };
 
@@ -150,6 +161,35 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
                   </span>
                 )}
               </div>
+
+              {/* Sync Progress */}
+              {isSyncing && syncProgress && (
+                <div className="mt-3 p-3 rounded-lg bg-[#635BFF]/5 border border-[#635BFF]/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <RefreshCw className="w-4 h-4 animate-spin text-[#635BFF]" />
+                    <span className="text-sm font-medium text-[#374151]">
+                      {syncProgress.phase === "pushing" ? "Pushing" : "Pulling"}{" "}
+                      records...
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-xs text-[#6B7280]">
+                    <div className="flex items-center gap-1">
+                      <ArrowUpCircle className="w-3 h-3 text-[#635BFF]" />
+                      <span>Pushed: {syncProgress.recordsPushed}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <ArrowDownCircle className="w-3 h-3 text-[#635BFF]" />
+                      <span>Pulled: {syncProgress.recordsPulled}</span>
+                    </div>
+                  </div>
+                  {syncProgress.phase === "pulling" && (
+                    <div className="mt-2 text-xs text-[#9CA3AF]">
+                      Page {syncProgress.currentPage}
+                      {syncProgress.hasMore && " — more records available"}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Pending Changes Badge */}
@@ -284,38 +324,40 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
         </Card>
       )}
 
-      {/* Server Configuration */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Server Configuration</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div>
-            <Label htmlFor="server-url" className="mb-2 block">
-              <div className="flex items-center gap-2">
-                <Server className="w-4 h-4 text-[#635BFF]" />
-                Server URL
-              </div>
-            </Label>
-            <Input
-              id="server-url"
-              type="text"
-              placeholder="http://localhost:3000"
-              value={serverUrl}
-              onChange={(e) => setServerUrl(e.target.value)}
-              disabled={isLoadingStatus}
-            />
-          </div>
-          <Button
-            variant="secondary"
-            className="w-full mt-3"
-            onClick={handleConfigureSync}
-            disabled={isLoadingStatus || !serverUrl}
-          >
-            Save Configuration
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Server Configuration - Only shown in Tauri (native) mode */}
+      {isTauri() && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Server Configuration</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <Label htmlFor="server-url" className="mb-2 block">
+                <div className="flex items-center gap-2">
+                  <Server className="w-4 h-4 text-[#635BFF]" />
+                  Server URL
+                </div>
+              </Label>
+              <Input
+                id="server-url"
+                type="text"
+                placeholder="http://localhost:3000"
+                value={serverUrl}
+                onChange={(e) => setServerUrl(e.target.value)}
+                disabled={isLoadingStatus}
+              />
+            </div>
+            <Button
+              variant="secondary"
+              className="w-full mt-3"
+              onClick={handleConfigureSync}
+              disabled={isLoadingStatus || !serverUrl}
+            >
+              Save Configuration
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

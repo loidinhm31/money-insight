@@ -3,7 +3,10 @@ import type {
   AuthStatus,
   SyncConfig,
 } from "@money-insight/shared/types";
-import type { IAuthService } from "@money-insight/ui/adapters/factory/interfaces";
+import type {
+  IAuthService,
+  RequiredSyncConfig,
+} from "@money-insight/ui/adapters/factory/interfaces";
 import { invoke } from "@tauri-apps/api/core";
 
 export class TauriAuthAdapter implements IAuthService {
@@ -73,5 +76,14 @@ export class TauriAuthAdapter implements IAuthService {
     } catch {
       return {};
     }
+  }
+
+  getSyncConfig(): RequiredSyncConfig {
+    // For Tauri, the sync config is managed by the Rust backend
+    // This method provides compatibility with the IAuthService interface
+    // The actual config is retrieved from Tauri when needed via auth_get_status
+    throw new Error(
+      "getSyncConfig not supported in TauriAuthAdapter - sync config is managed by Rust backend",
+    );
   }
 }

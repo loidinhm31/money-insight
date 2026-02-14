@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import type { AuthStatus } from "@money-insight/shared/types";
-import { getAuthService } from "@money-insight/ui/adapters";
+import * as authService from "@money-insight/ui/services/authService";
 
 export interface UseAuthOptions {
   skipInitialCheck?: boolean;
@@ -23,7 +23,7 @@ export const useAuth = (options: UseAuthOptions = {}) => {
     isCheckingRef.current = true;
     setIsLoading(true);
     try {
-      const status = await getAuthService().getStatus();
+      const status = await authService.getStatus();
       setAuthStatus(status);
       setError(null);
     } catch (err) {
@@ -39,7 +39,7 @@ export const useAuth = (options: UseAuthOptions = {}) => {
 
   const logout = useCallback(async () => {
     try {
-      await getAuthService().logout();
+      await authService.logout();
       setAuthStatus({ isAuthenticated: false });
       setError(null);
     } catch (err) {
@@ -49,7 +49,7 @@ export const useAuth = (options: UseAuthOptions = {}) => {
 
   const refreshToken = useCallback(async () => {
     try {
-      await getAuthService().refreshToken();
+      await authService.refreshToken();
       await checkAuthStatus();
       setError(null);
     } catch (err) {

@@ -4,6 +4,9 @@ import type {
   SyncConfig,
 } from "@money-insight/shared/types";
 
+/** Sync config with all required fields (used when reading current config) */
+export type RequiredSyncConfig = Required<SyncConfig>;
+
 /**
  * Auth service interface for user authentication
  */
@@ -30,4 +33,5 @@ export interface IAuthService {
     refreshToken: string,
     userId: string,
   ): Promise<void>;
+  getSyncConfig(): RequiredSyncConfig;
 }
