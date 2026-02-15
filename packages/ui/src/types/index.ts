@@ -11,6 +11,7 @@ export type {
   TransactionFilter,
   Statistics,
   ImportResult,
+  AdjustmentNote,
 } from "@money-insight/shared/types";
 
 // UI-specific types

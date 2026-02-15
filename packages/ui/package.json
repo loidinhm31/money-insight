@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
   "exports": {
     "./components/atoms": "./src/components/atoms/index.ts",
     "./components/molecules": "./src/components/molecules/index.ts",
@@ -25,6 +29,7 @@
     "./services/categoryService": "./src/services/categoryService.ts",
     "./services/accountService": "./src/services/accountService.ts",
     "./services/statisticsService": "./src/services/statisticsService.ts",
+    "./services/balanceAdjustmentService": "./src/services/balanceAdjustmentService.ts",
     "./stores": "./src/stores/spendingStore.ts",
     "./utils": "./src/utils/index.ts",
     "./types": "./src/types/index.ts",
@@ -62,6 +67,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "tailwindcss": "^4.0.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.0"
   }
 }

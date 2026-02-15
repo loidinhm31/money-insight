@@ -70,3 +70,7 @@ export {
   type GroupedTransactionListProps,
 } from "./GroupedTransactionList";
 export { ReportsSection, type ReportsSectionProps } from "./ReportsSection";
+export {
+  AdjustBalanceDialog,
+  type AdjustBalanceDialogProps,
+} from "./AdjustBalanceDialog";

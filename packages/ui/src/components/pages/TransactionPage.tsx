@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import {
@@ -18,6 +18,7 @@ import {
   EditTransactionDialog,
   AccountList,
   EditAccountDialog,
+  AdjustBalanceDialog,
 } from "@money-insight/ui/components/organisms";
 import type { TimePeriodMode } from "@money-insight/ui/lib";
 import type { Transaction, Account } from "@money-insight/ui/types";
@@ -35,6 +36,7 @@ export function TransactionPage() {
     addAccount,
     updateAccount,
     deleteAccount,
+    adjustBalance,
   } = useSpendingStore();
 
   const [activeTab, setActiveTab] = useState("transactions");
@@ -42,8 +44,26 @@ export function TransactionPage() {
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+  const [adjustingAccount, setAdjustingAccount] = useState<Account | null>(
+    null,
+  );
 
   const getCategories = useCallback(() => categoryService.getCategories(), []);
+
+  // Calculate current balance for each account
+  const accountBalances = useMemo(() => {
+    const balances = new Map<string, number>();
+    for (const account of accounts) {
+      let balance = account.initialBalance;
+      for (const tx of transactions) {
+        if (tx.account === account.name) {
+          balance += tx.income - tx.expense;
+        }
+      }
+      balances.set(account.name, balance);
+    }
+    return balances;
+  }, [accounts, transactions]);
 
   const handleTransactionClick = useCallback((transaction: Transaction) => {
     setEditingTransaction(transaction);
@@ -79,6 +99,17 @@ export function TransactionPage() {
       await deleteAccount(id);
     },
     [deleteAccount],
+  );
+
+  const handleAdjustBalance = useCallback((account: Account) => {
+    setAdjustingAccount(account);
+  }, []);
+
+  const handleAdjustBalanceSubmit = useCallback(
+    async (accountName: string, targetBalance: number, date: string) => {
+      return adjustBalance(accountName, targetBalance, date);
+    },
+    [adjustBalance],
   );
 
   return (
@@ -154,12 +185,19 @@ export function TransactionPage() {
           {/* Accounts Tab Content */}
           <TabsContent value="accounts" className="mt-0">
             <div className="p-4 space-y-4">
-              {accounts.length > 0 && <AccountStats accounts={accounts} />}
+              {accounts.length > 0 && (
+                <AccountStats
+                  accounts={accounts}
+                  accountBalances={accountBalances}
+                />
+              )}
               <AccountList
                 accounts={accounts}
+                accountBalances={accountBalances}
                 onAccountClick={handleAccountClick}
                 onAccountDelete={handleAccountDelete}
                 onAccountAdd={addAccount}
+                onAdjustBalance={handleAdjustBalance}
               />
             </div>
           </TabsContent>
@@ -185,6 +223,19 @@ export function TransactionPage() {
         onOpenChange={(open) => !open && setEditingAccount(null)}
         onSubmit={handleAccountSubmit}
         onDelete={handleAccountDelete}
+      />
+
+      {/* Adjust Balance Dialog */}
+      <AdjustBalanceDialog
+        account={adjustingAccount}
+        currentBalance={
+          adjustingAccount
+            ? (accountBalances.get(adjustingAccount.name) ?? 0)
+            : 0
+        }
+        open={!!adjustingAccount}
+        onOpenChange={(open) => !open && setAdjustingAccount(null)}
+        onSubmit={handleAdjustBalanceSubmit}
       />
     </div>
   );

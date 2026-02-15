@@ -4,14 +4,18 @@ import type { Account } from "@money-insight/ui/types";
 
 export interface AccountStatsProps {
   accounts: Account[];
+  accountBalances?: Map<string, number>; // Optional map of account name to calculated balance
 }
 
-export function AccountStats({ accounts }: AccountStatsProps) {
+export function AccountStats({ accounts, accountBalances }: AccountStatsProps) {
   const totalAccounts = accounts.length;
-  const totalBalance = accounts.reduce(
-    (sum, acc) => sum + acc.initialBalance,
-    0,
-  );
+
+  // Calculate total balance using calculated balances if available, otherwise use initialBalance
+  const totalBalance = accounts.reduce((sum, acc) => {
+    const balance = accountBalances?.get(acc.name) ?? acc.initialBalance;
+    return sum + balance;
+  }, 0);
+
   const currencies = [...new Set(accounts.map((a) => a.currency))];
 
   return (

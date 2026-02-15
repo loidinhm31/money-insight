@@ -15,6 +15,7 @@ import type {
 import { matchesSearch, MoneyInsightAnalyzer } from "@money-insight/ui/lib";
 import * as transactionService from "@money-insight/ui/services/transactionService";
 import * as accountService from "@money-insight/ui/services/accountService";
+import * as balanceAdjustmentService from "@money-insight/ui/services/balanceAdjustmentService";
 
 // Convert Transaction (from DB) to ProcessedTransaction (for analysis)
 function toProcessedTransaction(tx: Transaction): ProcessedTransaction {
@@ -110,6 +111,14 @@ interface SpendingStore {
   addAccount: (account: NewAccount) => Promise<Account>;
   updateAccount: (account: Account) => Promise<Account>;
   deleteAccount: (id: string) => Promise<void>;
+
+  // Balance adjustment actions
+  adjustBalance: (
+    accountName: string,
+    targetBalance: number,
+    date: string,
+  ) => Promise<Transaction>;
+  recalculateAdjustmentsForAccount: (accountName: string) => Promise<void>;
 }
 
 const initialFilter: FilterState = {
@@ -184,7 +193,22 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
 
     try {
       const transaction = await transactionService.addTransaction(tx);
-      const transactions = [...get().transactions, transaction];
+      let transactions = [...get().transactions, transaction];
+
+      // Recalculate adjustments for the affected account
+      const account = get().accounts.find((a) => a.name === tx.account);
+      if (account) {
+        const updatedAdjs = balanceAdjustmentService.recalculateAdjustments(
+          transactions,
+          account,
+        );
+        // Update adjustment transactions in DB and local state
+        for (const adj of updatedAdjs) {
+          await transactionService.updateTransaction(adj);
+          transactions = transactions.map((t) => (t.id === adj.id ? adj : t));
+        }
+      }
+
       const processedTransactions = transactions.map(toProcessedTransaction);
       // Filter out transactions with excludeReport=true for analysis
       const reportableTransactions = processedTransactions.filter(
@@ -217,9 +241,26 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
 
     try {
       const updated = await transactionService.updateTransaction(tx);
-      const transactions = get().transactions.map((t) =>
+      let transactions = get().transactions.map((t) =>
         t.id === updated.id ? updated : t,
       );
+
+      // Recalculate adjustments for the affected account
+      // Skip if this is an adjustment being updated (to avoid infinite loop)
+      if (!balanceAdjustmentService.isAdjustmentTransaction(updated)) {
+        const account = get().accounts.find((a) => a.name === tx.account);
+        if (account) {
+          const updatedAdjs = balanceAdjustmentService.recalculateAdjustments(
+            transactions,
+            account,
+          );
+          for (const adj of updatedAdjs) {
+            await transactionService.updateTransaction(adj);
+            transactions = transactions.map((t) => (t.id === adj.id ? adj : t));
+          }
+        }
+      }
+
       const processedTransactions = transactions.map(toProcessedTransaction);
       // Filter out transactions with excludeReport=true for analysis
       const reportableTransactions = processedTransactions.filter(
@@ -253,8 +294,31 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     set({ isLoading: true });
 
     try {
+      // Get the transaction before deleting to know which account to recalculate
+      const deletedTx = get().transactions.find((t) => t.id === id);
       await transactionService.deleteTransaction(id);
-      const transactions = get().transactions.filter((t) => t.id !== id);
+      let transactions = get().transactions.filter((t) => t.id !== id);
+
+      // Recalculate adjustments for the affected account
+      if (
+        deletedTx &&
+        !balanceAdjustmentService.isAdjustmentTransaction(deletedTx)
+      ) {
+        const account = get().accounts.find(
+          (a) => a.name === deletedTx.account,
+        );
+        if (account) {
+          const updatedAdjs = balanceAdjustmentService.recalculateAdjustments(
+            transactions,
+            account,
+          );
+          for (const adj of updatedAdjs) {
+            await transactionService.updateTransaction(adj);
+            transactions = transactions.map((t) => (t.id === adj.id ? adj : t));
+          }
+        }
+      }
+
       const processedTransactions = transactions.map(toProcessedTransaction);
       // Filter out transactions with excludeReport=true for analysis
       const reportableTransactions = processedTransactions.filter(
@@ -531,6 +595,115 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
         isLoading: false,
         error:
           error instanceof Error ? error.message : "Failed to delete account",
+      });
+      throw error;
+    }
+  },
+
+  // Adjust balance for an account
+  adjustBalance: async (accountName, targetBalance, date) => {
+    set({ isLoading: true });
+
+    try {
+      const { transactions, accounts } = get();
+      const account = accounts.find((a) => a.name === accountName);
+      if (!account) {
+        throw new Error(`Account "${accountName}" not found`);
+      }
+
+      // Calculate current balance at the adjustment date
+      const currentBalance = balanceAdjustmentService.getBalanceAtDate(
+        transactions,
+        account,
+        date,
+      );
+
+      // Create adjustment transaction
+      const adjustmentData = balanceAdjustmentService.createAdjustment(
+        accountName,
+        targetBalance,
+        date,
+        account.currency,
+        currentBalance,
+      );
+
+      // Add the adjustment transaction
+      const transaction =
+        await transactionService.addTransaction(adjustmentData);
+      const newTransactions = [...transactions, transaction];
+      const processedTransactions = newTransactions.map(toProcessedTransaction);
+      const reportableTransactions = processedTransactions.filter(
+        (t) => !t.excludeReport,
+      );
+      const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
+
+      set({
+        transactions: newTransactions,
+        processedTransactions,
+        analyzer,
+        isLoading: false,
+      });
+
+      get().refreshAnalysis();
+      return transaction;
+    } catch (error) {
+      set({
+        isLoading: false,
+        error:
+          error instanceof Error ? error.message : "Failed to adjust balance",
+      });
+      throw error;
+    }
+  },
+
+  // Recalculate adjustments for a specific account
+  recalculateAdjustmentsForAccount: async (accountName) => {
+    const { transactions, accounts } = get();
+    const account = accounts.find((a) => a.name === accountName);
+    if (!account) return;
+
+    const updatedAdjs = balanceAdjustmentService.recalculateAdjustments(
+      transactions,
+      account,
+    );
+
+    if (updatedAdjs.length === 0) return;
+
+    set({ isLoading: true });
+
+    try {
+      let updatedTransactions = [...transactions];
+
+      for (const adj of updatedAdjs) {
+        await transactionService.updateTransaction(adj);
+        updatedTransactions = updatedTransactions.map((t) =>
+          t.id === adj.id ? adj : t,
+        );
+      }
+
+      const processedTransactions = updatedTransactions.map(
+        toProcessedTransaction,
+      );
+      const reportableTransactions = processedTransactions.filter(
+        (t) => !t.excludeReport,
+      );
+      const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
+
+      set({
+        transactions: updatedTransactions,
+        processedTransactions,
+        analyzer,
+        isLoading: false,
+      });
+
+      get().refreshAnalysis();
+    } catch (error) {
+      set({
+        isLoading: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to recalculate adjustments",
       });
       throw error;
     }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Scale } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -121,7 +121,19 @@ export function GroupedTransactionList({
               <div className="space-y-2">
                 {group.transactions.map((transaction) => {
                   const isExpense = transaction.expense > 0;
+                  const isAdjustment =
+                    transaction.source === "balance_adjustment";
                   const transactionDate = new Date(transaction.date);
+
+                  // Determine display values based on transaction type
+                  const displayCategory = isAdjustment
+                    ? "Balance Adjustment"
+                    : transaction.category;
+                  const amountColor = isAdjustment
+                    ? "#2563EB"
+                    : isExpense
+                      ? "#DC2626"
+                      : "#059669";
 
                   return (
                     <div
@@ -129,25 +141,29 @@ export function GroupedTransactionList({
                       className={cn(
                         "flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors",
                         onTransactionClick && "cursor-pointer",
+                        isAdjustment && "border-blue-200 bg-blue-50/50",
                       )}
                       onClick={() => onTransactionClick?.(transaction)}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
+                          {isAdjustment && (
+                            <Scale className="h-4 w-4 text-blue-600" />
+                          )}
                           <span
                             className="text-sm font-medium"
                             style={{ color: "#374151" }}
                           >
                             {format(transactionDate, "MMM dd")}
                           </span>
-                          <Badge variant="outline">
-                            {transaction.category}
+                          <Badge variant={isAdjustment ? "default" : "outline"}>
+                            {displayCategory}
                           </Badge>
                           <Badge variant="secondary">
                             {transaction.account}
                           </Badge>
                         </div>
-                        {transaction.note && (
+                        {transaction.note && !isAdjustment && (
                           <p
                             className="text-sm truncate mt-1"
                             style={{ color: "#6B7280" }}
@@ -155,11 +171,19 @@ export function GroupedTransactionList({
                             {transaction.note}
                           </p>
                         )}
+                        {isAdjustment && (
+                          <p
+                            className="text-sm mt-1"
+                            style={{ color: "#2563EB" }}
+                          >
+                            Auto-adjusting entry
+                          </p>
+                        )}
                       </div>
                       <div className="text-right ml-2">
                         <p
                           className="font-semibold"
-                          style={{ color: isExpense ? "#DC2626" : "#059669" }}
+                          style={{ color: amountColor }}
                         >
                           {valuesHidden
                             ? maskValue(
@@ -171,7 +195,9 @@ export function GroupedTransactionList({
                               )
                             : isExpense
                               ? `-${formatCurrency(transaction.expense)}`
-                              : `+${formatCurrency(transaction.income)}`}
+                              : transaction.income > 0
+                                ? `+${formatCurrency(transaction.income)}`
+                                : formatCurrency(0)}
                         </p>
                       </div>
                     </div>

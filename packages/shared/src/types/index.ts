@@ -84,7 +84,15 @@ export interface FilterState {
 }
 
 // Transaction source type
-export type TransactionSource = "csv_import" | "manual";
+export type TransactionSource = "csv_import" | "manual" | "balance_adjustment";
+
+// Special category for balance adjustments
+export const BALANCE_ADJUSTMENT_CATEGORY = "__balance_adjustment__";
+
+// Parsed adjustment note structure
+export interface AdjustmentNote {
+  targetBalance: number;
+}
 
 // New transaction for creation (matches Rust NewTransaction)
 export interface NewTransaction {

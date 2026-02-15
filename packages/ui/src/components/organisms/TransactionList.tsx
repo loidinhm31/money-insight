@@ -46,6 +46,7 @@ export function TransactionList({
             note={transaction.note}
             expense={transaction.expense}
             income={transaction.income}
+            source={transaction.source}
             onClick={() => onTransactionClick?.(transaction)}
           />
         ))}

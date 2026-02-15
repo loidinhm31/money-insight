@@ -4,16 +4,20 @@ import type { Account, NewAccount } from "@money-insight/ui/types";
 
 export interface AccountListProps {
   accounts: Account[];
+  accountBalances?: Map<string, number>; // Map of account name to calculated balance
   onAccountClick?: (account: Account) => void;
   onAccountDelete?: (id: string) => void;
   onAccountAdd: (account: NewAccount) => Promise<Account | void>;
+  onAdjustBalance?: (account: Account) => void;
 }
 
 export function AccountList({
   accounts,
+  accountBalances,
   onAccountClick,
   onAccountDelete,
   onAccountAdd,
+  onAdjustBalance,
 }: AccountListProps) {
   // Sort accounts alphabetically by name
   const sortedAccounts = [...accounts].sort((a, b) =>
@@ -37,8 +41,12 @@ export function AccountList({
             <AccountItem
               key={account.id}
               {...account}
+              balance={accountBalances?.get(account.name)}
               onClick={() => onAccountClick?.(account)}
               onDelete={onAccountDelete}
+              onAdjustBalance={
+                onAdjustBalance ? () => onAdjustBalance(account) : undefined
+              }
             />
           ))}
         </div>

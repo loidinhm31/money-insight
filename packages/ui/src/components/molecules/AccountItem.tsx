@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Scale } from "lucide-react";
 import { Badge, Button } from "@money-insight/ui/components/atoms";
 import { cn } from "@money-insight/ui/lib";
 
@@ -9,9 +9,11 @@ export interface AccountItemProps {
   accountType?: string;
   icon?: string;
   initialBalance: number;
+  balance?: number; // Calculated balance including transactions
   currency: string;
   onClick?: () => void;
   onDelete?: (id: string) => void;
+  onAdjustBalance?: (id: string) => void;
 }
 
 function formatCurrencyWithCode(amount: number, currency: string): string {
@@ -53,11 +55,16 @@ export function AccountItem({
   accountType,
   icon,
   initialBalance,
+  balance,
   currency,
   onClick,
   onDelete,
+  onAdjustBalance,
 }: AccountItemProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // Use calculated balance if available, otherwise use initialBalance
+  const displayBalance = balance !== undefined ? balance : initialBalance;
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -69,6 +76,11 @@ export function AccountItem({
       // Reset confirmation after 3 seconds
       setTimeout(() => setConfirmDelete(false), 3000);
     }
+  };
+
+  const handleAdjust = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAdjustBalance?.(id);
   };
 
   return (
@@ -88,13 +100,23 @@ export function AccountItem({
           <p
             className={cn(
               "font-semibold",
-              initialBalance >= 0 ? "text-green-600" : "text-red-600",
+              displayBalance >= 0 ? "text-green-600" : "text-red-600",
             )}
           >
-            {formatCurrencyWithCode(initialBalance, currency)}
+            {formatCurrencyWithCode(displayBalance, currency)}
           </p>
           <p className="text-xs text-muted-foreground">{currency}</p>
         </div>
+        {onAdjustBalance && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleAdjust}
+            title="Adjust balance"
+          >
+            <Scale className="h-4 w-4" />
+          </Button>
+        )}
         {onDelete && (
           <Button
             variant={confirmDelete ? "destructive" : "ghost"}
