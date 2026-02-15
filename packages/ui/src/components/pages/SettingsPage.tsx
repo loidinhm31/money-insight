@@ -38,10 +38,7 @@ interface SettingsPageProps {
 /**
  * Settings page with browser mode and app info
  */
-export function SettingsPage({
-  onBack,
-  onLogout,
-}: SettingsPageProps) {
+export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
   const [isOpeningBrowser, setIsOpeningBrowser] = useState(false);
   const [browserUrl, setBrowserUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

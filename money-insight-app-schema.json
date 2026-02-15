@@ -35,7 +35,11 @@
       "columns": [
         { "name": "name", "type": "string", "nullable": false },
         { "name": "accountType", "type": "string", "nullable": true },
-        { "name": "icon", "type": "string", "nullable": true }
+        { "name": "icon", "type": "string", "nullable": true },
+        { "name": "initialBalance", "type": "number", "nullable": false },
+        { "name": "currency", "type": "string", "nullable": false },
+        { "name": "createdAt", "type": "string", "nullable": false },
+        { "name": "updatedAt", "type": "string", "nullable": false }
       ],
       "primaryKey": "rowId"
     }

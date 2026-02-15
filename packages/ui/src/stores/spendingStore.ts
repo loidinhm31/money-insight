@@ -2,6 +2,8 @@ import { create } from "zustand";
 import type {
   Transaction,
   NewTransaction,
+  Account,
+  NewAccount,
   FilterState,
   CategorySpending,
   MonthlyAnalysis,
@@ -12,6 +14,7 @@ import type {
 } from "@money-insight/ui/types";
 import { matchesSearch, MoneyInsightAnalyzer } from "@money-insight/ui/lib";
 import * as transactionService from "@money-insight/ui/services/transactionService";
+import * as accountService from "@money-insight/ui/services/accountService";
 
 // Convert Transaction (from DB) to ProcessedTransaction (for analysis)
 function toProcessedTransaction(tx: Transaction): ProcessedTransaction {
@@ -57,6 +60,7 @@ interface SpendingStore {
   // Data
   transactions: Transaction[];
   processedTransactions: ProcessedTransaction[];
+  accounts: Account[];
   analyzer: MoneyInsightAnalyzer | null;
 
   // Filter state
@@ -101,6 +105,11 @@ interface SpendingStore {
   refreshAnalysis: () => void;
   reset: () => void;
   toggleValuesHidden: () => void;
+
+  // Account actions
+  addAccount: (account: NewAccount) => Promise<Account>;
+  updateAccount: (account: Account) => Promise<Account>;
+  deleteAccount: (id: string) => Promise<void>;
 }
 
 const initialFilter: FilterState = {
@@ -114,6 +123,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
   // Initial state
   transactions: [],
   processedTransactions: [],
+  accounts: [],
   analyzer: null,
   filter: initialFilter,
   statistics: null,
@@ -137,7 +147,10 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const transactions = await transactionService.getTransactions();
+      const [transactions, accounts] = await Promise.all([
+        transactionService.getTransactions(),
+        accountService.getAccounts(),
+      ]);
       const processedTransactions = transactions.map(toProcessedTransaction);
       // Filter out transactions with excludeReport=true for analysis
       const reportableTransactions = processedTransactions.filter(
@@ -148,6 +161,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
       set({
         transactions,
         processedTransactions,
+        accounts,
         analyzer,
         isLoading: false,
         isDbReady: true,
@@ -434,6 +448,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     set({
       transactions: [],
       processedTransactions: [],
+      accounts: [],
       analyzer: null,
       filter: initialFilter,
       statistics: null,
@@ -456,5 +471,68 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
   // Toggle values visibility
   toggleValuesHidden: () => {
     set((state) => ({ valuesHidden: !state.valuesHidden }));
+  },
+
+  // Add a new account
+  addAccount: async (account) => {
+    set({ isLoading: true });
+
+    try {
+      const newAccount = await accountService.addAccount(account);
+      set((state) => ({
+        accounts: [...state.accounts, newAccount],
+        isLoading: false,
+      }));
+      return newAccount;
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Failed to add account",
+      });
+      throw error;
+    }
+  },
+
+  // Update an existing account
+  updateAccount: async (account) => {
+    set({ isLoading: true });
+
+    try {
+      const updated = await accountService.updateAccount(account);
+      set((state) => ({
+        accounts: state.accounts.map((a) =>
+          a.id === updated.id ? updated : a,
+        ),
+        isLoading: false,
+      }));
+      return updated;
+    } catch (error) {
+      set({
+        isLoading: false,
+        error:
+          error instanceof Error ? error.message : "Failed to update account",
+      });
+      throw error;
+    }
+  },
+
+  // Delete an account
+  deleteAccount: async (id) => {
+    set({ isLoading: true });
+
+    try {
+      await accountService.deleteAccount(id);
+      set((state) => ({
+        accounts: state.accounts.filter((a) => a.id !== id),
+        isLoading: false,
+      }));
+    } catch (error) {
+      set({
+        isLoading: false,
+        error:
+          error instanceof Error ? error.message : "Failed to delete account",
+      });
+      throw error;
+    }
   },
 }));

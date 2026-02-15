@@ -4,6 +4,7 @@ import type {
   NewTransaction,
   TransactionFilter,
   ImportResult,
+  Account,
 } from "@money-insight/ui/types";
 import { db, generateId } from "./database";
 import { trackDelete } from "./indexedDbHelpers";
@@ -55,6 +56,11 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
     const date = tx.date;
     const parsedDate = new Date(date);
     const amount = tx.amount;
+
+    // Ensure account exists (for manual entry with new account names)
+    if (tx.account?.trim()) {
+      await this.ensureAccountsExist([tx]);
+    }
 
     const transaction: Transaction = {
       id: generateId(),
@@ -111,33 +117,124 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
     let importedCount = 0;
     let skippedCount = 0;
 
-    await db.transaction("rw", db.transactions, db.importBatches, async () => {
-      for (const tx of transactions) {
-        try {
-          const newTx: NewTransaction = {
-            ...tx,
-            source: "csv_import",
-            importBatchId: batchId,
-          };
-          await this.addTransaction(newTx);
-          importedCount++;
-        } catch {
-          skippedCount++;
-        }
-      }
+    await db.transaction(
+      "rw",
+      db.transactions,
+      db.importBatches,
+      db.accounts,
+      async () => {
+        // Auto-create missing accounts from imported transactions
+        await this.ensureAccountsExist(transactions);
 
-      await db.importBatches.add({
-        id: batchId,
-        filename,
-        recordCount: importedCount,
-        importedAt: new Date().toISOString(),
-      });
-    });
+        for (const tx of transactions) {
+          try {
+            const newTx: NewTransaction = {
+              ...tx,
+              source: "csv_import",
+              importBatchId: batchId,
+            };
+            await this.addTransaction(newTx);
+            importedCount++;
+          } catch {
+            skippedCount++;
+          }
+        }
+
+        await db.importBatches.add({
+          id: batchId,
+          filename,
+          recordCount: importedCount,
+          importedAt: new Date().toISOString(),
+        });
+      },
+    );
 
     return {
       batchId: batchId,
       importedCount: importedCount,
       skippedCount: skippedCount,
     };
+  }
+
+  /**
+   * Ensure all account names from transactions exist in the accounts table.
+   * Creates missing accounts automatically with default values.
+   */
+  private async ensureAccountsExist(
+    transactions: NewTransaction[],
+  ): Promise<void> {
+    // Extract unique account names from transactions
+    const accountNames = new Set<string>();
+    for (const tx of transactions) {
+      if (tx.account?.trim()) {
+        accountNames.add(tx.account.trim());
+      }
+    }
+
+    // Get existing accounts
+    const existingAccounts = await db.accounts.toArray();
+    const existingNames = new Set(existingAccounts.map((a) => a.name));
+
+    // Create missing accounts
+    const now = new Date().toISOString();
+    for (const accountName of accountNames) {
+      if (!existingNames.has(accountName)) {
+        // Determine account type and icon based on name
+        const { accountType, icon } = this.inferAccountType(accountName);
+
+        const newAccount: Account = {
+          id: generateId(),
+          name: accountName,
+          accountType,
+          icon,
+          initialBalance: 0, // Default to 0, user can update later
+          currency: "VND", // Default currency
+          createdAt: now,
+          updatedAt: now,
+          syncVersion: 1,
+          syncedAt: null,
+        };
+
+        await db.accounts.add(newAccount);
+      }
+    }
+  }
+
+  /**
+   * Infer account type and icon from account name
+   */
+  private inferAccountType(name: string): {
+    accountType: string;
+    icon: string;
+  } {
+    const lowerName = name.toLowerCase();
+
+    if (
+      lowerName.includes("credit") ||
+      lowerName.includes("card") ||
+      lowerName.includes("visa") ||
+      lowerName.includes("mastercard")
+    ) {
+      return { accountType: "Credit Card", icon: "💳" };
+    } else if (
+      lowerName.includes("bank") ||
+      lowerName.includes("checking") ||
+      lowerName.includes("savings")
+    ) {
+      return { accountType: "Bank Account", icon: "🏦" };
+    } else if (
+      lowerName.includes("invest") ||
+      lowerName.includes("stock") ||
+      lowerName.includes("portfolio")
+    ) {
+      return { accountType: "Investment", icon: "📊" };
+    } else if (lowerName.includes("save")) {
+      return { accountType: "Savings", icon: "💎" };
+    } else if (lowerName.includes("cash") || lowerName.includes("wallet")) {
+      return { accountType: "Cash", icon: "💰" };
+    }
+
+    // Default to Cash
+    return { accountType: "Cash", icon: "💰" };
   }
 }

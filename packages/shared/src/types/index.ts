@@ -141,8 +141,21 @@ export interface Account {
   name: string;
   accountType?: string;
   icon?: string;
+  initialBalance: number;
+  currency: string;
+  createdAt: string;
+  updatedAt: string;
   syncVersion: number;
   syncedAt: number | null;
+}
+
+// New account for creation
+export interface NewAccount {
+  name: string;
+  accountType?: string;
+  icon?: string;
+  initialBalance: number;
+  currency: string;
 }
 
 // Import batch tracking

@@ -19,12 +19,14 @@ export interface GroupedTransactionListProps {
   transactions: Transaction[];
   periodMode: TimePeriodMode;
   valuesHidden?: boolean;
+  onTransactionClick?: (transaction: Transaction) => void;
 }
 
 export function GroupedTransactionList({
   transactions,
   periodMode,
   valuesHidden = false,
+  onTransactionClick,
 }: GroupedTransactionListProps) {
   const maskValue = (value: string) => "*".repeat(value.length);
 
@@ -124,7 +126,11 @@ export function GroupedTransactionList({
                   return (
                     <div
                       key={transaction.id}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
+                      className={cn(
+                        "flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors",
+                        onTransactionClick && "cursor-pointer",
+                      )}
+                      onClick={() => onTransactionClick?.(transaction)}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">

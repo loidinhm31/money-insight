@@ -1,0 +1,13 @@
+date,note,amount,category,account,currency,excludeReport
+2024/01/15,Grocery shopping at supermarket,-150000,Food,Cash,VND,false
+2024/01/16,Monthly salary,5000000,Income,HSBC Bank,VND,false
+2024/01/17,Coffee at Starbucks,-50000,Food & Drink,Visa Credit Card,VND,false
+2024/01/18,Gas refill,-200000,Transport,Cash,VND,false
+2024/01/19,Online shopping,-500000,Shopping,Mastercard,VND,false
+2024/01/20,Freelance work,2000000,Income,PayPal Account,USD,false
+2024/01/21,Restaurant dinner,-300000,Food & Drink,Credit Card,VND,false
+2024/01/22,Phone bill payment,-150000,Bills,Main Bank,VND,false
+2024/01/23,Investment purchase,-1000000,Investment,Stock Portfolio,VND,false
+2024/01/24,Transfer to savings,500000,Savings,Emergency Fund,VND,false
+2024/01/25,Movie tickets,-120000,Entertainment,Cash,VND,false
+2024/01/26,Uber ride,-80000,Transport,Company Card,VND,false

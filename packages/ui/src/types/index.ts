@@ -6,6 +6,7 @@ export type {
   Transaction,
   Category,
   Account,
+  NewAccount,
   ImportBatch,
   TransactionFilter,
   Statistics,
