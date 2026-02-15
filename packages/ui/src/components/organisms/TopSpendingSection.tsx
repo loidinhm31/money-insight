@@ -13,6 +13,7 @@ import { TransactionListModal } from "@money-insight/ui/components/organisms";
 import { formatCurrency } from "@money-insight/ui/lib";
 import { TrendingUp } from "lucide-react";
 import type { Transaction } from "@money-insight/ui/types";
+import { useCategoryGroupStore } from "@money-insight/ui/stores";
 import {
   startOfWeek,
   endOfWeek,
@@ -42,6 +43,9 @@ export function TopSpendingSection({
   const [selectedCategory, setSelectedCategory] =
     useState<CategoryTotal | null>(null);
 
+  // Get category lookup for grouping
+  const { lookupMap } = useCategoryGroupStore();
+
   // Calculate date ranges
   const { weekStart, weekEnd, monthStart, monthEnd } = useMemo(() => {
     const now = new Date();
@@ -53,15 +57,15 @@ export function TopSpendingSection({
     };
   }, []);
 
-  // Calculate top spending for the current week
+  // Calculate top spending for the current week (grouped by parent category)
   const weeklyTopSpending = useMemo(() => {
-    return calculateTopSpending(transactions, weekStart, weekEnd);
-  }, [transactions, weekStart, weekEnd]);
+    return calculateTopSpending(transactions, weekStart, weekEnd, lookupMap);
+  }, [transactions, weekStart, weekEnd, lookupMap]);
 
-  // Calculate top spending for the current month
+  // Calculate top spending for the current month (grouped by parent category)
   const monthlyTopSpending = useMemo(() => {
-    return calculateTopSpending(transactions, monthStart, monthEnd);
-  }, [transactions, monthStart, monthEnd]);
+    return calculateTopSpending(transactions, monthStart, monthEnd, lookupMap);
+  }, [transactions, monthStart, monthEnd, lookupMap]);
 
   // Mask value with asterisks
   const maskValue = (value: string) => "*".repeat(value.length);
@@ -222,10 +226,12 @@ export function TopSpendingSection({
 }
 
 // Helper function to calculate top spending categories within a date range
+// Optionally groups by parent category using the lookup map
 function calculateTopSpending(
   transactions: Transaction[],
   startDate: Date,
   endDate: Date,
+  categoryLookup?: Map<string, string>,
 ): CategoryTotal[] {
   // Filter transactions within the date range (expenses only, excluding report-excluded transactions)
   const filtered = transactions.filter((t) => {
@@ -235,7 +241,7 @@ function calculateTopSpending(
     return isWithinInterval(txDate, { start: startDate, end: endDate });
   });
 
-  // Group by category
+  // Group by category (or parent category if lookup is provided)
   const categoryMap = new Map<
     string,
     { total: number; count: number; transactions: Transaction[] }
@@ -243,12 +249,18 @@ function calculateTopSpending(
   let totalExpense = 0;
 
   filtered.forEach((t) => {
-    const current = categoryMap.get(t.category) || {
+    // Resolve to parent category if lookup exists, otherwise use original
+    const categoryKey =
+      categoryLookup && categoryLookup.size > 0
+        ? (categoryLookup.get(t.category) ?? t.category)
+        : t.category;
+
+    const current = categoryMap.get(categoryKey) || {
       total: 0,
       count: 0,
       transactions: [],
     };
-    categoryMap.set(t.category, {
+    categoryMap.set(categoryKey, {
       total: current.total + t.expense,
       count: current.count + 1,
       transactions: [...current.transactions, t],

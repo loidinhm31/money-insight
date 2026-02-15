@@ -6,6 +6,7 @@ import {
   List,
   ChevronLeft,
   ChevronRight,
+  Layers,
 } from "lucide-react";
 import { Button } from "@money-insight/ui/components/atoms";
 import { cn } from "@money-insight/ui/lib";
@@ -56,6 +57,12 @@ export function Sidebar({
       label: "Add Transaction",
       icon: <PlusCircle className="h-5 w-5" />,
       show: true,
+    },
+    {
+      path: to("categories"),
+      label: "Categories",
+      icon: <Layers className="h-5 w-5" />,
+      show: hasTransactions,
     },
     {
       path: to("settings"),

@@ -33,6 +33,27 @@ export interface CategorySpending {
   average: number;
   percentage: number;
   transactions: ProcessedTransaction[];
+  subCategories?: CategorySpending[];
+}
+
+// Category group (parent category for grouping)
+export interface CategoryGroup {
+  id: string;
+  name: string;
+  icon?: string;
+  color?: string;
+  isExpense: boolean;
+  syncVersion: number;
+  syncedAt: number | null;
+}
+
+// Category mapping (sub-category to parent group)
+export interface CategoryMapping {
+  id: string;
+  subCategory: string;
+  parentGroupId: string;
+  syncVersion: number;
+  syncedAt: number | null;
 }
 
 // Monthly analysis

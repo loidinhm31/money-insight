@@ -5,3 +5,4 @@ export { InitialSetupPage } from "./InitialSetupPage";
 export { ReportsPage } from "./ReportsPage";
 export { LoginPage } from "./LoginPage";
 export { TransactionPage } from "./TransactionPage";
+export { CategorySetupPage } from "./CategorySetupPage";

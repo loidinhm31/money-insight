@@ -103,7 +103,7 @@ export function Dashboard({
             className="text-2xl sm:text-3xl font-bold font-heading"
             style={{ color: "#111827" }}
           >
-            Spending Analysis
+            Money Analysis
           </h1>
           <p className="text-sm sm:text-base" style={{ color: "#6B7280" }}>
             {stats?.transactionCount} transactions • {stats?.categoryCount}{" "}

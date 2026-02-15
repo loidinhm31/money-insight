@@ -1,12 +1,14 @@
 import {
   IndexedDBAccountAdapter,
   IndexedDBCategoryAdapter,
+  IndexedDBCategoryGroupAdapter,
   IndexedDBStatisticsAdapter,
   IndexedDBTransactionAdapter,
   createIndexedDBSyncAdapter,
   setAccountService,
   setAuthService,
   setCategoryService,
+  setCategoryGroupService,
   setStatisticsService,
   setSyncService,
   setTransactionService,
@@ -65,6 +67,7 @@ export function MoneyInsightApp({
     // Initialize data services
     setTransactionService(new IndexedDBTransactionAdapter());
     setCategoryService(new IndexedDBCategoryAdapter());
+    setCategoryGroupService(new IndexedDBCategoryGroupAdapter());
     setAccountService(new IndexedDBAccountAdapter());
     setStatisticsService(new IndexedDBStatisticsAdapter());
 

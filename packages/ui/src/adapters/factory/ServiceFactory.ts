@@ -4,6 +4,7 @@ import { serviceLogger } from "@money-insight/ui/utils";
 import type {
   ITransactionService,
   ICategoryService,
+  ICategoryGroupService,
   IAccountService,
   IStatisticsService,
   ISyncService,
@@ -13,6 +14,7 @@ import type {
 // Singleton instances (lazy initialized or injected via setters)
 let transactionService: ITransactionService | null = null;
 let categoryService: ICategoryService | null = null;
+let categoryGroupService: ICategoryGroupService | null = null;
 let accountService: IAccountService | null = null;
 let statisticsService: IStatisticsService | null = null;
 let authService: IAuthService | null = null;
@@ -27,6 +29,11 @@ export const setTransactionService = (svc: ITransactionService): void => {
 export const setCategoryService = (svc: ICategoryService): void => {
   categoryService = svc;
   serviceLogger.factory("Set custom CategoryService");
+};
+
+export const setCategoryGroupService = (svc: ICategoryGroupService): void => {
+  categoryGroupService = svc;
+  serviceLogger.factory("Set custom CategoryGroupService");
 };
 
 export const setAccountService = (svc: IAccountService): void => {
@@ -65,6 +72,15 @@ export const getCategoryService = (): ICategoryService => {
     );
   }
   return categoryService;
+};
+
+export const getCategoryGroupService = (): ICategoryGroupService => {
+  if (!categoryGroupService) {
+    throw new Error(
+      "CategoryGroupService not initialized. Call setCategoryGroupService() first.",
+    );
+  }
+  return categoryGroupService;
 };
 
 export const getAccountService = (): IAccountService => {
@@ -106,6 +122,7 @@ export const getSyncService = (): ISyncService => {
 export const getAllServices = () => ({
   transaction: getTransactionService(),
   category: getCategoryService(),
+  categoryGroup: getCategoryGroupService(),
   account: getAccountService(),
   statistics: getStatisticsService(),
   auth: getAuthService(),
@@ -115,6 +132,7 @@ export const getAllServices = () => ({
 export const resetServices = (): void => {
   transactionService = null;
   categoryService = null;
+  categoryGroupService = null;
   accountService = null;
   statisticsService = null;
   authService = null;

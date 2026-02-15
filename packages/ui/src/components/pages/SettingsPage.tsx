@@ -2,13 +2,14 @@ import { useCallback, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
+  ChevronRight,
   Database,
   ExternalLink,
   Globe,
-  Info,
+  Layers,
   Loader2,
-  Monitor,
   LogIn,
+  Monitor,
 } from "lucide-react";
 import { useAuth, useNav } from "@money-insight/ui/hooks";
 import { invoke } from "@tauri-apps/api/core";
@@ -83,17 +84,6 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Platform Info */}
         <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Monitor className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-base">Platform</CardTitle>
-                <CardDescription>Current runtime environment</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-accent text-accent-foreground">
@@ -259,31 +249,31 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
           </CardContent>
         </Card>
 
-        {/* Sync Settings */}
-        <SyncSettings />
-
-        {/* App Info */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Info className="h-5 w-5 text-primary" />
+        {/* Category Setup */}
+        <Card
+          className="cursor-pointer hover:bg-accent/50 transition-colors"
+          onClick={() => nav("/categories")}
+        >
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-primary/10 rounded-full">
+                  <Layers className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Category Setup</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Group categories for better analysis
+                  </p>
+                </div>
               </div>
-              <div>
-                <CardTitle className="text-base">About</CardTitle>
-                <CardDescription>Money Insight</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Version</span>
-                <span className="font-medium">0.1.0</span>
-              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
+
+        {/* Sync Settings */}
+        <SyncSettings />
       </div>
     </div>
   );

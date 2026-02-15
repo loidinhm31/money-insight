@@ -10,6 +10,7 @@ import {
 import { CategorySpending } from "@money-insight/ui/types";
 import { formatCurrency } from "@money-insight/ui/lib";
 import { TransactionListModal } from "./TransactionListModal";
+import { SubCategoryBreakdownModal } from "./SubCategoryBreakdownModal";
 
 // Payment gateway color palette (Stripe-inspired)
 const COLORS = [
@@ -36,6 +37,8 @@ export function CategoryPieChart({
 }: CategoryPieChartProps) {
   const [selectedCategory, setSelectedCategory] =
     useState<CategorySpending | null>(null);
+  const [showSubCategoryModal, setShowSubCategoryModal] = useState(false);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
 
   const chartData = data.slice(0, 10).map((cat) => ({
     name: cat.category,
@@ -43,13 +46,33 @@ export function CategoryPieChart({
     percentage: cat.percentage,
     count: cat.count,
     transactions: cat.transactions,
+    hasSubCategories: !!cat.subCategories && cat.subCategories.length > 0,
   }));
 
   const handleClick = (chartEntry: any) => {
     const category = data.find((c) => c.category === chartEntry.name);
     if (category) {
       setSelectedCategory(category);
+      // Show sub-category breakdown if it has sub-categories, otherwise show transactions
+      if (category.subCategories && category.subCategories.length > 0) {
+        setShowSubCategoryModal(true);
+      } else {
+        setShowTransactionModal(true);
+      }
     }
+  };
+
+  const handleSubCategorySelect = (subCategory: CategorySpending) => {
+    // Close sub-category modal and show transactions for the selected sub-category
+    setShowSubCategoryModal(false);
+    setSelectedCategory(subCategory);
+    setShowTransactionModal(true);
+  };
+
+  const handleCloseModals = () => {
+    setSelectedCategory(null);
+    setShowSubCategoryModal(false);
+    setShowTransactionModal(false);
   };
 
   return (
@@ -105,6 +128,11 @@ export function CategoryPieChart({
                   <p className="text-sm" style={{ color: "#111827" }}>
                     Transactions: {data.count}
                   </p>
+                  {data.hasSubCategories && (
+                    <p className="text-xs mt-1" style={{ color: "#7C3AED" }}>
+                      Has sub-categories
+                    </p>
+                  )}
                   <p className="text-xs mt-1" style={{ color: "#6B7280" }}>
                     Click to view details
                   </p>
@@ -116,10 +144,22 @@ export function CategoryPieChart({
         </PieChart>
       </ResponsiveContainer>
 
+      {/* Sub-Category Breakdown Modal */}
+      {selectedCategory?.subCategories && (
+        <SubCategoryBreakdownModal
+          isOpen={showSubCategoryModal}
+          onClose={handleCloseModals}
+          parentCategory={selectedCategory.category}
+          subCategories={selectedCategory.subCategories}
+          onSubCategorySelect={handleSubCategorySelect}
+          valuesHidden={valuesHidden}
+        />
+      )}
+
       {/* Transaction List Modal */}
       <TransactionListModal
-        isOpen={!!selectedCategory}
-        onClose={() => setSelectedCategory(null)}
+        isOpen={showTransactionModal}
+        onClose={handleCloseModals}
         title={selectedCategory?.category || ""}
         subtitle={`${selectedCategory?.count || 0} transactions`}
         transactions={selectedCategory?.transactions || []}

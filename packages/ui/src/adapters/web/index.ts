@@ -4,5 +4,6 @@ export * from "./indexedDbHelpers";
 export * from "./sync";
 export { IndexedDBTransactionAdapter } from "./IndexedDBTransactionAdapter";
 export { IndexedDBCategoryAdapter } from "./IndexedDBCategoryAdapter";
+export { IndexedDBCategoryGroupAdapter } from "./IndexedDBCategoryGroupAdapter";
 export { IndexedDBAccountAdapter } from "./IndexedDBAccountAdapter";
 export { IndexedDBStatisticsAdapter } from "./IndexedDBStatisticsAdapter";

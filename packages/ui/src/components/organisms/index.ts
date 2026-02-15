@@ -57,6 +57,10 @@ export {
   TransactionListModal,
   type TransactionListModalProps,
 } from "./TransactionListModal";
+export {
+  SubCategoryBreakdownModal,
+  type SubCategoryBreakdownModalProps,
+} from "./SubCategoryBreakdownModal";
 export { SyncSettings } from "./SyncSettings";
 export { BrowserSyncInitializer } from "./BrowserSyncInitializer";
 export { Sidebar, type SidebarProps, type NavItem } from "./Sidebar";

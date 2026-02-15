@@ -7,10 +7,8 @@ import {
   CheckCircle2,
   Cloud,
   CloudOff,
-  Mail,
   RefreshCw,
   Server,
-  User,
 } from "lucide-react";
 import {
   Button,
@@ -296,33 +294,6 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
           </>
         )}
       </div>
-
-      {/* Account Info */}
-      {authStatus?.isAuthenticated && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Account Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {authStatus.username && (
-              <div className="flex items-center gap-2 mb-2">
-                <User className="w-4 h-4 text-[#635BFF]" />
-                <span className="text-sm text-[#374151]">
-                  {authStatus.username}
-                </span>
-              </div>
-            )}
-            {authStatus.email && (
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#635BFF]" />
-                <span className="text-sm text-[#374151]">
-                  {authStatus.email}
-                </span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Server Configuration - Only shown in Tauri (native) mode */}
       {isTauri() && (

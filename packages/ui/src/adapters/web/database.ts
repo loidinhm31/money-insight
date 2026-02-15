@@ -4,6 +4,8 @@ import type {
   Category,
   Account,
   ImportBatch,
+  CategoryGroup,
+  CategoryMapping,
 } from "@money-insight/ui/types";
 
 export interface SyncMeta {
@@ -26,6 +28,8 @@ export class MoneyInsightDatabase extends Dexie {
   categories!: EntityTable<Category, "id">;
   accounts!: EntityTable<Account, "id">;
   importBatches!: EntityTable<ImportBatch, "id">;
+  categoryGroups!: EntityTable<CategoryGroup, "id">;
+  categoryMappings!: EntityTable<CategoryMapping, "id">;
   _syncMeta!: Table<SyncMeta, string>;
   _pendingChanges!: Table<PendingChange, number>;
 
@@ -62,10 +66,24 @@ export class MoneyInsightDatabase extends Dexie {
       _pendingChanges: "++id, tableName, rowId",
     });
 
+    this.version(4).stores({
+      transactions:
+        "id, category, account, date, yearMonth, year, month, source, importBatchId, syncVersion, syncedAt",
+      categories: "id, name, syncVersion, syncedAt",
+      accounts: "id, name, accountType, currency, syncVersion, syncedAt",
+      importBatches: "id, filename, importedAt",
+      categoryGroups: "id, name, syncVersion, syncedAt",
+      categoryMappings: "id, subCategory, parentGroupId, syncVersion, syncedAt",
+      _syncMeta: "key",
+      _pendingChanges: "++id, tableName, rowId",
+    });
+
     this.transactions = this.table("transactions");
     this.categories = this.table("categories");
     this.accounts = this.table("accounts");
     this.importBatches = this.table("importBatches");
+    this.categoryGroups = this.table("categoryGroups");
+    this.categoryMappings = this.table("categoryMappings");
     this._syncMeta = this.table("_syncMeta");
     this._pendingChanges = this.table("_pendingChanges");
   }

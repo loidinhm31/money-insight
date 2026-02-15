@@ -190,6 +190,107 @@ export class MoneyInsightAnalyzer {
     });
   }
 
+  // Analyze category spending grouped by parent category
+  analyzeCategorySpendingGrouped(
+    transactions: ProcessedTransaction[] = this.transactions,
+    categoryLookup: Map<string, string>,
+  ): CategorySpending[] {
+    // If no mappings exist, return flat analysis
+    if (categoryLookup.size === 0) {
+      return this.analyzeCategorySpending(transactions);
+    }
+
+    // First, compute flat spending per sub-category
+    const flatSpending = this.analyzeCategorySpending(transactions);
+
+    // Group by parent name using lookup
+    const parentMap = new Map<string, CategorySpending[]>();
+
+    flatSpending.forEach((cat) => {
+      const parentName = categoryLookup.get(cat.category) ?? cat.category;
+      if (!parentMap.has(parentName)) {
+        parentMap.set(parentName, []);
+      }
+      parentMap.get(parentName)!.push(cat);
+    });
+
+    // Aggregate into parent-level CategorySpending with subCategories
+    const totalExpense = flatSpending.reduce((sum, c) => sum + c.total, 0);
+
+    return Array.from(parentMap.entries())
+      .map(([parentName, subCategories]) => {
+        const total = subCategories.reduce((sum, c) => sum + c.total, 0);
+        const transactions = subCategories.flatMap((c) => c.transactions);
+
+        // If it's a single unmapped category (same as parent), don't include subCategories
+        const isSingleUnmapped =
+          subCategories.length === 1 &&
+          subCategories[0].category === parentName;
+
+        return {
+          category: parentName,
+          total,
+          count: transactions.length,
+          average: total / transactions.length,
+          percentage: totalExpense > 0 ? (total / totalExpense) * 100 : 0,
+          transactions,
+          subCategories: isSingleUnmapped ? undefined : subCategories,
+        };
+      })
+      .sort((a, b) => b.total - a.total);
+  }
+
+  // Detect spending bottlenecks grouped by parent category
+  detectBottlenecksGrouped(
+    transactions: ProcessedTransaction[] = this.transactions,
+    categoryLookup: Map<string, string>,
+  ): SpendingBottleneck[] {
+    // If no mappings exist, return flat analysis
+    if (categoryLookup.size === 0) {
+      return this.detectBottlenecks(transactions);
+    }
+
+    const bottlenecks: SpendingBottleneck[] = [];
+    const categorySpending = this.analyzeCategorySpendingGrouped(
+      transactions,
+      categoryLookup,
+    );
+
+    categorySpending.forEach((cat) => {
+      // High amount bottleneck (>15% of total spending)
+      if (cat.percentage > 15) {
+        bottlenecks.push({
+          type: "high_amount",
+          category: cat.category,
+          severity: cat.percentage > 20 ? "critical" : "high",
+          amount: cat.total,
+          percentage: cat.percentage,
+          suggestion: `${cat.category} represents ${cat.percentage.toFixed(1)}% of your spending. Consider reducing by 20-30%.`,
+          transactions: cat.transactions,
+        });
+      }
+
+      // High frequency bottleneck (>100 transactions)
+      if (cat.count > 100) {
+        bottlenecks.push({
+          type: "high_frequency",
+          category: cat.category,
+          severity:
+            cat.count > 500 ? "critical" : cat.count > 200 ? "high" : "medium",
+          amount: cat.total,
+          percentage: cat.percentage,
+          suggestion: `${cat.count} transactions in ${cat.category}. Small purchases add up to ${this.formatCurrency(cat.total)}.`,
+          transactions: cat.transactions,
+        });
+      }
+    });
+
+    return bottlenecks.sort((a, b) => {
+      const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+      return severityOrder[a.severity] - severityOrder[b.severity];
+    });
+  }
+
   // Calculate statistics
   getStatistics(transactions: ProcessedTransaction[] = this.transactions) {
     const totalExpense = transactions.reduce((sum, t) => sum + t.expense, 0);

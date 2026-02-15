@@ -16,6 +16,7 @@ import { matchesSearch, MoneyInsightAnalyzer } from "@money-insight/ui/lib";
 import * as transactionService from "@money-insight/ui/services/transactionService";
 import * as accountService from "@money-insight/ui/services/accountService";
 import * as balanceAdjustmentService from "@money-insight/ui/services/balanceAdjustmentService";
+import { useCategoryGroupStore } from "./categoryGroupStore";
 
 // Convert Transaction (from DB) to ProcessedTransaction (for analysis)
 function toProcessedTransaction(tx: Transaction): ProcessedTransaction {
@@ -156,9 +157,11 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
+      // Load category groups in parallel with transactions and accounts
       const [transactions, accounts] = await Promise.all([
         transactionService.getTransactions(),
         accountService.getAccounts(),
+        useCategoryGroupStore.getState().loadFromDatabase(),
       ]);
       const processedTransactions = transactions.map(toProcessedTransaction);
       // Filter out transactions with excludeReport=true for analysis
@@ -426,11 +429,24 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     try {
       const filteredProcessed = analyzer.filterTransactions(filter);
       const statistics = analyzer.getStatistics(filteredProcessed);
+
+      // Get category lookup map from category group store
+      const { lookupMap } = useCategoryGroupStore.getState();
+
+      // Use grouped analysis if mappings exist, otherwise flat
       const categorySpending =
-        analyzer.analyzeCategorySpending(filteredProcessed);
+        lookupMap.size > 0
+          ? analyzer.analyzeCategorySpendingGrouped(
+              filteredProcessed,
+              lookupMap,
+            )
+          : analyzer.analyzeCategorySpending(filteredProcessed);
       const monthlyAnalysis = analyzer.analyzeMonthly(filteredProcessed);
       const yearlyAnalysis = analyzer.analyzeYearly(filteredProcessed);
-      const bottlenecks = analyzer.detectBottlenecks(filteredProcessed);
+      const bottlenecks =
+        lookupMap.size > 0
+          ? analyzer.detectBottlenecksGrouped(filteredProcessed, lookupMap)
+          : analyzer.detectBottlenecks(filteredProcessed);
 
       // Filter Transaction[] for display (same logic as analyzer.filterTransactions)
       // Also exclude transactions with excludeReport=true to match analysis

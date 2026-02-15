@@ -1,5 +1,6 @@
 export type { ITransactionService } from "./ITransactionService";
 export type { ICategoryService } from "./ICategoryService";
+export type { ICategoryGroupService } from "./ICategoryGroupService";
 export type { IAccountService } from "./IAccountService";
 export type { IStatisticsService } from "./IStatisticsService";
 export type { ISyncService } from "./ISyncService";

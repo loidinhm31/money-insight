@@ -5,6 +5,8 @@ export type {
   NewTransaction,
   Transaction,
   Category,
+  CategoryGroup,
+  CategoryMapping,
   Account,
   NewAccount,
   ImportBatch,
