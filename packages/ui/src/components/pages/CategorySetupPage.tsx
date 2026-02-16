@@ -11,7 +11,10 @@ import {
   Edit2,
   Check,
   ArrowUpCircle,
+  ArrowDownCircle,
   Link,
+  MoreHorizontal,
+  Tag,
 } from "lucide-react";
 import {
   Button,
@@ -29,6 +32,7 @@ import {
 } from "@money-insight/ui/stores";
 import type { CategoryGroup } from "@money-insight/ui/types";
 import { formatCurrency } from "@money-insight/ui/lib";
+import * as categoryService from "@money-insight/ui/services/categoryService";
 
 interface CategorySetupPageProps {
   onBack?: () => void;
@@ -54,6 +58,25 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingGroupName, setEditingGroupName] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  // For sub-category actions
+  const [selectedSubCategory, setSelectedSubCategory] = useState<{
+    name: string;
+    parentId: string;
+  } | null>(null);
+  // For demoting parent to sub
+  const [demotingGroupId, setDemotingGroupId] = useState<string | null>(null);
+  // For adding sub-category to a group
+  const [addingSubToGroupId, setAddingSubToGroupId] = useState<string | null>(
+    null,
+  );
+  // For standalone category CRUD
+  const [isAddingStandalone, setIsAddingStandalone] = useState(false);
+  const [newStandaloneName, setNewStandaloneName] = useState("");
+  const [editingStandalone, setEditingStandalone] = useState<string | null>(
+    null,
+  );
+  const [editingStandaloneName, setEditingStandaloneName] = useState("");
+  const [standaloneLoading, setStandaloneLoading] = useState(false);
 
   // Get all unique categories from transactions with their stats
   const categoryStats = useMemo(() => {
@@ -153,6 +176,76 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
     }
   };
 
+  // Add new standalone category
+  const handleAddStandalone = async () => {
+    if (!newStandaloneName.trim()) return;
+
+    setStandaloneLoading(true);
+    try {
+      await categoryService.addCategory({
+        name: newStandaloneName.trim(),
+        isExpense: true,
+      });
+      setNewStandaloneName("");
+      setIsAddingStandalone(false);
+      // Refresh to show new category
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to add standalone category:", error);
+    } finally {
+      setStandaloneLoading(false);
+    }
+  };
+
+  // Rename standalone category
+  const handleRenameStandalone = async (oldName: string) => {
+    if (!editingStandaloneName.trim() || editingStandaloneName === oldName)
+      return;
+
+    setStandaloneLoading(true);
+    try {
+      await categoryService.renameCategory(
+        oldName,
+        editingStandaloneName.trim(),
+      );
+      setEditingStandalone(null);
+      setEditingStandaloneName("");
+      // Refresh to show updated category and transactions
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to rename standalone category:", error);
+    } finally {
+      setStandaloneLoading(false);
+    }
+  };
+
+  // Delete standalone category (only if no transactions)
+  const handleDeleteStandalone = async (categoryName: string) => {
+    const stats = categoryStats.get(categoryName);
+    if (stats && stats.count > 0) {
+      alert(
+        `Cannot delete "${categoryName}" - it has ${stats.count} transactions. Remove or reassign transactions first.`,
+      );
+      return;
+    }
+
+    setStandaloneLoading(true);
+    try {
+      // Find the category ID from stored categories
+      const categories = await categoryService.getCategories();
+      const cat = categories.find((c) => c.name === categoryName);
+      if (cat) {
+        await categoryService.deleteCategory(cat.id);
+      }
+      // Refresh
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to delete standalone category:", error);
+    } finally {
+      setStandaloneLoading(false);
+    }
+  };
+
   // Promote an existing category to be a parent group
   const handlePromoteToParent = async (categoryName: string) => {
     try {
@@ -163,6 +256,22 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
       setSelectedCategory(null);
     } catch (error) {
       console.error("Failed to promote category:", error);
+    }
+  };
+
+  // Demote a parent group to become a sub-category of another group
+  const handleDemoteToSub = async (
+    groupToDelete: CategoryGroup,
+    newParentId: string,
+  ) => {
+    try {
+      // First delete the parent group
+      await deleteGroup(groupToDelete.id);
+      // Then map the category name as sub-category under new parent
+      await mapSubCategory(groupToDelete.name, newParentId);
+      setDemotingGroupId(null);
+    } catch (error) {
+      console.error("Failed to demote group:", error);
     }
   };
 
@@ -193,6 +302,7 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
     try {
       await mapSubCategory(subCategory, groupId);
       setSelectedCategory(null);
+      setAddingSubToGroupId(null);
     } catch (error) {
       console.error("Failed to map category:", error);
     }
@@ -201,8 +311,38 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
   const handleUnmapCategory = async (subCategory: string) => {
     try {
       await unmapSubCategory(subCategory);
+      setSelectedSubCategory(null);
     } catch (error) {
       console.error("Failed to unmap category:", error);
+    }
+  };
+
+  // Move sub-category to a different parent
+  const handleMoveSubCategory = async (
+    subCategory: string,
+    newParentId: string,
+  ) => {
+    try {
+      await mapSubCategory(subCategory, newParentId);
+      setSelectedSubCategory(null);
+    } catch (error) {
+      console.error("Failed to move sub-category:", error);
+    }
+  };
+
+  // Promote sub-category to parent
+  const handlePromoteSubToParent = async (subCategoryName: string) => {
+    try {
+      // First unmap from current parent
+      await unmapSubCategory(subCategoryName);
+      // Then add as new parent group
+      await addGroup({
+        name: subCategoryName,
+        isExpense: true,
+      });
+      setSelectedSubCategory(null);
+    } catch (error) {
+      console.error("Failed to promote sub-category:", error);
     }
   };
 
@@ -308,6 +448,10 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
                 const isExpanded = expandedGroups.has(group.id);
                 const isEditing = editingGroupId === group.id;
                 const groupStats = getGroupStats(group);
+                const isDemoting = demotingGroupId === group.id;
+                const isAddingSub = addingSubToGroupId === group.id;
+                const canDemote =
+                  subCategories.length === 0 && groups.length > 1;
 
                 return (
                   <div
@@ -318,7 +462,9 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
                     <div
                       className="flex items-center gap-2 p-3 bg-accent/30 cursor-pointer hover:bg-accent/50 transition-colors"
                       onClick={() =>
-                        !isEditing && toggleGroupExpanded(group.id)
+                        !isEditing &&
+                        !isDemoting &&
+                        toggleGroupExpanded(group.id)
                       }
                     >
                       {(subCategories.length > 0 ||
@@ -396,6 +542,22 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
                         </>
                       ) : (
                         <>
+                          {/* Add sub-category button */}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAddingSubToGroupId(
+                                isAddingSub ? null : group.id,
+                              );
+                              setDemotingGroupId(null);
+                            }}
+                            title="Add sub-category"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </Button>
                           <Button
                             size="sm"
                             variant="ghost"
@@ -405,9 +567,28 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
                               setEditingGroupId(group.id);
                               setEditingGroupName(group.name);
                             }}
+                            title="Rename"
                           >
                             <Edit2 className="h-3.5 w-3.5" />
                           </Button>
+                          {/* Demote option for parents without sub-categories */}
+                          {canDemote && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDemotingGroupId(
+                                  isDemoting ? null : group.id,
+                                );
+                                setAddingSubToGroupId(null);
+                              }}
+                              title="Change to sub-category"
+                            >
+                              <ArrowDownCircle className="h-3.5 w-3.5 text-blue-500" />
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="ghost"
@@ -416,6 +597,7 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
                               e.stopPropagation();
                               handleDeleteGroup(group.id);
                             }}
+                            title="Delete"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -423,8 +605,92 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
                       )}
                     </div>
 
+                    {/* Demote to sub-category options */}
+                    {isDemoting && (
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border-t">
+                        <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">
+                          Move "{group.name}" under:
+                        </p>
+                        <div className="space-y-1">
+                          {groups
+                            .filter((g) => g.id !== group.id)
+                            .map((targetGroup) => (
+                              <Button
+                                key={targetGroup.id}
+                                variant="ghost"
+                                size="sm"
+                                className="w-full justify-start text-sm h-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDemoteToSub(group, targetGroup.id);
+                                }}
+                              >
+                                <Layers className="h-3.5 w-3.5 mr-2 text-primary" />
+                                {targetGroup.name}
+                              </Button>
+                            ))}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full mt-2 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDemotingGroupId(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Add sub-category options */}
+                    {isAddingSub && (
+                      <div className="p-3 bg-green-50 dark:bg-green-900/20 border-t">
+                        <p className="text-xs font-medium text-green-700 dark:text-green-300 mb-2">
+                          Add sub-category to "{group.name}":
+                        </p>
+                        {unmappedCategories.length > 0 ? (
+                          <div className="space-y-1 max-h-40 overflow-y-auto">
+                            {unmappedCategories.map((cat) => (
+                              <Button
+                                key={cat}
+                                variant="ghost"
+                                size="sm"
+                                className="w-full justify-start text-sm h-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMapCategory(cat, group.id);
+                                }}
+                              >
+                                <Plus className="h-3.5 w-3.5 mr-2 text-green-600" />
+                                {cat}
+                              </Button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            No standalone categories available
+                          </p>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full mt-2 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAddingSubToGroupId(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+
                     {/* Sub-categories and own transactions */}
                     {isExpanded &&
+                      !isDemoting &&
+                      !isAddingSub &&
                       (subCategories.length > 0 ||
                         groupStats.ownStats.count > 0) && (
                         <div className="border-t divide-y">
@@ -443,29 +709,120 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
                               <div className="w-6" />
                             </div>
                           )}
-                          {subCategories.map((subCat) => (
-                            <div
-                              key={subCat.name}
-                              className="flex items-center gap-3 px-4 py-2 pl-10 text-sm hover:bg-accent/20"
-                            >
-                              <span className="flex-1">{subCat.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {subCat.stats.count} txns
-                              </span>
-                              <span className="text-xs text-destructive">
-                                {formatCurrency(subCat.stats.total)}
-                              </span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                                onClick={() => handleUnmapCategory(subCat.name)}
-                                title="Remove from parent"
-                              >
-                                <X className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          ))}
+                          {subCategories.map((subCat) => {
+                            const isSubSelected =
+                              selectedSubCategory?.name === subCat.name &&
+                              selectedSubCategory?.parentId === group.id;
+
+                            return (
+                              <div key={subCat.name}>
+                                <div
+                                  className={`flex items-center gap-3 px-4 py-2 pl-10 text-sm cursor-pointer transition-colors ${
+                                    isSubSelected
+                                      ? "bg-primary/10"
+                                      : "hover:bg-accent/20"
+                                  }`}
+                                  onClick={() =>
+                                    setSelectedSubCategory(
+                                      isSubSelected
+                                        ? null
+                                        : {
+                                            name: subCat.name,
+                                            parentId: group.id,
+                                          },
+                                    )
+                                  }
+                                >
+                                  <span className="flex-1">{subCat.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {subCat.stats.count} txns
+                                  </span>
+                                  <span className="text-xs text-destructive">
+                                    {formatCurrency(subCat.stats.total)}
+                                  </span>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 text-muted-foreground"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSubCategory(
+                                        isSubSelected
+                                          ? null
+                                          : {
+                                              name: subCat.name,
+                                              parentId: group.id,
+                                            },
+                                      );
+                                    }}
+                                    title="More actions"
+                                  >
+                                    <MoreHorizontal className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+
+                                {/* Sub-category actions */}
+                                {isSubSelected && (
+                                  <div className="px-4 py-2 pl-10 bg-accent/30 space-y-2">
+                                    {/* Promote to parent */}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="w-full justify-start text-sm h-8"
+                                      onClick={() =>
+                                        handlePromoteSubToParent(subCat.name)
+                                      }
+                                    >
+                                      <ArrowUpCircle className="h-3.5 w-3.5 mr-2 text-green-600" />
+                                      Make "{subCat.name}" a parent
+                                    </Button>
+
+                                    {/* Move to different parent */}
+                                    {groups.length > 1 && (
+                                      <div>
+                                        <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                                          <Link className="h-3 w-3" />
+                                          Move to different parent:
+                                        </p>
+                                        {groups
+                                          .filter((g) => g.id !== group.id)
+                                          .map((targetGroup) => (
+                                            <Button
+                                              key={targetGroup.id}
+                                              variant="ghost"
+                                              size="sm"
+                                              className="w-full justify-start text-sm h-7"
+                                              onClick={() =>
+                                                handleMoveSubCategory(
+                                                  subCat.name,
+                                                  targetGroup.id,
+                                                )
+                                              }
+                                            >
+                                              <Layers className="h-3 w-3 mr-2 text-primary" />
+                                              {targetGroup.name}
+                                            </Button>
+                                          ))}
+                                      </div>
+                                    )}
+
+                                    {/* Remove from parent */}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="w-full justify-start text-sm h-8 text-destructive hover:text-destructive"
+                                      onClick={() =>
+                                        handleUnmapCategory(subCat.name)
+                                      }
+                                    >
+                                      <X className="h-3.5 w-3.5 mr-2" />
+                                      Remove from parent (make standalone)
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                   </div>
@@ -478,31 +835,91 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
         {/* Unmapped Categories Section */}
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <FolderPlus className="h-5 w-5 text-blue-500" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <Tag className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">
+                    Standalone Categories
+                  </CardTitle>
+                  <CardDescription>
+                    Categories not assigned to any parent
+                  </CardDescription>
+                </div>
               </div>
-              <div>
-                <CardTitle className="text-base">
-                  Standalone Categories
-                </CardTitle>
-                <CardDescription>
-                  Click to make parent or assign to existing parent
-                </CardDescription>
-              </div>
+              {!isAddingStandalone && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsAddingStandalone(true)}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+              )}
             </div>
           </CardHeader>
-          <CardContent>
-            {unmappedCategories.length === 0 ? (
+          <CardContent className="space-y-3">
+            {/* Add new standalone category */}
+            {isAddingStandalone && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/50">
+                <Tag className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={newStandaloneName}
+                  onChange={(e) => setNewStandaloneName(e.target.value)}
+                  placeholder="New category name..."
+                  className="flex-1 h-8"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAddStandalone();
+                    if (e.key === "Escape") {
+                      setIsAddingStandalone(false);
+                      setNewStandaloneName("");
+                    }
+                  }}
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleAddStandalone}
+                  disabled={!newStandaloneName.trim() || standaloneLoading}
+                >
+                  {standaloneLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Check className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setIsAddingStandalone(false);
+                    setNewStandaloneName("");
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            {unmappedCategories.length === 0 && !isAddingStandalone ? (
               <div className="text-center py-6 text-muted-foreground">
                 <Check className="h-10 w-10 mx-auto mb-2 text-green-500" />
                 <p className="text-sm">All categories are organized!</p>
+                <p className="text-xs mt-1">
+                  Add new categories or import transactions with new categories
+                </p>
               </div>
             ) : (
               <div className="space-y-2">
                 {unmappedCategories.map((category) => {
-                  const stats = categoryStats.get(category)!;
+                  const stats = categoryStats.get(category);
                   const isSelected = selectedCategory === category;
+                  const isEditing = editingStandalone === category;
+                  const hasTransactions = stats && stats.count > 0;
 
                   return (
                     <div key={category}>
@@ -513,22 +930,116 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
                             : "hover:bg-accent/50"
                         }`}
                         onClick={() =>
+                          !isEditing &&
                           setSelectedCategory(isSelected ? null : category)
                         }
                       >
-                        <span className="flex-1 text-sm font-medium">
-                          {category}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {stats.count} txns
-                        </span>
-                        <span className="text-xs font-medium text-destructive">
-                          {formatCurrency(stats.total)}
-                        </span>
+                        {isEditing ? (
+                          <>
+                            <Input
+                              value={editingStandaloneName}
+                              onChange={(e) =>
+                                setEditingStandaloneName(e.target.value)
+                              }
+                              className="flex-1 h-7 text-sm"
+                              autoFocus
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter")
+                                  handleRenameStandalone(category);
+                                if (e.key === "Escape") {
+                                  setEditingStandalone(null);
+                                  setEditingStandaloneName("");
+                                }
+                              }}
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRenameStandalone(category);
+                              }}
+                              disabled={standaloneLoading}
+                            >
+                              {standaloneLoading ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Check className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingStandalone(null);
+                                setEditingStandaloneName("");
+                              }}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="flex-1 text-sm font-medium">
+                              {category}
+                            </span>
+                            {hasTransactions ? (
+                              <>
+                                <span className="text-xs text-muted-foreground">
+                                  {stats.count} txns
+                                </span>
+                                <span className="text-xs font-medium text-destructive">
+                                  {formatCurrency(stats.total)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                no transactions
+                              </span>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingStandalone(category);
+                                setEditingStandaloneName(category);
+                              }}
+                              title="Rename"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className={`h-7 w-7 p-0 ${
+                                hasTransactions
+                                  ? "text-muted-foreground cursor-not-allowed"
+                                  : "text-destructive hover:text-destructive"
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteStandalone(category);
+                              }}
+                              title={
+                                hasTransactions
+                                  ? "Cannot delete - has transactions"
+                                  : "Delete"
+                              }
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
                       </div>
 
                       {/* Action options */}
-                      {isSelected && (
+                      {isSelected && !isEditing && (
                         <div className="mt-2 ml-4 p-3 rounded-lg bg-accent/30 space-y-3">
                           {/* Option 1: Make as parent */}
                           <div>
