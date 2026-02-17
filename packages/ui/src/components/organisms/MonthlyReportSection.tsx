@@ -63,78 +63,59 @@ export function MonthlyReportSection({
       <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" style={{ color: "#6B7280" }} />
-            <CardTitle
-              className="text-base sm:text-lg font-heading"
-              style={{ color: "#111827" }}
-            >
+            <Calendar className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-base sm:text-lg font-heading text-foreground">
               Report this month
             </CardTitle>
           </div>
           <Link
             to={to("transactions")}
-            className="text-sm cursor-pointer hover:underline"
-            style={{ color: "#635BFF" }}
+            className="text-sm cursor-pointer hover:underline text-primary"
           >
             See all transactions
           </Link>
         </div>
-        <p className="text-sm mt-1" style={{ color: "#6B7280" }}>
+        <p className="text-sm mt-1 text-muted-foreground">
           {monthName} {report.year} - Day {currentDay} of {report.daysInMonth}
         </p>
       </CardHeader>
       <CardContent className="p-4 sm:p-6 pt-0 space-y-4">
         {/* Summary Stats */}
         <div className="grid grid-cols-2 gap-4">
-          <div
-            className="p-3 rounded-lg"
-            style={{ backgroundColor: "#FEF2F2" }}
-          >
-            <p className="text-xs" style={{ color: "#6B7280" }}>
-              Spent so far
-            </p>
-            <p
-              className="text-lg font-bold font-heading"
-              style={{ color: "#DC2626" }}
-            >
+          <div className="p-3 rounded-lg bg-destructive/10">
+            <p className="text-xs text-muted-foreground">Spent so far</p>
+            <p className="text-lg font-bold font-heading text-destructive">
               {valuesHidden
                 ? maskValue(formatCurrency(report.currentDayExpense))
                 : formatCurrency(report.currentDayExpense)}
             </p>
             <div className="flex items-center gap-1 mt-1">
               {isOverBudget ? (
-                <TrendingUp className="h-3 w-3" style={{ color: "#DC2626" }} />
+                <TrendingUp className="h-3 w-3 text-destructive" />
               ) : (
-                <TrendingDown
-                  className="h-3 w-3"
-                  style={{ color: "#059669" }}
-                />
+                <TrendingDown className="h-3 w-3 text-success" />
               )}
               <span
                 className="text-xs"
-                style={{ color: isOverBudget ? "#DC2626" : "#059669" }}
+                style={{
+                  color: isOverBudget
+                    ? "var(--color-destructive)"
+                    : "var(--color-success)",
+                }}
               >
                 {isOverBudget ? "+" : ""}
                 {percentDiff.toFixed(1)}% vs avg
               </span>
             </div>
           </div>
-          <div
-            className="p-3 rounded-lg"
-            style={{ backgroundColor: "#F0FDF4" }}
-          >
-            <p className="text-xs" style={{ color: "#6B7280" }}>
-              Income
-            </p>
-            <p
-              className="text-lg font-bold font-heading"
-              style={{ color: "#059669" }}
-            >
+          <div className="p-3 rounded-lg bg-success/10">
+            <p className="text-xs text-muted-foreground">Income</p>
+            <p className="text-lg font-bold font-heading text-success">
               {valuesHidden
                 ? maskValue(formatCurrency(report.totalIncome))
                 : formatCurrency(report.totalIncome)}
             </p>
-            <p className="text-xs mt-1" style={{ color: "#6B7280" }}>
+            <p className="text-xs mt-1 text-muted-foreground">
               3-mo avg:{" "}
               {valuesHidden
                 ? maskValue(formatCurrency(report.previousThreeMonthAverage))
@@ -145,7 +126,7 @@ export function MonthlyReportSection({
 
         {/* Trending Chart */}
         <div>
-          <p className="text-sm font-medium mb-2" style={{ color: "#374151" }}>
+          <p className="text-sm font-medium mb-2 text-secondary-foreground">
             Cumulative spending trend
           </p>
           <TrendingReportChart report={report} />

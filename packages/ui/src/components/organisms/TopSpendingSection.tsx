@@ -77,7 +77,7 @@ export function TopSpendingSection({
   const renderTopSpending = (data: CategoryTotal[]) => {
     if (data.length === 0) {
       return (
-        <div className="text-center py-4 text-sm" style={{ color: "#6B7280" }}>
+        <div className="text-center py-4 text-sm text-muted-foreground">
           No spending data for this period
         </div>
       );
@@ -90,7 +90,7 @@ export function TopSpendingSection({
           return (
             <div
               key={item.category}
-              className="flex items-center justify-between py-2 border-b border-[#E5E7EB] last:border-b-0 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors"
+              className="flex items-center justify-between py-2 border-b border-border last:border-b-0 cursor-pointer hover:bg-muted rounded-lg px-2 -mx-2 transition-colors"
               onClick={() => handleCategoryClick(item)}
             >
               <div className="flex items-center gap-3">
@@ -99,44 +99,38 @@ export function TopSpendingSection({
                   style={{
                     backgroundColor:
                       index === 0
-                        ? "#FEE2E2"
+                        ? "var(--color-destructive-bg)"
                         : index === 1
-                          ? "#FEF3C7"
+                          ? "var(--color-warning-bg)"
                           : index === 2
-                            ? "#DBEAFE"
-                            : "#F3F4F6",
+                            ? "var(--color-info-bg)"
+                            : "var(--color-muted)",
                     color:
                       index === 0
-                        ? "#DC2626"
+                        ? "var(--color-destructive)"
                         : index === 1
-                          ? "#D97706"
+                          ? "var(--color-warning)"
                           : index === 2
-                            ? "#2563EB"
-                            : "#6B7280",
+                            ? "var(--color-info)"
+                            : "var(--color-muted-foreground)",
                   }}
                 >
                   {index + 1}
                 </span>
                 <div>
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: "#374151" }}
-                  >
+                  <span className="text-sm font-medium text-secondary-foreground">
                     {item.category}
                   </span>
-                  <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>
+                  <span className="text-xs ml-2 text-muted-foreground">
                     ({item.count} transactions)
                   </span>
                 </div>
               </div>
               <div className="text-right">
-                <span
-                  className="text-sm font-semibold"
-                  style={{ color: "#DC2626" }}
-                >
+                <span className="text-sm font-semibold text-destructive">
                   {valuesHidden ? maskValue(formattedAmount) : formattedAmount}
                 </span>
-                <span className="text-xs block" style={{ color: "#9CA3AF" }}>
+                <span className="text-xs block text-muted-foreground">
                   {item.percentage.toFixed(1)}%
                 </span>
               </div>
@@ -157,22 +151,16 @@ export function TopSpendingSection({
         <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" style={{ color: "#DC2626" }} />
-              <CardTitle
-                className="text-base sm:text-lg font-heading"
-                style={{ color: "#111827" }}
-              >
+              <TrendingUp className="h-5 w-5 text-destructive" />
+              <CardTitle className="text-base sm:text-lg font-heading text-foreground">
                 Top Spending
               </CardTitle>
             </div>
             <div className="text-right">
-              <span className="text-xs" style={{ color: "#6B7280" }}>
+              <span className="text-xs text-muted-foreground">
                 {activeTab === "week" ? "This Week" : "This Month"} Total
               </span>
-              <p
-                className="text-lg font-bold font-heading"
-                style={{ color: "#DC2626" }}
-              >
+              <p className="text-lg font-bold font-heading text-destructive">
                 {valuesHidden
                   ? maskValue(
                       formatCurrency(

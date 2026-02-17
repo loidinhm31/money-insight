@@ -120,16 +120,13 @@ export function TransactionPage() {
           to={to("dashboard")}
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
         >
-          <ArrowLeft className="h-5 w-5" style={{ color: "#374151" }} />
+          <ArrowLeft className="h-5 w-5 text-secondary-foreground" />
         </Link>
         <div>
-          <h1
-            className="text-xl font-bold font-heading"
-            style={{ color: "#111827" }}
-          >
+          <h1 className="text-xl font-bold font-heading text-foreground">
             Transactions & Accounts
           </h1>
-          <p className="text-sm" style={{ color: "#6B7280" }}>
+          <p className="text-sm text-muted-foreground">
             {activeTab === "transactions"
               ? `${transactions.length} transactions`
               : `${accounts.length} accounts`}
@@ -140,10 +137,7 @@ export function TransactionPage() {
       {/* Tabs */}
       <div className="flex-1 overflow-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div
-            className="sticky top-0 z-10 border-b px-4 pt-2"
-            style={{ backgroundColor: "#FFFFFF" }}
-          >
+          <div className="sticky top-0 z-10 border-b px-4 pt-2 bg-card">
             <TabsList className="w-full grid grid-cols-2 mb-2">
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
               <TabsTrigger value="accounts">Accounts</TabsTrigger>
@@ -153,15 +147,9 @@ export function TransactionPage() {
           {/* Transactions Tab Content */}
           <TabsContent value="transactions" className="mt-0">
             {/* Sticky period selector */}
-            <div
-              className="sticky top-[52px] z-10 border-b p-4"
-              style={{ backgroundColor: "#FFFFFF" }}
-            >
+            <div className="sticky top-[52px] z-10 border-b p-4 bg-card">
               <div className="flex items-center justify-between">
-                <span
-                  className="text-sm font-medium"
-                  style={{ color: "#374151" }}
-                >
+                <span className="text-sm font-medium text-secondary-foreground">
                   Group by
                 </span>
                 <TimePeriodSelector

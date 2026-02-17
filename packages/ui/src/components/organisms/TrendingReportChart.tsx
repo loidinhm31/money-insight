@@ -63,43 +63,37 @@ export function TrendingReportChart({ report }: TrendingReportChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <ComposedChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#E6E8EC" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
         <XAxis
           dataKey="day"
-          tick={{ fontSize: 11, fill: "#6F767E" }}
-          stroke="#E6E8EC"
+          tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+          stroke="var(--color-border)"
           tickFormatter={(value) => value.toString()}
         />
         <YAxis
-          tick={{ fontSize: 11, fill: "#6F767E" }}
+          tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
           tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
-          stroke="#E6E8EC"
+          stroke="var(--color-border)"
         />
         <Tooltip
           content={({ payload, label }) => {
             if (!payload || payload.length === 0) return null;
             const data = payload[0].payload;
             return (
-              <div
-                style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
-                className="border rounded-lg p-3 shadow-lg"
-              >
-                <p className="font-semibold mb-2" style={{ color: "#111827" }}>
+              <div className="border rounded-lg p-3 shadow-lg bg-card border-border">
+                <p className="font-semibold mb-2 text-foreground">
                   Day {label}
                 </p>
                 {data.currentExpense !== undefined && (
-                  <p className="text-sm" style={{ color: "#DC2626" }}>
+                  <p className="text-sm text-destructive">
                     This month: {formatCurrency(data.currentExpense)}
                   </p>
                 )}
-                <p className="text-sm" style={{ color: "#6B7280" }}>
+                <p className="text-sm text-muted-foreground">
                   3-month avg: {formatCurrency(data.averageExpense)}
                 </p>
                 {data.dailyExpense !== undefined && data.dailyExpense > 0 && (
-                  <p
-                    className="text-xs mt-1 pt-1 border-t"
-                    style={{ color: "#9CA3AF", borderColor: "#E5E7EB" }}
-                  >
+                  <p className="text-xs mt-1 pt-1 border-t text-muted-foreground border-border">
                     Today: {formatCurrency(data.dailyExpense)}
                   </p>
                 )}
@@ -111,14 +105,14 @@ export function TrendingReportChart({ report }: TrendingReportChartProps) {
           verticalAlign="top"
           height={36}
           formatter={(value) => (
-            <span style={{ color: "#374151", fontSize: 12 }}>{value}</span>
+            <span className="text-secondary-foreground text-xs">{value}</span>
           )}
         />
         <Area
           type="monotone"
           dataKey="currentExpense"
-          fill="#DC2626"
-          stroke="#DC2626"
+          fill="var(--color-destructive)"
+          stroke="var(--color-destructive)"
           fillOpacity={0.15}
           strokeWidth={2}
           name="This month"
@@ -127,7 +121,7 @@ export function TrendingReportChart({ report }: TrendingReportChartProps) {
         <Line
           type="monotone"
           dataKey="averageExpense"
-          stroke="#9CA3AF"
+          stroke="var(--color-muted-foreground)"
           strokeWidth={2}
           strokeDasharray="5 5"
           name="3-month average"

@@ -100,7 +100,7 @@ export function AccountItem({
           <p
             className={cn(
               "font-semibold",
-              displayBalance >= 0 ? "text-green-600" : "text-red-600",
+              displayBalance >= 0 ? "text-success" : "text-destructive",
             )}
           >
             {formatCurrencyWithCode(displayBalance, currency)}

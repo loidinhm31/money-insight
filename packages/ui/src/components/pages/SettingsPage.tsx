@@ -10,8 +10,14 @@ import {
   Loader2,
   LogIn,
   Monitor,
+  Palette,
+  Sun,
+  Moon,
+  Laptop,
+  Terminal,
 } from "lucide-react";
 import { useAuth, useNav } from "@money-insight/ui/hooks";
+import { useTheme, type Theme } from "@money-insight/ui/contexts";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
@@ -45,6 +51,23 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
   const [error, setError] = useState<string | null>(null);
   const { nav } = useNav();
   const { isAuthenticated, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
+
+  const themeOptions: { value: Theme; label: string; icon: React.ReactNode }[] =
+    [
+      { value: "light", label: "Light", icon: <Sun className="h-4 w-4" /> },
+      { value: "dark", label: "Dark", icon: <Moon className="h-4 w-4" /> },
+      {
+        value: "system",
+        label: "System",
+        icon: <Laptop className="h-4 w-4" />,
+      },
+      {
+        value: "cyber",
+        label: "Cyber",
+        icon: <Terminal className="h-4 w-4" />,
+      },
+    ];
 
   const platform = getPlatformName();
   const canOpenInBrowser = isTauri() && isDesktop();
@@ -104,6 +127,41 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
                   </>
                 )}
               </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Theme Settings */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Palette className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Theme</CardTitle>
+                <CardDescription>
+                  Choose your preferred appearance
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {themeOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setTheme(option.value)}
+                  className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                    theme === option.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border hover:border-primary/50 hover:bg-accent"
+                  }`}
+                >
+                  {option.icon}
+                  <span className="text-sm font-medium">{option.label}</span>
+                </button>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -229,7 +287,7 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
             {isAuthenticated ? (
               <Button
                 variant="ghost"
-                className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={async () => {
                   await logout();
                   onLogout?.();

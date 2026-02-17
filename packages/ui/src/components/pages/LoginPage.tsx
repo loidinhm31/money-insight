@@ -85,20 +85,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-8"
-      style={{ backgroundColor: "#F8F9FA" }}
-    >
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-background">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 bg-[#635BFF]/10">
-            <ShieldCheck className="w-8 h-8 text-[#635BFF]" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 bg-primary/10">
+            <ShieldCheck className="w-8 h-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-extrabold text-[#111827] mb-2">
+          <h1 className="text-3xl font-extrabold text-foreground mb-2">
             Money Insight
           </h1>
-          <p className="text-[#6B7280] text-sm">
+          <p className="text-muted-foreground text-sm">
             Sync your spending data across devices
           </p>
         </div>
@@ -107,7 +104,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         <Card>
           <CardContent className="pt-6">
             {/* Mode Toggle */}
-            <div className="flex gap-2 mb-6 p-1 rounded-lg bg-[#F3F4F6]">
+            <div className="flex gap-2 mb-6 p-1 rounded-lg bg-secondary">
               <button
                 type="button"
                 onClick={() => {
@@ -116,8 +113,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 }}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all ${
                   mode === "login"
-                    ? "bg-[#635BFF] text-white shadow-sm"
-                    : "text-[#6B7280]"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground"
                 }`}
               >
                 Login
@@ -130,8 +127,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 }}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all ${
                   mode === "register"
-                    ? "bg-[#635BFF] text-white shadow-sm"
-                    : "text-[#6B7280]"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground"
                 }`}
               >
                 Register
@@ -140,7 +137,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
             {/* Error */}
             {error && (
-              <div className="mb-4 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-600">
+              <div className="mb-4 p-3 rounded-lg text-sm bg-destructive/10 border border-destructive/20 text-destructive">
                 {error}
               </div>
             )}
@@ -151,7 +148,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <div>
                   <Label htmlFor="login-email" className="mb-2 block">
                     <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-[#635BFF]" />
+                      <Mail className="w-4 h-4 text-primary" />
                       Email
                     </div>
                   </Label>
@@ -169,7 +166,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <div>
                   <Label htmlFor="login-password" className="mb-2 block">
                     <div className="flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-[#635BFF]" />
+                      <Lock className="w-4 h-4 text-primary" />
                       Password
                     </div>
                   </Label>
@@ -200,7 +197,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <div>
                   <Label htmlFor="register-username" className="mb-2 block">
                     <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-[#635BFF]" />
+                      <User className="w-4 h-4 text-primary" />
                       Username
                     </div>
                   </Label>
@@ -218,7 +215,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <div>
                   <Label htmlFor="register-email" className="mb-2 block">
                     <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-[#635BFF]" />
+                      <Mail className="w-4 h-4 text-primary" />
                       Email
                     </div>
                   </Label>
@@ -236,7 +233,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <div>
                   <Label htmlFor="register-password" className="mb-2 block">
                     <div className="flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-[#635BFF]" />
+                      <Lock className="w-4 h-4 text-primary" />
                       Password
                     </div>
                   </Label>
@@ -250,7 +247,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     disabled={isLoading}
                     minLength={8}
                   />
-                  <p className="text-xs mt-1 text-[#9CA3AF]">
+                  <p className="text-xs mt-1 text-muted-foreground">
                     At least 8 characters
                   </p>
                 </div>
@@ -261,7 +258,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     className="mb-2 block"
                   >
                     <div className="flex items-center gap-2">
-                      <KeyRound className="w-4 h-4 text-[#635BFF]" />
+                      <KeyRound className="w-4 h-4 text-primary" />
                       Confirm Password
                     </div>
                   </Label>
@@ -298,7 +295,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <button
                   type="button"
                   onClick={onSkip}
-                  className="text-sm font-medium text-[#6B7280] hover:text-[#374151] hover:underline transition-colors"
+                  className="text-sm font-medium text-muted-foreground hover:text-secondary-foreground hover:underline transition-colors"
                   disabled={isLoading}
                 >
                   Skip for now (Local only)
@@ -308,7 +305,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs mt-6 text-[#9CA3AF]">
+        <p className="text-center text-xs mt-6 text-muted-foreground">
           Your data is encrypted and secure
         </p>
       </div>

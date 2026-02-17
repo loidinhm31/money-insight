@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
+@import "@fontsource/jetbrains-mono/300.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/600.css";
+@import "@fontsource/jetbrains-mono/700.css";
+
 @source "../**/*.{ts,tsx}";
+
+/* Custom theme variants */
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant cyber (&:where(.cyber, .cyber *));
 
 /*
  * Payment Gateway Design System
@@ -83,12 +93,284 @@
 }
 
 /* ============================================
+ * DARK MODE THEME
+ * ============================================ */
+
+.dark,
+[data-theme="dark"] {
+  /* Page Background - Dark slate */
+  --color-background: #0f172a;
+
+  /* Text - Light for dark mode */
+  --color-foreground: #f1f5f9;
+
+  /* Cards & Surfaces */
+  --color-card: #1e293b;
+  --color-card-foreground: #f1f5f9;
+
+  /* Popovers & Dropdowns */
+  --color-popover: #1e293b;
+  --color-popover-foreground: #f1f5f9;
+
+  /* Primary - Trust Blue */
+  --color-primary: #818cf8;
+  --color-primary-foreground: #ffffff;
+
+  /* Secondary - Dark surface */
+  --color-secondary: #334155;
+  --color-secondary-foreground: #f1f5f9;
+
+  /* Muted */
+  --color-muted: #334155;
+  --color-muted-foreground: #94a3b8;
+
+  /* Accent */
+  --color-accent: #1e293b;
+  --color-accent-foreground: #818cf8;
+
+  /* Semantic Colors */
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-success: #10b981;
+  --color-success-foreground: #ffffff;
+  --color-warning: #f59e0b;
+  --color-warning-foreground: #ffffff;
+
+  /* Borders */
+  --color-border: #334155;
+  --color-input: #334155;
+  --color-ring: #818cf8;
+
+  /* Chart Colors */
+  --color-chart-1: #818cf8;
+  --color-chart-2: #10b981;
+  --color-chart-3: #f59e0b;
+  --color-chart-4: #a855f7;
+  --color-chart-5: #ec4899;
+
+  color-scheme: dark;
+}
+
+/* ============================================
+ * CYBER THEME - Developer Terminal Aesthetic
+ * ============================================ */
+
+.cyber,
+[data-theme="cyber"] {
+  /* Backgrounds */
+  --color-background: #0F172A;
+  --color-card: #1E293B;
+  --color-popover: #1E293B;
+  --color-foreground: #F1F5F9;
+  --color-card-foreground: #F1F5F9;
+  --color-popover-foreground: #F1F5F9;
+
+  /* Primary - VS Code Blue */
+  --color-primary: #3B82F6;
+  --color-primary-foreground: #FFFFFF;
+
+  /* Secondary - Slate */
+  --color-secondary: #334155;
+  --color-secondary-foreground: #F1F5F9;
+
+  /* Muted */
+  --color-muted: #1E293B;
+  --color-muted-foreground: #94A3B8;
+
+  /* Accent - Orange */
+  --color-accent: #F97316;
+  --color-accent-foreground: #FFFFFF;
+
+  /* Semantic */
+  --color-destructive: #DC2626;
+  --color-destructive-foreground: #FFFFFF;
+  --color-success: #10B981;
+  --color-success-foreground: #FFFFFF;
+  --color-warning: #FACC15;
+  --color-warning-foreground: #0F172A;
+
+  /* Border & Input */
+  --color-border: #334155;
+  --color-input: #1E293B;
+  --color-ring: #3B82F6;
+
+  /* Chart Colors - Cyber palette */
+  --color-chart-1: #3B82F6;
+  --color-chart-2: #10B981;
+  --color-chart-3: #F97316;
+  --color-chart-4: #A855F7;
+  --color-chart-5: #EC4899;
+
+  /* Extended Syntax Color Palette - Developer Tool Aesthetic */
+  --color-syntax-blue: #3B82F6;
+  --color-syntax-cyan: #06B6D4;
+  --color-syntax-green: #10B981;
+  --color-syntax-yellow: #FACC15;
+  --color-syntax-orange: #F97316;
+  --color-syntax-purple: #A855F7;
+  --color-syntax-red: #DC2626;
+  --color-syntax-pink: #EC4899;
+  --color-syntax-amber: #FBBF24;
+
+  color-scheme: dark;
+}
+
+/* Cyber theme font overrides - use CSS variables */
+.cyber,
+[data-theme="cyber"] {
+  --font-heading: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+}
+
+/* Apply cyber fonts to all text */
+.cyber,
+.cyber *,
+[data-theme="cyber"],
+[data-theme="cyber"],
+.cyber .font-mono,
+.cyber code,
+.cyber pre,
+[data-theme="cyber"] .font-mono,
+[data-theme="cyber"] code,
+[data-theme="cyber"] pre {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+}
+
+/* Cyber utility classes */
+.cyber-glass-card {
+  background-color: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(51, 65, 85, 1);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.1);
+  border-radius: 0.5rem;
+}
+
+.cyber-grid-pattern {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.cyber-glass-input {
+  background-color: #0F172A;
+  border: 1px solid rgba(51, 65, 85, 1);
+  color: #F1F5F9;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.875rem;
+  transition: all 200ms;
+}
+
+.cyber-glass-input:focus {
+  border-color: #3B82F6;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* ============================================
+ * GLASSMORPHISM UTILITIES - Enhanced Cyber Theme
+ * ============================================ */
+
+/* Standard glassmorphism card - 90% opacity */
+.glass-card {
+  background-color: rgb(30 41 59 / 0.9);
+  border: 1px solid rgb(51 65 85);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.1);
+}
+
+/* Lighter glassmorphism card - 70% opacity */
+.glass-card-light {
+  background-color: rgb(15 23 42 / 0.7);
+  border: 1px solid rgb(51 65 85 / 0.8);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Glassmorphism card with backdrop blur - for floating/overlay elements */
+.glass-card-blur {
+  background-color: rgb(30 41 59 / 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgb(51 65 85 / 0.8);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.15);
+}
+
+/* ============================================
+ * GLOW EFFECTS - Status and Interactive Elements
+ * ============================================ */
+
+/* Status indicator glows */
+.status-glow-green {
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.6), 0 0 4px rgba(16, 185, 129, 0.4);
+}
+
+.status-glow-blue {
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.6), 0 0 4px rgba(59, 130, 246, 0.4);
+}
+
+.status-glow-red {
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.6), 0 0 4px rgba(220, 38, 38, 0.4);
+}
+
+.status-glow-orange {
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.6), 0 0 4px rgba(249, 115, 22, 0.4);
+}
+
+/* Neon glow effects for interactive elements */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.glow-green {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+/* ============================================
+ * CYBER GRID AND SCANLINE EFFECTS
+ * ============================================ */
+
+/* Grid pattern background - subtle blue grid overlay */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Scanline effect for terminal aesthetic */
+.scanline-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanline-effect::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: rgba(59, 130, 246, 0.15);
+  animation: scanline 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100vh); }
+}
+
+/* ============================================
  * BASE STYLES
  * ============================================ */
 
-/* Force light color scheme */
+/* Default to light color scheme */
 :root {
   color-scheme: light;
+}
+
+/* Dark/Cyber modes use dark color scheme */
+.dark, .cyber,
+[data-theme="dark"], [data-theme="cyber"] {
+  color-scheme: dark;
 }
 
 * {
@@ -98,10 +380,10 @@
 html {
   -webkit-tap-highlight-color: transparent;
   scroll-behavior: smooth;
-  background-color: #f8f9fa;
 }
 
-body {
+body,
+.shadow-body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family:
@@ -219,6 +501,73 @@ textarea {
 
 .bg-accent {
   background-color: #eef2ff !important;
+}
+
+/* ============================================
+ * THEME UTILITY CLASS OVERRIDES
+ * Ensure theme switching works correctly
+ * ============================================ */
+
+/* Dark theme overrides */
+.dark .bg-background,
+[data-theme="dark"] .bg-background {
+  background-color: #0f172a !important;
+}
+
+.dark .bg-card,
+[data-theme="dark"] .bg-card {
+  background-color: #1e293b !important;
+}
+
+.dark .bg-popover,
+[data-theme="dark"] .bg-popover {
+  background-color: #1e293b !important;
+}
+
+.dark .bg-muted,
+[data-theme="dark"] .bg-muted {
+  background-color: #334155 !important;
+}
+
+.dark .bg-secondary,
+[data-theme="dark"] .bg-secondary {
+  background-color: #334155 !important;
+}
+
+.dark .bg-accent,
+[data-theme="dark"] .bg-accent {
+  background-color: #1e293b !important;
+}
+
+/* Cyber theme overrides */
+.cyber .bg-background,
+[data-theme="cyber"] .bg-background {
+  background-color: #0F172A !important;
+}
+
+.cyber .bg-card,
+[data-theme="cyber"] .bg-card {
+  background-color: #1E293B !important;
+}
+
+.cyber .bg-popover,
+[data-theme="cyber"] .bg-popover {
+  background-color: #1E293B !important;
+}
+
+.cyber .bg-muted,
+[data-theme="cyber"] .bg-muted {
+  background-color: #1E293B !important;
+}
+
+.cyber .bg-secondary,
+[data-theme="cyber"] .bg-secondary {
+  background-color: #334155 !important;
+}
+
+.cyber .bg-accent,
+[data-theme="cyber"] .bg-accent {
+  background-color: #F97316 !important;
 }
 
 /* ============================================

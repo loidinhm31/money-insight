@@ -28,50 +28,47 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
   return (
     <ResponsiveContainer width="100%" height={400}>
       <ComposedChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#E6E8EC" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
         <XAxis
           dataKey="month"
-          tick={{ fontSize: 12, fill: "#6F767E" }}
+          tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
           angle={-45}
           textAnchor="end"
           height={80}
-          stroke="#E6E8EC"
+          stroke="var(--color-border)"
         />
         <YAxis
           yAxisId="left"
-          tick={{ fontSize: 12, fill: "#6F767E" }}
+          tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
           tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
-          stroke="#E6E8EC"
+          stroke="var(--color-border)"
         />
         <YAxis
           yAxisId="right"
           orientation="right"
-          tick={{ fontSize: 12, fill: "#6F767E" }}
+          tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
           tickFormatter={(value) => `${value.toFixed(0)}%`}
-          stroke="#E6E8EC"
+          stroke="var(--color-border)"
         />
         <Tooltip
           content={({ payload }) => {
             if (!payload || payload.length === 0) return null;
             const data = payload[0].payload;
             return (
-              <div
-                style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
-                className="border rounded-lg p-3 shadow-lg"
-              >
-                <p className="font-semibold mb-2" style={{ color: "#111827" }}>
+              <div className="border rounded-lg p-3 shadow-lg bg-card border-border">
+                <p className="font-semibold mb-2 text-foreground">
                   {data.month}
                 </p>
-                <p className="text-sm" style={{ color: "#DC2626" }}>
+                <p className="text-sm text-destructive">
                   Expense: {formatCurrency(data.expense)}
                 </p>
-                <p className="text-sm" style={{ color: "#059669" }}>
+                <p className="text-sm text-success">
                   Income: {formatCurrency(data.income)}
                 </p>
-                <p className="text-sm font-medium" style={{ color: "#111827" }}>
+                <p className="text-sm font-medium text-foreground">
                   Savings: {formatCurrency(data.savings)}
                 </p>
-                <p className="text-sm" style={{ color: "#6B7280" }}>
+                <p className="text-sm text-muted-foreground">
                   Rate: {data.savingsRate.toFixed(1)}%
                 </p>
               </div>
@@ -83,8 +80,8 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
           yAxisId="left"
           type="monotone"
           dataKey="expense"
-          fill="#DC2626"
-          stroke="#DC2626"
+          fill="var(--color-destructive)"
+          stroke="var(--color-destructive)"
           fillOpacity={0.1}
           name="Expense"
         />
@@ -92,7 +89,7 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
           yAxisId="left"
           type="monotone"
           dataKey="income"
-          stroke="#059669"
+          stroke="var(--color-success)"
           strokeWidth={2}
           name="Income"
         />
@@ -100,7 +97,7 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
           yAxisId="right"
           type="monotone"
           dataKey="savingsRate"
-          stroke="#635BFF"
+          stroke="var(--color-primary)"
           strokeWidth={2}
           strokeDasharray="5 5"
           name="Savings Rate"

@@ -18,13 +18,19 @@ export function AccountStats({ accounts, accountBalances }: AccountStatsProps) {
 
   const currencies = [...new Set(accounts.map((a) => a.currency))];
 
+  // Use semantic color class names instead of hex values
+  const balanceColor =
+    totalBalance >= 0
+      ? "hsl(var(--color-success))"
+      : "hsl(var(--color-destructive))";
+
   return (
     <div className="grid gap-4 md:grid-cols-3">
       <StatCard title="Total Accounts" value={totalAccounts.toString()} />
       <StatCard
         title="Total Balance"
         value={formatCurrency(totalBalance)}
-        valueColor={totalBalance >= 0 ? "#16a34a" : "#dc2626"}
+        valueColor={balanceColor}
       />
       <StatCard
         title="Currencies"

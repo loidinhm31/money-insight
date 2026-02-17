@@ -40,9 +40,7 @@ export function GroupedTransactionList({
   if (groups.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-sm" style={{ color: "#6B7280" }}>
-          No transactions found
-        </p>
+        <p className="text-sm text-muted-foreground">No transactions found</p>
       </div>
     );
   }
@@ -84,16 +82,12 @@ export function GroupedTransactionList({
                     "h-4 w-4 shrink-0 transition-transform duration-200",
                     isOpen && "rotate-180",
                   )}
-                  style={{ color: "#6B7280" }}
                 />
                 <div>
-                  <span
-                    className="text-sm font-semibold"
-                    style={{ color: "#111827" }}
-                  >
+                  <span className="text-sm font-semibold text-foreground">
                     {group.label}
                   </span>
-                  <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>
+                  <span className="text-xs ml-2 text-muted-foreground">
                     ({group.transactions.length} transaction
                     {group.transactions.length !== 1 ? "s" : ""})
                   </span>
@@ -101,14 +95,14 @@ export function GroupedTransactionList({
               </div>
               <div className="flex items-center gap-3 text-xs">
                 {group.totalExpense > 0 && (
-                  <span className="font-medium" style={{ color: "#DC2626" }}>
+                  <span className="font-medium text-destructive">
                     {valuesHidden
                       ? maskValue(formatCurrency(group.totalExpense))
                       : `-${formatCurrency(group.totalExpense)}`}
                   </span>
                 )}
                 {group.totalIncome > 0 && (
-                  <span className="font-medium" style={{ color: "#059669" }}>
+                  <span className="font-medium text-success">
                     {valuesHidden
                       ? maskValue(formatCurrency(group.totalIncome))
                       : `+${formatCurrency(group.totalIncome)}`}
@@ -130,10 +124,10 @@ export function GroupedTransactionList({
                     ? "Balance Adjustment"
                     : transaction.category;
                   const amountColor = isAdjustment
-                    ? "#2563EB"
+                    ? "var(--color-info)"
                     : isExpense
-                      ? "#DC2626"
-                      : "#059669";
+                      ? "var(--color-destructive)"
+                      : "var(--color-success)";
 
                   return (
                     <div
@@ -148,12 +142,9 @@ export function GroupedTransactionList({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           {isAdjustment && (
-                            <Scale className="h-4 w-4 text-blue-600" />
+                            <Scale className="h-4 w-4 text-info" />
                           )}
-                          <span
-                            className="text-sm font-medium"
-                            style={{ color: "#374151" }}
-                          >
+                          <span className="text-sm font-medium text-secondary-foreground">
                             {format(transactionDate, "MMM dd")}
                           </span>
                           <Badge variant={isAdjustment ? "default" : "outline"}>
@@ -164,18 +155,12 @@ export function GroupedTransactionList({
                           </Badge>
                         </div>
                         {transaction.note && !isAdjustment && (
-                          <p
-                            className="text-sm truncate mt-1"
-                            style={{ color: "#6B7280" }}
-                          >
+                          <p className="text-sm truncate mt-1 text-muted-foreground">
                             {transaction.note}
                           </p>
                         )}
                         {isAdjustment && (
-                          <p
-                            className="text-sm mt-1"
-                            style={{ color: "#2563EB" }}
-                          >
+                          <p className="text-sm mt-1 text-info">
                             Auto-adjusting entry
                           </p>
                         )}

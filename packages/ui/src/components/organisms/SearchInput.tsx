@@ -44,10 +44,7 @@ export function SearchInput({
 
   return (
     <div className="relative">
-      <Search
-        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
-        style={{ color: "#9CA3AF" }}
-      />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input
         type="text"
         value={localValue}
@@ -59,10 +56,10 @@ export function SearchInput({
         <button
           type="button"
           onClick={handleClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-[#F3F4F6] transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted transition-colors"
           aria-label="Clear search"
         >
-          <X className="h-4 w-4" style={{ color: "#6B7280" }} />
+          <X className="h-4 w-4 text-muted-foreground" />
         </button>
       )}
     </div>

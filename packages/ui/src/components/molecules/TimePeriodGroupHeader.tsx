@@ -18,29 +18,24 @@ export function TimePeriodGroupHeader({
   const maskValue = (value: string) => "*".repeat(value.length);
 
   return (
-    <div
-      className="sticky top-[60px] z-[5] bg-background border-b py-3 px-1"
-      style={{ backgroundColor: "#FFFFFF" }}
-    >
+    <div className="sticky top-[60px] z-[5] bg-card border-b py-3 px-1">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold" style={{ color: "#111827" }}>
-            {label}
-          </span>
-          <span className="text-xs" style={{ color: "#9CA3AF" }}>
+          <span className="text-sm font-semibold text-foreground">{label}</span>
+          <span className="text-xs text-muted-foreground">
             ({transactionCount} transaction{transactionCount !== 1 ? "s" : ""})
           </span>
         </div>
         <div className="flex items-center gap-3 text-xs">
           {totalExpense > 0 && (
-            <span style={{ color: "#DC2626" }}>
+            <span className="text-destructive">
               {valuesHidden
                 ? maskValue(formatCurrency(totalExpense))
                 : `-${formatCurrency(totalExpense)}`}
             </span>
           )}
           {totalIncome > 0 && (
-            <span style={{ color: "#059669" }}>
+            <span className="text-success">
               {valuesHidden
                 ? maskValue(formatCurrency(totalIncome))
                 : `+${formatCurrency(totalIncome)}`}

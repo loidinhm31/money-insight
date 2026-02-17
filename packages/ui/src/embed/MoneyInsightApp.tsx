@@ -27,6 +27,7 @@ import {
   PlatformProvider,
   type IPlatformServices,
 } from "@money-insight/ui/platform";
+import { ThemeProvider } from "@money-insight/ui/contexts";
 
 export interface AuthTokens {
   accessToken?: string;
@@ -127,17 +128,19 @@ export function MoneyInsightApp({
 
   return (
     <div ref={containerRef} className={className}>
-      <PlatformProvider services={services}>
-        <PortalContainerContext.Provider value={portalContainer}>
-          <BasePathContext.Provider value={basePath || ""}>
-            {useRouter ? (
-              <BrowserRouter basename={basePath}>{content}</BrowserRouter>
-            ) : (
-              content
-            )}
-          </BasePathContext.Provider>
-        </PortalContainerContext.Provider>
-      </PlatformProvider>
+      <ThemeProvider embedded={embedded}>
+        <PlatformProvider services={services}>
+          <PortalContainerContext.Provider value={portalContainer}>
+            <BasePathContext.Provider value={basePath || ""}>
+              {useRouter ? (
+                <BrowserRouter basename={basePath}>{content}</BrowserRouter>
+              ) : (
+                content
+              )}
+            </BasePathContext.Provider>
+          </PortalContainerContext.Provider>
+        </PlatformProvider>
+      </ThemeProvider>
     </div>
   );
 }

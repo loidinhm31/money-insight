@@ -99,13 +99,10 @@ export function Dashboard({
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
         <div>
-          <h1
-            className="text-2xl sm:text-3xl font-bold font-heading"
-            style={{ color: "#111827" }}
-          >
+          <h1 className="text-2xl sm:text-3xl font-bold font-heading text-foreground">
             Money Analysis
           </h1>
-          <p className="text-sm sm:text-base" style={{ color: "#6B7280" }}>
+          <p className="text-sm sm:text-base text-muted-foreground">
             {stats?.transactionCount} transactions • {stats?.categoryCount}{" "}
             categories
             {filter.search && ` • Searching: "${filter.search}"`}
@@ -123,7 +120,7 @@ export function Dashboard({
 
       {/* Quick Stats */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium" style={{ color: "#6B7280" }}>
+        <span className="text-sm font-medium text-muted-foreground">
           Financial Summary
         </span>
         <Button
@@ -134,9 +131,9 @@ export function Dashboard({
           title={valuesHidden ? "Show values" : "Hide values"}
         >
           {valuesHidden ? (
-            <EyeOff className="h-4 w-4" style={{ color: "#6B7280" }} />
+            <EyeOff className="h-4 w-4 text-muted-foreground" />
           ) : (
-            <Eye className="h-4 w-4" style={{ color: "#6B7280" }} />
+            <Eye className="h-4 w-4 text-muted-foreground" />
           )}
         </Button>
       </div>
@@ -159,7 +156,7 @@ export function Dashboard({
             const formatted = formatCurrency(stats?.totalIncome || 0);
             return valuesHidden ? maskValue(formatted) : formatted;
           })()}
-          valueColor="#059669"
+          valueColor="var(--color-success)"
         />
         <StatCard
           title="Net Savings"
@@ -167,7 +164,11 @@ export function Dashboard({
             const formatted = formatCurrency(stats?.netSavings || 0);
             return valuesHidden ? maskValue(formatted) : formatted;
           })()}
-          valueColor={(stats?.netSavings || 0) >= 0 ? "#059669" : "#DC2626"}
+          valueColor={
+            (stats?.netSavings || 0) >= 0
+              ? "var(--color-success)"
+              : "var(--color-destructive)"
+          }
         />
         <StatCard
           title="Savings Rate"
@@ -183,16 +184,13 @@ export function Dashboard({
         <Card>
           <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
             <div className="flex items-center gap-2">
-              <Wallet className="h-5 w-5" style={{ color: "#6B7280" }} />
-              <CardTitle
-                className="text-base sm:text-lg font-heading"
-                style={{ color: "#111827" }}
-              >
+              <Wallet className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="text-base sm:text-lg font-heading text-foreground">
                 Wallet Balances
               </CardTitle>
             </div>
             <div className="mt-2">
-              <span className="text-sm" style={{ color: "#6B7280" }}>
+              <span className="text-sm text-muted-foreground">
                 Total Balance
               </span>
               <p
@@ -200,8 +198,8 @@ export function Dashboard({
                 style={{
                   color:
                     walletBalances.reduce((sum, w) => sum + w.balance, 0) >= 0
-                      ? "#059669"
-                      : "#DC2626",
+                      ? "var(--color-success)"
+                      : "var(--color-destructive)",
                 }}
               >
                 {(() => {
@@ -219,7 +217,7 @@ export function Dashboard({
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="wallets" className="border-b-0">
                 <AccordionTrigger className="text-sm hover:no-underline py-2">
-                  <span style={{ color: "#6B7280" }}>
+                  <span className="text-muted-foreground">
                     View {walletBalances.length} wallet
                     {walletBalances.length > 1 ? "s" : ""}
                   </span>
@@ -231,19 +229,18 @@ export function Dashboard({
                       return (
                         <div
                           key={wallet.account}
-                          className="flex items-center justify-between py-2 border-b border-[#E5E7EB] last:border-b-0"
+                          className="flex items-center justify-between py-2 border-b border-border last:border-b-0"
                         >
-                          <span
-                            className="text-sm font-medium"
-                            style={{ color: "#374151" }}
-                          >
+                          <span className="text-sm font-medium text-secondary-foreground">
                             {wallet.account}
                           </span>
                           <span
                             className="text-sm font-semibold"
                             style={{
                               color:
-                                wallet.balance >= 0 ? "#059669" : "#DC2626",
+                                wallet.balance >= 0
+                                  ? "var(--color-success)"
+                                  : "var(--color-destructive)",
                             }}
                           >
                             {valuesHidden
@@ -302,10 +299,7 @@ export function Dashboard({
           <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
             <Card>
               <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
-                <CardTitle
-                  className="text-base sm:text-lg font-heading"
-                  style={{ color: "#111827" }}
-                >
+                <CardTitle className="text-base sm:text-lg font-heading text-foreground">
                   Spending by Category
                 </CardTitle>
               </CardHeader>
@@ -319,10 +313,7 @@ export function Dashboard({
 
             <Card>
               <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
-                <CardTitle
-                  className="text-base sm:text-lg font-heading"
-                  style={{ color: "#111827" }}
-                >
+                <CardTitle className="text-base sm:text-lg font-heading text-foreground">
                   Monthly Trend
                 </CardTitle>
               </CardHeader>
@@ -336,10 +327,7 @@ export function Dashboard({
         <TabsContent value="monthly">
           <Card>
             <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
-              <CardTitle
-                className="text-base sm:text-lg font-heading"
-                style={{ color: "#111827" }}
-              >
+              <CardTitle className="text-base sm:text-lg font-heading text-foreground">
                 Monthly Analysis
               </CardTitle>
             </CardHeader>
@@ -352,10 +340,7 @@ export function Dashboard({
         <TabsContent value="categories">
           <Card>
             <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
-              <CardTitle
-                className="text-base sm:text-lg font-heading"
-                style={{ color: "#111827" }}
-              >
+              <CardTitle className="text-base sm:text-lg font-heading text-foreground">
                 Category Breakdown
               </CardTitle>
             </CardHeader>
@@ -371,10 +356,7 @@ export function Dashboard({
         <TabsContent value="transactions">
           <Card>
             <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
-              <CardTitle
-                className="text-base sm:text-lg font-heading"
-                style={{ color: "#111827" }}
-              >
+              <CardTitle className="text-base sm:text-lg font-heading text-foreground">
                 All Transactions
               </CardTitle>
             </CardHeader>

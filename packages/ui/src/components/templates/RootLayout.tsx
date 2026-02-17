@@ -69,10 +69,7 @@ export function RootLayout() {
   const hasTransactions = transactions.length > 0;
 
   return (
-    <div
-      className="min-h-screen font-body antialiased flex"
-      style={{ backgroundColor: "#F8F9FA" }}
-    >
+    <div className="min-h-screen font-body antialiased flex bg-background">
       {/* Desktop Sidebar */}
       <Sidebar
         collapsed={sidebarCollapsed}

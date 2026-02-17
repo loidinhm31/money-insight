@@ -37,13 +37,13 @@ export function TransactionItem({
     <div
       className={cn(
         "flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors cursor-pointer",
-        isAdjustment && "border-blue-200 bg-blue-50/50",
+        isAdjustment && "border-primary/20 bg-primary/5",
       )}
       onClick={onClick}
     >
       <div className="flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          {isAdjustment && <Scale className="h-4 w-4 text-blue-600" />}
+          {isAdjustment && <Scale className="h-4 w-4 text-primary" />}
           <span className="font-medium">
             {format(transactionDate, "MMM dd, yyyy")}
           </span>
@@ -56,7 +56,7 @@ export function TransactionItem({
           <p className="text-sm text-muted-foreground mt-1">{note}</p>
         )}
         {isAdjustment && (
-          <p className="text-sm text-blue-600 mt-1">Auto-adjusting entry</p>
+          <p className="text-sm text-primary mt-1">Auto-adjusting entry</p>
         )}
       </div>
       <div className="text-right">
@@ -64,10 +64,10 @@ export function TransactionItem({
           className={cn(
             "font-semibold",
             isAdjustment
-              ? "text-blue-600"
+              ? "text-primary"
               : isExpense
-                ? "text-red-600"
-                : "text-green-600",
+                ? "text-destructive"
+                : "text-success",
           )}
         >
           {isExpense

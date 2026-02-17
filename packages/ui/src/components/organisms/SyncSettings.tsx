@@ -128,25 +128,25 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
-            <Cloud className="w-6 h-6 text-[#635BFF]" />
+            <Cloud className="w-6 h-6 text-primary" />
             <div className="flex-1">
-              <h2 className="text-2xl font-semibold mb-2 text-[#111827]">
+              <h2 className="text-2xl font-semibold mb-2 text-foreground">
                 Cloud Sync
               </h2>
-              <p className="mb-4 text-[#6B7280]">
+              <p className="mb-4 text-muted-foreground">
                 Keep your data synchronized across devices
               </p>
 
               {/* Status indicator */}
               <div className="flex items-center gap-2 mb-4">
                 {isSyncing ? (
-                  <RefreshCw className="w-4 h-4 animate-spin text-[#635BFF]" />
+                  <RefreshCw className="w-4 h-4 animate-spin text-primary" />
                 ) : authStatus?.isAuthenticated ? (
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <CheckCircle2 className="w-4 h-4 text-success" />
                 ) : (
-                  <CloudOff className="w-4 h-4 text-gray-400" />
+                  <CloudOff className="w-4 h-4 text-muted-foreground" />
                 )}
-                <span className="text-sm text-[#6B7280]">
+                <span className="text-sm text-muted-foreground">
                   {isSyncing
                     ? "Syncing..."
                     : authStatus?.isAuthenticated
@@ -154,7 +154,7 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
                       : "Not logged in"}
                 </span>
                 {syncStatus?.lastSyncAt && (
-                  <span className="text-xs text-[#9CA3AF]">
+                  <span className="text-xs text-muted-foreground/80">
                     — Last sync: {formatTimestamp(syncStatus.lastSyncAt)}
                   </span>
                 )}
@@ -162,26 +162,26 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
 
               {/* Sync Progress */}
               {isSyncing && syncProgress && (
-                <div className="mt-3 p-3 rounded-lg bg-[#635BFF]/5 border border-[#635BFF]/20">
+                <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
                   <div className="flex items-center gap-2 mb-2">
-                    <RefreshCw className="w-4 h-4 animate-spin text-[#635BFF]" />
-                    <span className="text-sm font-medium text-[#374151]">
+                    <RefreshCw className="w-4 h-4 animate-spin text-primary" />
+                    <span className="text-sm font-medium text-secondary-foreground">
                       {syncProgress.phase === "pushing" ? "Pushing" : "Pulling"}{" "}
                       records...
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 text-xs text-[#6B7280]">
+                  <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <ArrowUpCircle className="w-3 h-3 text-[#635BFF]" />
+                      <ArrowUpCircle className="w-3 h-3 text-primary" />
                       <span>Pushed: {syncProgress.recordsPushed}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <ArrowDownCircle className="w-3 h-3 text-[#635BFF]" />
+                      <ArrowDownCircle className="w-3 h-3 text-primary" />
                       <span>Pulled: {syncProgress.recordsPulled}</span>
                     </div>
                   </div>
                   {syncProgress.phase === "pulling" && (
-                    <div className="mt-2 text-xs text-[#9CA3AF]">
+                    <div className="mt-2 text-xs text-muted-foreground/70">
                       Page {syncProgress.currentPage}
                       {syncProgress.hasMore && " — more records available"}
                     </div>
@@ -193,7 +193,7 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
             {/* Pending Changes Badge */}
             {syncStatus?.pendingChanges !== undefined &&
               syncStatus.pendingChanges > 0 && (
-                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#635BFF]/10 text-[#635BFF] border border-[#635BFF]/30">
+                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/30">
                   <AlertCircle className="w-3 h-3" />
                   {syncStatus.pendingChanges} pending change
                   {syncStatus.pendingChanges !== 1 ? "s" : ""}
@@ -205,19 +205,19 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
               <div
                 className={`mt-3 p-4 rounded-lg border ${
                   syncResult.success
-                    ? "bg-green-50 border-green-200"
-                    : "bg-red-50 border-red-200"
+                    ? "bg-success/5 border-success/30"
+                    : "bg-destructive/5 border-destructive/30"
                 }`}
               >
                 <div className="flex items-center gap-2 mb-3">
                   {syncResult.success ? (
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    <CheckCircle2 className="w-4 h-4 text-success" />
                   ) : (
-                    <AlertCircle className="w-4 h-4 text-red-500" />
+                    <AlertCircle className="w-4 h-4 text-destructive" />
                   )}
                   <span
                     className={`font-semibold text-sm ${
-                      syncResult.success ? "text-green-700" : "text-red-700"
+                      syncResult.success ? "text-success" : "text-destructive"
                     }`}
                   >
                     {syncResult.success
@@ -228,38 +228,44 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
 
                 {syncResult.success && (
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="flex flex-col items-center p-2 rounded-lg bg-white/60">
-                      <ArrowUpCircle className="w-4 h-4 mb-1 text-[#635BFF]" />
-                      <span className="text-lg font-bold text-[#111827]">
+                    <div className="flex flex-col items-center p-2 rounded-lg bg-card/60">
+                      <ArrowUpCircle className="w-4 h-4 mb-1 text-primary" />
+                      <span className="text-lg font-bold text-foreground">
                         {syncResult.pushed}
                       </span>
-                      <span className="text-xs text-[#6B7280]">Pushed</span>
+                      <span className="text-xs text-muted-foreground">
+                        Pushed
+                      </span>
                     </div>
-                    <div className="flex flex-col items-center p-2 rounded-lg bg-white/60">
-                      <ArrowDownCircle className="w-4 h-4 mb-1 text-[#635BFF]" />
-                      <span className="text-lg font-bold text-[#111827]">
+                    <div className="flex flex-col items-center p-2 rounded-lg bg-card/60">
+                      <ArrowDownCircle className="w-4 h-4 mb-1 text-primary" />
+                      <span className="text-lg font-bold text-foreground">
                         {syncResult.pulled}
                       </span>
-                      <span className="text-xs text-[#6B7280]">Pulled</span>
+                      <span className="text-xs text-muted-foreground">
+                        Pulled
+                      </span>
                     </div>
-                    <div className="flex flex-col items-center p-2 rounded-lg bg-white/60">
+                    <div className="flex flex-col items-center p-2 rounded-lg bg-card/60">
                       <AlertTriangle
                         className={`w-4 h-4 mb-1 ${
                           syncResult.conflicts > 0
-                            ? "text-amber-500"
-                            : "text-[#9CA3AF]"
+                            ? "text-warning"
+                            : "text-muted-foreground"
                         }`}
                       />
                       <span
                         className={`text-lg font-bold ${
                           syncResult.conflicts > 0
-                            ? "text-amber-600"
-                            : "text-[#111827]"
+                            ? "text-warning"
+                            : "text-foreground"
                         }`}
                       >
                         {syncResult.conflicts}
                       </span>
-                      <span className="text-xs text-[#6B7280]">Conflicts</span>
+                      <span className="text-xs text-muted-foreground">
+                        Conflicts
+                      </span>
                     </div>
                   </div>
                 )}
@@ -271,7 +277,7 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
 
       {/* Error */}
       {error && (
-        <div className="p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-600">
+        <div className="p-3 rounded-lg text-sm bg-destructive/10 border border-destructive/30 text-destructive">
           {error}
         </div>
       )}
@@ -305,7 +311,7 @@ export const SyncSettings: React.FC<SyncSettingsProps> = () => {
             <div>
               <Label htmlFor="server-url" className="mb-2 block">
                 <div className="flex items-center gap-2">
-                  <Server className="w-4 h-4 text-[#635BFF]" />
+                  <Server className="w-4 h-4 text-primary" />
                   Server URL
                 </div>
               </Label>

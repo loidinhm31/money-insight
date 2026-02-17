@@ -78,7 +78,7 @@ export function TransactionListModal({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle style={{ color: "#111827" }}>{title}</DialogTitle>
+          <DialogTitle className="text-foreground">{title}</DialogTitle>
           <DialogDescription>
             {subtitle && <span>{subtitle} • </span>}
             {transactions.length} transactions
@@ -145,7 +145,11 @@ export function TransactionListModal({
                       </td>
                       <td
                         className="p-3 text-right font-semibold whitespace-nowrap"
-                        style={{ color: isExpense ? "#DC2626" : "#059669" }}
+                        style={{
+                          color: isExpense
+                            ? "var(--color-destructive)"
+                            : "var(--color-success)",
+                        }}
                       >
                         {isExpense ? "-" : "+"}
                         {valuesHidden
@@ -192,7 +196,11 @@ export function TransactionListModal({
                   <div className="text-right ml-2 flex-shrink-0">
                     <p
                       className="font-semibold"
-                      style={{ color: isExpense ? "#DC2626" : "#059669" }}
+                      style={{
+                        color: isExpense
+                          ? "var(--color-destructive)"
+                          : "var(--color-success)",
+                      }}
                     >
                       {isExpense ? "-" : "+"}
                       {valuesHidden

@@ -63,11 +63,8 @@ export function AppShell({
 
   if (isAuthLoading && !skipAuth) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "#F8F9FA" }}
-      >
-        <Spinner className="w-8 h-8 text-[#635BFF]" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Spinner className="w-8 h-8 text-primary" />
       </div>
     );
   }
@@ -84,11 +81,8 @@ export function AppShell({
     <BrowserSyncInitializer>
       <Suspense
         fallback={
-          <div
-            className="min-h-screen flex items-center justify-center"
-            style={{ backgroundColor: "#F8F9FA" }}
-          >
-            <Spinner className="w-8 h-8 text-[#635BFF]" />
+          <div className="min-h-screen flex items-center justify-center bg-background">
+            <Spinner className="w-8 h-8 text-primary" />
           </div>
         }
       >

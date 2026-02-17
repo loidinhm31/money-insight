@@ -5,20 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@money-insight/ui/lib";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#635BFF] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer",
   {
     variants: {
       variant: {
         default:
-          "bg-[#635BFF] text-white shadow-sm hover:bg-[#4F46E5] active:bg-[#4338CA]",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:bg-primary/80",
         destructive:
-          "bg-[#DC2626] text-white shadow-sm hover:bg-[#B91C1C] active:bg-[#991B1B]",
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 active:bg-destructive/80",
         outline:
-          "border border-[#E5E7EB] bg-white text-[#111827] shadow-sm hover:bg-[#F3F4F6] hover:border-[#635BFF]",
+          "border border-border bg-card text-foreground shadow-sm hover:bg-muted hover:border-primary",
         secondary:
-          "bg-[#F3F4F6] text-[#374151] shadow-sm hover:bg-[#E5E7EB] active:bg-[#D1D5DB]",
-        ghost: "hover:bg-[#F3F4F6] hover:text-[#111827]",
-        link: "text-[#635BFF] underline-offset-4 hover:underline",
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/90 active:bg-secondary/80",
+        ghost: "hover:bg-muted hover:text-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-10 px-4 py-2",

@@ -68,13 +68,12 @@ export function DropZone({
       onDrop={onDrop}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
-      style={{
-        backgroundColor: isDragActive ? "#EEF2FF" : "#FFFFFF",
-        borderColor: isDragActive ? "#635BFF" : "#E5E7EB",
-      }}
       className={cn(
         "border-2 border-dashed rounded-lg p-6 sm:p-12 text-center cursor-pointer",
-        "transition-colors duration-200 hover:border-[#635BFF]",
+        "transition-colors duration-200",
+        isDragActive
+          ? "bg-accent border-primary"
+          : "bg-card border-border hover:border-primary",
         isProcessing && "opacity-50 pointer-events-none",
         className,
       )}
@@ -95,27 +94,16 @@ export function DropZone({
         {isProcessing ? (
           <>
             <Spinner size="lg" />
-            <p className="text-sm" style={{ color: "#6B7280" }}>
-              {processingText}
-            </p>
+            <p className="text-sm text-muted-foreground">{processingText}</p>
           </>
         ) : (
           <>
-            <Upload
-              className="h-10 w-10 sm:h-12 sm:w-12"
-              style={{ color: "#6B7280" }}
-            />
+            <Upload className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
             <div>
-              <p
-                className="text-base sm:text-lg font-medium font-heading"
-                style={{ color: "#111827" }}
-              >
+              <p className="text-base sm:text-lg font-medium font-heading text-foreground">
                 {isDragActive ? dropText : defaultText}
               </p>
-              <p
-                className="text-xs sm:text-sm mt-1 sm:mt-2"
-                style={{ color: "#6B7280" }}
-              >
+              <p className="text-xs sm:text-sm mt-1 sm:mt-2 text-muted-foreground">
                 {subText}
               </p>
             </div>

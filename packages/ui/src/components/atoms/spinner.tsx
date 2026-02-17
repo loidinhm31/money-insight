@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@money-insight/ui/lib";
 
 const spinnerVariants = cva(
-  "animate-spin rounded-full border-b-2 border-[#635BFF]",
+  "animate-spin rounded-full border-b-2 border-primary",
   {
     variants: {
       size: {

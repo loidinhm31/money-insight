@@ -12,18 +12,18 @@ import { formatCurrency } from "@money-insight/ui/lib";
 import { TransactionListModal } from "./TransactionListModal";
 import { SubCategoryBreakdownModal } from "./SubCategoryBreakdownModal";
 
-// Payment gateway color palette (Stripe-inspired)
+// Chart color palette using CSS variables
 const COLORS = [
-  "#635BFF",
-  "#059669",
-  "#D97706",
-  "#7C3AED",
-  "#DB2777",
-  "#0891B2",
-  "#DC2626",
-  "#65A30D",
-  "#4F46E5",
-  "#EA580C",
+  "var(--color-chart-1)",
+  "var(--color-chart-2)",
+  "var(--color-chart-3)",
+  "var(--color-chart-4)",
+  "var(--color-chart-5)",
+  "var(--color-accent)",
+  "var(--color-destructive)",
+  "var(--color-success)",
+  "var(--color-primary)",
+  "var(--color-warning)",
 ];
 
 export interface CategoryPieChartProps {
@@ -88,7 +88,7 @@ export function CategoryPieChart({
               `${entry.name}: ${entry.percentage.toFixed(1)}%`
             }
             outerRadius={120}
-            fill="#8884d8"
+            fill="var(--color-chart-1)"
             dataKey="value"
             onClick={handleClick}
             style={{ cursor: "pointer" }}
@@ -98,7 +98,9 @@ export function CategoryPieChart({
                 key={`cell-${index}`}
                 fill={COLORS[index % COLORS.length]}
                 stroke={
-                  entry.name === selectedCategory?.category ? "#000" : "none"
+                  entry.name === selectedCategory?.category
+                    ? "var(--color-foreground)"
+                    : "none"
                 }
                 strokeWidth={entry.name === selectedCategory?.category ? 3 : 0}
               />
@@ -109,31 +111,26 @@ export function CategoryPieChart({
               if (!payload || payload.length === 0) return null;
               const data = payload[0].payload;
               return (
-                <div
-                  style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
-                  className="border rounded-lg p-3 shadow-lg"
-                >
-                  <p className="font-semibold" style={{ color: "#111827" }}>
-                    {data.name}
-                  </p>
-                  <p className="text-sm" style={{ color: "#111827" }}>
+                <div className="border rounded-lg p-3 shadow-lg bg-card border-border">
+                  <p className="font-semibold text-foreground">{data.name}</p>
+                  <p className="text-sm text-foreground">
                     Amount:{" "}
                     {valuesHidden
                       ? "*".repeat(formatCurrency(data.value).length)
                       : formatCurrency(data.value)}
                   </p>
-                  <p className="text-sm" style={{ color: "#111827" }}>
+                  <p className="text-sm text-foreground">
                     Percentage: {data.percentage.toFixed(1)}%
                   </p>
-                  <p className="text-sm" style={{ color: "#111827" }}>
+                  <p className="text-sm text-foreground">
                     Transactions: {data.count}
                   </p>
                   {data.hasSubCategories && (
-                    <p className="text-xs mt-1" style={{ color: "#7C3AED" }}>
+                    <p className="text-xs mt-1 text-primary">
                       Has sub-categories
                     </p>
                   )}
-                  <p className="text-xs mt-1" style={{ color: "#6B7280" }}>
+                  <p className="text-xs mt-1 text-muted-foreground">
                     Click to view details
                   </p>
                 </div>

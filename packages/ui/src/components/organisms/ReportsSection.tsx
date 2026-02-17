@@ -70,13 +70,10 @@ export function ReportsSection({
     <div className="space-y-4">
       {/* Header */}
       <div className="px-1">
-        <h2
-          className="text-lg font-bold font-heading"
-          style={{ color: "#111827" }}
-        >
+        <h2 className="text-lg font-bold font-heading text-foreground">
           Monthly Report
         </h2>
-        <p className="text-sm" style={{ color: "#6B7280" }}>
+        <p className="text-sm text-muted-foreground">
           {monthName} {year} - Transactions counted in report
         </p>
       </div>
@@ -86,23 +83,17 @@ export function ReportsSection({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingDown className="h-4 w-4" style={{ color: "#DC2626" }} />
-              <span
-                className="text-sm font-medium"
-                style={{ color: "#374151" }}
-              >
+              <TrendingDown className="h-4 w-4 text-destructive" />
+              <span className="text-sm font-medium text-secondary-foreground">
                 Spending
               </span>
             </div>
-            <p
-              className="text-lg font-bold font-heading"
-              style={{ color: "#DC2626" }}
-            >
+            <p className="text-lg font-bold font-heading text-destructive">
               {valuesHidden
                 ? maskValue(formatCurrency(totalSpending))
                 : formatCurrency(totalSpending)}
             </p>
-            <p className="text-xs" style={{ color: "#6B7280" }}>
+            <p className="text-xs text-muted-foreground">
               {spendingTransactions.length} transactions
             </p>
           </CardContent>
@@ -111,23 +102,17 @@ export function ReportsSection({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4" style={{ color: "#059669" }} />
-              <span
-                className="text-sm font-medium"
-                style={{ color: "#374151" }}
-              >
+              <TrendingUp className="h-4 w-4 text-success" />
+              <span className="text-sm font-medium text-secondary-foreground">
                 Income
               </span>
             </div>
-            <p
-              className="text-lg font-bold font-heading"
-              style={{ color: "#059669" }}
-            >
+            <p className="text-lg font-bold font-heading text-success">
               {valuesHidden
                 ? maskValue(formatCurrency(totalIncome))
                 : formatCurrency(totalIncome)}
             </p>
-            <p className="text-xs" style={{ color: "#6B7280" }}>
+            <p className="text-xs text-muted-foreground">
               {incomeTransactions.length} transactions
             </p>
           </CardContent>
@@ -139,20 +124,14 @@ export function ReportsSection({
         {/* Spending Transactions List */}
         <Card className="h-fit">
           <CardHeader className="p-4 pb-2">
-            <CardTitle
-              className="text-base font-heading flex items-center gap-2"
-              style={{ color: "#111827" }}
-            >
-              <TrendingDown className="h-4 w-4" style={{ color: "#DC2626" }} />
+            <CardTitle className="text-base font-heading flex items-center gap-2 text-foreground">
+              <TrendingDown className="h-4 w-4 text-destructive" />
               Spending ({spendingTransactions.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             {spendingTransactions.length === 0 ? (
-              <p
-                className="text-sm py-4 text-center"
-                style={{ color: "#6B7280" }}
-              >
+              <p className="text-sm py-4 text-center text-muted-foreground">
                 No spending transactions this month
               </p>
             ) : (
@@ -160,25 +139,18 @@ export function ReportsSection({
                 {spendingTransactions.map((t) => (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between p-3 rounded-lg"
-                    style={{ backgroundColor: "#FEF2F2" }}
+                    className="flex items-center justify-between p-3 rounded-lg bg-destructive/5"
                   >
                     <div className="flex-1 min-w-0">
-                      <p
-                        className="text-sm font-medium truncate"
-                        style={{ color: "#111827" }}
-                      >
+                      <p className="text-sm font-medium truncate text-foreground">
                         {t.note || t.category}
                       </p>
-                      <p className="text-xs" style={{ color: "#6B7280" }}>
+                      <p className="text-xs text-muted-foreground">
                         {new Date(t.date).toLocaleDateString()} • {t.category} •{" "}
                         {t.account}
                       </p>
                     </div>
-                    <p
-                      className="text-sm font-bold ml-2"
-                      style={{ color: "#DC2626" }}
-                    >
+                    <p className="text-sm font-bold ml-2 text-destructive">
                       {valuesHidden
                         ? maskValue(formatCurrency(t.expense))
                         : `-${formatCurrency(t.expense)}`}
@@ -189,14 +161,11 @@ export function ReportsSection({
             )}
             {/* Total - always visible */}
             {spendingTransactions.length > 0 && (
-              <div
-                className="flex items-center justify-between p-3 rounded-lg mt-2"
-                style={{ backgroundColor: "#374151" }}
-              >
-                <p className="text-sm font-bold" style={{ color: "#FFFFFF" }}>
+              <div className="flex items-center justify-between p-3 rounded-lg mt-2 bg-secondary">
+                <p className="text-sm font-bold text-secondary-foreground">
                   Total Spending
                 </p>
-                <p className="text-sm font-bold" style={{ color: "#FFFFFF" }}>
+                <p className="text-sm font-bold text-secondary-foreground">
                   {valuesHidden
                     ? maskValue(formatCurrency(totalSpending))
                     : formatCurrency(totalSpending)}
@@ -209,20 +178,14 @@ export function ReportsSection({
         {/* Income Transactions List */}
         <Card className="h-fit">
           <CardHeader className="p-4 pb-2">
-            <CardTitle
-              className="text-base font-heading flex items-center gap-2"
-              style={{ color: "#111827" }}
-            >
-              <TrendingUp className="h-4 w-4" style={{ color: "#059669" }} />
+            <CardTitle className="text-base font-heading flex items-center gap-2 text-foreground">
+              <TrendingUp className="h-4 w-4 text-success" />
               Income ({incomeTransactions.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             {incomeTransactions.length === 0 ? (
-              <p
-                className="text-sm py-4 text-center"
-                style={{ color: "#6B7280" }}
-              >
+              <p className="text-sm py-4 text-center text-muted-foreground">
                 No income transactions this month
               </p>
             ) : (
@@ -230,25 +193,18 @@ export function ReportsSection({
                 {incomeTransactions.map((t) => (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between p-3 rounded-lg"
-                    style={{ backgroundColor: "#F0FDF4" }}
+                    className="flex items-center justify-between p-3 rounded-lg bg-success/5"
                   >
                     <div className="flex-1 min-w-0">
-                      <p
-                        className="text-sm font-medium truncate"
-                        style={{ color: "#111827" }}
-                      >
+                      <p className="text-sm font-medium truncate text-foreground">
                         {t.note || t.category}
                       </p>
-                      <p className="text-xs" style={{ color: "#6B7280" }}>
+                      <p className="text-xs text-muted-foreground">
                         {new Date(t.date).toLocaleDateString()} • {t.category} •{" "}
                         {t.account}
                       </p>
                     </div>
-                    <p
-                      className="text-sm font-bold ml-2"
-                      style={{ color: "#059669" }}
-                    >
+                    <p className="text-sm font-bold ml-2 text-success">
                       {valuesHidden
                         ? maskValue(formatCurrency(t.income))
                         : `+${formatCurrency(t.income)}`}
@@ -259,14 +215,11 @@ export function ReportsSection({
             )}
             {/* Total - always visible */}
             {incomeTransactions.length > 0 && (
-              <div
-                className="flex items-center justify-between p-3 rounded-lg mt-2"
-                style={{ backgroundColor: "#374151" }}
-              >
-                <p className="text-sm font-bold" style={{ color: "#FFFFFF" }}>
+              <div className="flex items-center justify-between p-3 rounded-lg mt-2 bg-secondary">
+                <p className="text-sm font-bold text-secondary-foreground">
                   Total Income
                 </p>
-                <p className="text-sm font-bold" style={{ color: "#FFFFFF" }}>
+                <p className="text-sm font-bold text-secondary-foreground">
                   {valuesHidden
                     ? maskValue(formatCurrency(totalIncome))
                     : formatCurrency(totalIncome)}
