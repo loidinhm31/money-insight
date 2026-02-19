@@ -80,6 +80,21 @@
   /* Accordion animations */
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  /* Semantic aliases - matches cham-lang/code-notes/fin-catch naming pattern */
+  --color-bg-light: #f8f9fa;
+  --color-bg-white: #ffffff;
+  --color-bg-app: #f8f9fa;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #6b7280;
+  --color-border-light: #e5e7eb;
+  --color-primary-500: #635bff;
+  --color-primary-600: #4f46e5;
+
+  /* Font families */
+  --font-family-heading: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family-body: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 @keyframes accordion-down {
@@ -148,6 +163,17 @@
   --color-chart-4: #a855f7;
   --color-chart-5: #ec4899;
 
+  /* Semantic aliases */
+  --color-bg-light: #0f172a;
+  --color-bg-white: #1e293b;
+  --color-bg-app: #0f172a;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  --color-border-light: #334155;
+  --color-primary-500: #818cf8;
+  --color-primary-600: #6366f1;
+
   color-scheme: dark;
 }
 
@@ -190,7 +216,7 @@
   --color-warning-foreground: #0F172A;
 
   /* Border & Input */
-  --color-border: #334155;
+  --color-border: #475569;
   --color-input: #1E293B;
   --color-ring: #3B82F6;
 
@@ -200,6 +226,21 @@
   --color-chart-3: #F97316;
   --color-chart-4: #A855F7;
   --color-chart-5: #EC4899;
+
+  /* Semantic aliases */
+  --color-bg-light: #0F172A;
+  --color-bg-white: #1E293B;
+  --color-bg-app: #0F172A;
+  --color-text-primary: #F1F5F9;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+  --color-border-light: #334155;
+  --color-primary-500: #3B82F6;
+  --color-primary-600: #2563EB;
+
+  /* Font families - monospace for cyber theme */
+  --font-family-heading: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  --font-family-body: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
 
   /* Extended Syntax Color Palette - Developer Tool Aesthetic */
   --color-syntax-blue: #3B82F6;
@@ -215,25 +256,12 @@
   color-scheme: dark;
 }
 
-/* Cyber theme font overrides - use CSS variables */
-.cyber,
-[data-theme="cyber"] {
-  --font-heading: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
-  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
-}
-
 /* Apply cyber fonts to all text */
 .cyber,
 .cyber *,
 [data-theme="cyber"],
-[data-theme="cyber"],
-.cyber .font-mono,
-.cyber code,
-.cyber pre,
-[data-theme="cyber"] .font-mono,
-[data-theme="cyber"] code,
-[data-theme="cyber"] pre {
-  font-family: var(--font-mono, "JetBrains Mono", monospace);
+[data-theme="cyber"] * {
+  font-family: var(--font-family-body);
 }
 
 /* Cyber utility classes */
@@ -384,15 +412,9 @@ html {
 
 body,
 .shadow-body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
-  font-family:
-    "Open Sans",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  background-color: var(--color-bg-app);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -401,25 +423,13 @@ body,
 
 /* Heading Font */
 .font-heading {
-  font-family:
-    "Poppins",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  font-family: var(--font-family-heading);
   font-weight: 600;
 }
 
 /* Body Font */
 .font-body {
-  font-family:
-    "Open Sans",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  font-family: var(--font-family-body);
 }
 
 /* ============================================
@@ -461,6 +471,27 @@ textarea {
   background: #9ca3af;
 }
 
+.dark ::-webkit-scrollbar-track,
+[data-theme="dark"] ::-webkit-scrollbar-track,
+.cyber ::-webkit-scrollbar-track,
+[data-theme="cyber"] ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb,
+[data-theme="dark"] ::-webkit-scrollbar-thumb,
+.cyber ::-webkit-scrollbar-thumb,
+[data-theme="cyber"] ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
+.cyber ::-webkit-scrollbar-thumb:hover,
+[data-theme="cyber"] ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
 /* ============================================
  * UTILITY CLASSES
  * ============================================ */
@@ -476,98 +507,6 @@ textarea {
   box-shadow:
     0 4px 6px -1px rgb(0 0 0 / 0.1),
     0 2px 4px -2px rgb(0 0 0 / 0.1);
-}
-
-/* Ensure all surfaces are solid */
-.bg-background {
-  background-color: #f8f9fa !important;
-}
-
-.bg-card {
-  background-color: #ffffff !important;
-}
-
-.bg-popover {
-  background-color: #ffffff !important;
-}
-
-.bg-muted {
-  background-color: #f3f4f6 !important;
-}
-
-.bg-secondary {
-  background-color: #f3f4f6 !important;
-}
-
-.bg-accent {
-  background-color: #eef2ff !important;
-}
-
-/* ============================================
- * THEME UTILITY CLASS OVERRIDES
- * Ensure theme switching works correctly
- * ============================================ */
-
-/* Dark theme overrides */
-.dark .bg-background,
-[data-theme="dark"] .bg-background {
-  background-color: #0f172a !important;
-}
-
-.dark .bg-card,
-[data-theme="dark"] .bg-card {
-  background-color: #1e293b !important;
-}
-
-.dark .bg-popover,
-[data-theme="dark"] .bg-popover {
-  background-color: #1e293b !important;
-}
-
-.dark .bg-muted,
-[data-theme="dark"] .bg-muted {
-  background-color: #334155 !important;
-}
-
-.dark .bg-secondary,
-[data-theme="dark"] .bg-secondary {
-  background-color: #334155 !important;
-}
-
-.dark .bg-accent,
-[data-theme="dark"] .bg-accent {
-  background-color: #1e293b !important;
-}
-
-/* Cyber theme overrides */
-.cyber .bg-background,
-[data-theme="cyber"] .bg-background {
-  background-color: #0F172A !important;
-}
-
-.cyber .bg-card,
-[data-theme="cyber"] .bg-card {
-  background-color: #1E293B !important;
-}
-
-.cyber .bg-popover,
-[data-theme="cyber"] .bg-popover {
-  background-color: #1E293B !important;
-}
-
-.cyber .bg-muted,
-[data-theme="cyber"] .bg-muted {
-  background-color: #1E293B !important;
-}
-
-.cyber .bg-secondary,
-[data-theme="cyber"] .bg-secondary {
-  background-color: #334155 !important;
-}
-
-.cyber .bg-accent,
-[data-theme="cyber"] .bg-accent {
-  background-color: #F97316 !important;
 }
 
 /* ============================================
@@ -629,6 +568,28 @@ body.modal-open {
   background-color: rgba(5, 150, 105, 0.1);
 }
 
-.text-success {
-  color: #059669;
+/* ============================================
+ * CYBER THEME - Tab & Separator Contrast
+ * ============================================ */
+
+/* Tab list: use page background so active tab (bg-card) pops out clearly */
+.cyber [role="tablist"],
+[data-theme="cyber"] [role="tablist"] {
+  background-color: var(--color-bg-light);
+  border-color: var(--color-border);
+}
+
+/* Active tab: primary-tinted background + blue label */
+.cyber [role="tab"][data-state="active"],
+[data-theme="cyber"] [role="tab"][data-state="active"] {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #3B82F6;
+  box-shadow: none;
+}
+
+/* Inactive tab hover: subtle primary tint */
+.cyber [role="tab"]:not([data-state="active"]):hover,
+[data-theme="cyber"] [role="tab"]:not([data-state="active"]):hover {
+  background-color: rgba(59, 130, 246, 0.06);
+  color: #F1F5F9;
 }

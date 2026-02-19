@@ -62,7 +62,7 @@ export function ReportsPage() {
       <div className="flex items-center gap-3">
         <Link
           to={to("dashboard")}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-lg hover:bg-(--color-bg-light) transition-colors"
         >
           <ArrowLeft className="h-5 w-5 text-secondary-foreground" />
         </Link>

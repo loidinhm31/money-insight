@@ -118,7 +118,7 @@ export function TransactionPage() {
       <div className="flex items-center gap-3 p-4">
         <Link
           to={to("dashboard")}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-lg hover:bg-(--color-bg-light) transition-colors"
         >
           <ArrowLeft className="h-5 w-5 text-secondary-foreground" />
         </Link>
@@ -149,7 +149,7 @@ export function TransactionPage() {
             {/* Sticky period selector */}
             <div className="sticky top-[52px] z-10 border-b p-4 bg-card">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-secondary-foreground">
+                <span className="text-sm font-medium text-muted-foreground">
                   Group by
                 </span>
                 <TimePeriodSelector

@@ -9,7 +9,6 @@ import {
   Layers,
   Loader2,
   LogIn,
-  Monitor,
   Palette,
   Sun,
   Moon,
@@ -29,7 +28,6 @@ import {
   CardTitle,
 } from "@money-insight/ui/components/atoms";
 import {
-  getPlatformName,
   isDesktop,
   isOpenedFromDesktop,
   isTauri,
@@ -68,8 +66,6 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
         icon: <Terminal className="h-4 w-4" />,
       },
     ];
-
-  const platform = getPlatformName();
   const canOpenInBrowser = isTauri() && isDesktop();
   const isFromDesktop = isOpenedFromDesktop();
 
@@ -105,32 +101,6 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
       <MobileHeader title="Settings" showBack={!!onBack} onBack={onBack} />
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Platform Info */}
-        <Card>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-accent text-accent-foreground">
-                {platform === "tauri" ? (
-                  <>
-                    <Monitor className="h-4 w-4 mr-2" />
-                    Desktop App
-                  </>
-                ) : isFromDesktop ? (
-                  <>
-                    <Globe className="h-4 w-4 mr-2" />
-                    Browser (Connected)
-                  </>
-                ) : (
-                  <>
-                    <Globe className="h-4 w-4 mr-2" />
-                    Browser
-                  </>
-                )}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Theme Settings */}
         <Card>
           <CardHeader className="pb-3">

@@ -15,6 +15,7 @@ export interface QmServerAuthConfig {
   baseUrl?: string;
   appId?: string;
   apiKey?: string;
+  apiBasePath?: string;
 }
 
 interface ApiResponse<T> {
@@ -41,6 +42,7 @@ export class QmServerAuthAdapter implements IAuthService {
   private baseUrl: string;
   private appId: string;
   private apiKey: string;
+  private apiBasePath: string;
   private statusCache: AuthStatus | null = null;
   private statusCacheTimestamp: number = 0;
   private static STATUS_CACHE_TTL = 10000;
@@ -67,6 +69,7 @@ export class QmServerAuthAdapter implements IAuthService {
       this.appId = config?.appId || getDefaultAppId();
       this.apiKey = config?.apiKey || getDefaultApiKey();
     }
+    this.apiBasePath = config?.apiBasePath ?? "/api/v1";
 
     serviceLogger.qmServer(`Initialized with baseUrl: ${this.baseUrl}`);
   }
@@ -201,7 +204,7 @@ export class QmServerAuthAdapter implements IAuthService {
       const response = await this.post<
         { username: string; email: string; password: string },
         AuthResponse
-      >("/api/v1/auth/register", { username, email, password });
+      >(`${this.apiBasePath}/auth/register`, { username, email, password });
       this.storeAuthData(response);
       return response;
     } catch (error) {
@@ -215,7 +218,7 @@ export class QmServerAuthAdapter implements IAuthService {
       const response = await this.post<
         { email: string; password: string },
         AuthResponse
-      >("/api/v1/auth/login", { email, password });
+      >(`${this.apiBasePath}/auth/login`, { email, password });
       this.storeAuthData(response);
       this.invalidateStatusCache();
       return response;
@@ -244,7 +247,7 @@ export class QmServerAuthAdapter implements IAuthService {
       const response = await this.post<
         { refreshToken: string },
         { accessToken: string; refreshToken: string }
-      >("/api/v1/auth/refresh", { refreshToken });
+      >(`${this.apiBasePath}/auth/refresh`, { refreshToken });
       this.setStoredValue(STORAGE_KEYS.ACCESS_TOKEN, response.accessToken);
       this.setStoredValue(STORAGE_KEYS.REFRESH_TOKEN, response.refreshToken);
       serviceLogger.qmServerDebug("Token refreshed");
@@ -306,7 +309,7 @@ export class QmServerAuthAdapter implements IAuthService {
         email: string;
         apps: string[];
         isAdmin: boolean;
-      }>("/api/v1/auth/me", true);
+      }>(`${this.apiBasePath}/auth/me`, true);
 
       const status: AuthStatus = {
         isAuthenticated: true,
