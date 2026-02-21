@@ -1,7 +1,8 @@
 import { format } from "date-fns";
 import { Scale } from "lucide-react";
-import { Badge } from "@money-insight/ui/components/atoms";
+import { Badge, CategoryIcon } from "@money-insight/ui/components/atoms";
 import { formatCurrency, cn } from "@money-insight/ui/lib";
+import { useCategoryIcon } from "@money-insight/ui/hooks";
 import type { TransactionSource } from "@money-insight/ui/types";
 
 export interface TransactionItemProps {
@@ -26,9 +27,11 @@ export function TransactionItem({
   source,
   onClick,
 }: TransactionItemProps) {
+  const { getIcon } = useCategoryIcon();
   const transactionDate = typeof date === "string" ? new Date(date) : date;
   const isExpense = expense > 0;
   const isAdjustment = source === "balance_adjustment";
+  const iconName = getIcon(category);
 
   // For adjustments, display "Balance Adjustment" instead of the internal category
   const displayCategory = isAdjustment ? "Balance Adjustment" : category;
@@ -48,7 +51,16 @@ export function TransactionItem({
             {format(transactionDate, "MMM dd, yyyy")}
           </span>
           <Badge variant={isAdjustment ? "default" : "outline"}>
-            {displayCategory}
+            <span className="inline-flex items-center gap-1">
+              {iconName && (
+                <CategoryIcon
+                  name={iconName}
+                  size={14}
+                  className="inline-block shrink-0"
+                />
+              )}
+              {displayCategory}
+            </span>
           </Badge>
           <Badge variant="secondary">{account}</Badge>
         </div>

@@ -7,11 +7,13 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CategoryIcon,
 } from "@money-insight/ui/components/atoms";
 import { TransactionListModal } from "@money-insight/ui/components/organisms";
 import { AlertCircle, TrendingUp, Repeat } from "lucide-react";
 import { SpendingBottleneck } from "@money-insight/ui/types";
 import { formatCurrency } from "@money-insight/ui/lib";
+import { useCategoryIcon } from "@money-insight/ui/hooks";
 
 export interface BottleneckAlertsProps {
   bottlenecks: SpendingBottleneck[];
@@ -22,6 +24,7 @@ export function BottleneckAlerts({
   bottlenecks,
   valuesHidden = false,
 }: BottleneckAlertsProps) {
+  const { getIcon: getCategoryIconName } = useCategoryIcon();
   const [selectedBottleneck, setSelectedBottleneck] =
     useState<SpendingBottleneck | null>(null);
 
@@ -72,6 +75,13 @@ export function BottleneckAlerts({
                 <div className="mt-0.5">{getIcon(bottleneck.type)}</div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
+                    {getCategoryIconName(bottleneck.category) && (
+                      <CategoryIcon
+                        name={getCategoryIconName(bottleneck.category)}
+                        size={16}
+                        className="inline-block shrink-0"
+                      />
+                    )}
                     <span className="font-semibold">{bottleneck.category}</span>
                     <Badge className={getSeverityColor(bottleneck.severity)}>
                       {bottleneck.severity}

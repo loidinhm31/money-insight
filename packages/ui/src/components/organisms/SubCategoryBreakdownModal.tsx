@@ -5,8 +5,10 @@ import {
   DialogHeader,
   DialogTitle,
   Button,
+  CategoryIcon,
 } from "@money-insight/ui/components/atoms";
 import { formatCurrency } from "@money-insight/ui/lib";
+import { useCategoryIcon } from "@money-insight/ui/hooks";
 import type { CategorySpending } from "@money-insight/ui/types";
 
 export interface SubCategoryBreakdownModalProps {
@@ -26,7 +28,9 @@ export function SubCategoryBreakdownModal({
   onSubCategorySelect,
   valuesHidden = false,
 }: SubCategoryBreakdownModalProps) {
+  const { getIcon } = useCategoryIcon();
   const maskValue = (value: string) => "*".repeat(value.length);
+  const parentIcon = getIcon(parentCategory);
 
   const totalAmount = subCategories.reduce((sum, cat) => sum + cat.total, 0);
   const totalCount = subCategories.reduce((sum, cat) => sum + cat.count, 0);
@@ -37,7 +41,15 @@ export function SubCategoryBreakdownModal({
         <DialogHeader className="flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Layers className="h-5 w-5 text-primary" />
+              {parentIcon ? (
+                <CategoryIcon
+                  name={parentIcon}
+                  size={20}
+                  className="text-primary"
+                />
+              ) : (
+                <Layers className="h-5 w-5 text-primary" />
+              )}
               <DialogTitle className="text-lg">{parentCategory}</DialogTitle>
             </div>
             <Button

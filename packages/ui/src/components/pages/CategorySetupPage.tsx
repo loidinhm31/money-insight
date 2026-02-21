@@ -25,7 +25,10 @@ import {
   CardTitle,
   Input,
 } from "@money-insight/ui/components/atoms";
-import { MobileHeader } from "@money-insight/ui/components/molecules";
+import {
+  MobileHeader,
+  IconPicker,
+} from "@money-insight/ui/components/molecules";
 import {
   useCategoryGroupStore,
   useSpendingStore,
@@ -77,6 +80,9 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
   );
   const [editingStandaloneName, setEditingStandaloneName] = useState("");
   const [standaloneLoading, setStandaloneLoading] = useState(false);
+  const [storedCategories, setStoredCategories] = useState<
+    import("@money-insight/ui/types").Category[]
+  >([]);
 
   // Get all unique categories from transactions with their stats
   const categoryStats = useMemo(() => {
@@ -346,6 +352,40 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
     }
   };
 
+  // Load stored categories for icon data
+  useEffect(() => {
+    categoryService
+      .getCategories()
+      .then(setStoredCategories)
+      .catch(() => {});
+  }, []);
+
+  // Helper to find stored category icon by name
+  const getCategoryIcon = (name: string) =>
+    storedCategories.find((c) => c.name === name)?.icon;
+
+  // Update a standalone category's icon
+  const handleUpdateStandaloneIcon = async (
+    categoryName: string,
+    icon: string,
+  ) => {
+    const cat = storedCategories.find((c) => c.name === categoryName);
+    if (cat) {
+      const updated = await categoryService.updateCategory({ ...cat, icon });
+      setStoredCategories((prev) =>
+        prev.map((c) => (c.id === updated.id ? updated : c)),
+      );
+    } else {
+      // Create a stored category record with the icon
+      const created = await categoryService.addCategory({
+        name: categoryName,
+        isExpense: true,
+        icon,
+      });
+      setStoredCategories((prev) => [...prev, created]);
+    }
+  };
+
   // Auto-expand groups when first loaded
   useEffect(() => {
     if (groups.length > 0 && expandedGroups.size === 0) {
@@ -481,6 +521,16 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
                         groupStats.ownStats.count === 0 && (
                           <div className="w-5" />
                         )}
+
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="shrink-0"
+                      >
+                        <IconPicker
+                          value={group.icon}
+                          onChange={(icon) => updateGroup({ ...group, icon })}
+                        />
+                      </div>
 
                       {isEditing ? (
                         <Input
@@ -984,6 +1034,17 @@ export function CategorySetupPage({ onBack }: CategorySetupPageProps) {
                           </>
                         ) : (
                           <>
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="shrink-0"
+                            >
+                              <IconPicker
+                                value={getCategoryIcon(category)}
+                                onChange={(icon) =>
+                                  handleUpdateStandaloneIcon(category, icon)
+                                }
+                              />
+                            </div>
                             <span className="flex-1 text-sm font-medium">
                               {category}
                             </span>

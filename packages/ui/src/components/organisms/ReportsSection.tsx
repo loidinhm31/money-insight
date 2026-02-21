@@ -3,8 +3,10 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CategoryIcon,
 } from "@money-insight/ui/components/atoms";
 import { formatCurrency } from "@money-insight/ui/lib";
+import { useCategoryIcon } from "@money-insight/ui/hooks";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import type { Transaction } from "@money-insight/ui/types";
 
@@ -19,6 +21,7 @@ export function ReportsSection({
   valuesHidden = false,
   currentYearMonth,
 }: ReportsSectionProps) {
+  const { getIcon } = useCategoryIcon();
   const maskValue = (value: string) => "*".repeat(value.length);
 
   // Get current month's year-month string
@@ -145,9 +148,16 @@ export function ReportsSection({
                       <p className="text-sm font-medium truncate text-foreground">
                         {t.note || t.category}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(t.date).toLocaleDateString()} • {t.category} •{" "}
-                        {t.account}
+                      <p className="text-xs text-muted-foreground inline-flex items-center gap-0.5 flex-wrap">
+                        {new Date(t.date).toLocaleDateString()} •{" "}
+                        {getIcon(t.category) && (
+                          <CategoryIcon
+                            name={getIcon(t.category)}
+                            size={12}
+                            className="inline-block shrink-0"
+                          />
+                        )}
+                        {t.category} • {t.account}
                       </p>
                     </div>
                     <p className="text-sm font-bold ml-2 text-destructive">
@@ -199,9 +209,16 @@ export function ReportsSection({
                       <p className="text-sm font-medium truncate text-foreground">
                         {t.note || t.category}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(t.date).toLocaleDateString()} • {t.category} •{" "}
-                        {t.account}
+                      <p className="text-xs text-muted-foreground inline-flex items-center gap-0.5 flex-wrap">
+                        {new Date(t.date).toLocaleDateString()} •{" "}
+                        {getIcon(t.category) && (
+                          <CategoryIcon
+                            name={getIcon(t.category)}
+                            size={12}
+                            className="inline-block shrink-0"
+                          />
+                        )}
+                        {t.category} • {t.account}
                       </p>
                     </div>
                     <p className="text-sm font-bold ml-2 text-success">

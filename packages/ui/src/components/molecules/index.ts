@@ -18,3 +18,4 @@ export {
   TimePeriodGroupHeader,
   type TimePeriodGroupHeaderProps,
 } from "./TimePeriodGroupHeader";
+export { IconPicker, type IconPickerProps } from "./IconPicker";

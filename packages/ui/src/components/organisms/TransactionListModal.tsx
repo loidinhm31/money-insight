@@ -7,7 +7,9 @@ import {
   DialogDescription,
   ScrollArea,
   Badge,
+  CategoryIcon,
 } from "@money-insight/ui/components/atoms";
+import { useCategoryIcon } from "@money-insight/ui/hooks";
 import { Pagination } from "@money-insight/ui/components/molecules";
 import { format } from "date-fns";
 import { formatCurrency } from "@money-insight/ui/lib";
@@ -46,6 +48,7 @@ export function TransactionListModal({
   transactions,
   valuesHidden = false,
 }: TransactionListModalProps) {
+  const { getIcon } = useCategoryIcon();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
@@ -132,7 +135,16 @@ export function TransactionListModal({
                       </td>
                       <td className="p-3">
                         <Badge variant="secondary">
-                          {transaction.category}
+                          <span className="inline-flex items-center gap-1">
+                            {getIcon(transaction.category) && (
+                              <CategoryIcon
+                                name={getIcon(transaction.category)}
+                                size={14}
+                                className="inline-block shrink-0"
+                              />
+                            )}
+                            {transaction.category}
+                          </span>
                         </Badge>
                       </td>
                       <td className="p-3">
@@ -181,7 +193,16 @@ export function TransactionListModal({
                         {format(getDate(transaction), "MMM dd")}
                       </span>
                       <Badge variant="secondary" className="text-xs">
-                        {transaction.category}
+                        <span className="inline-flex items-center gap-1">
+                          {getIcon(transaction.category) && (
+                            <CategoryIcon
+                              name={getIcon(transaction.category)}
+                              size={12}
+                              className="inline-block shrink-0"
+                            />
+                          )}
+                          {transaction.category}
+                        </span>
                       </Badge>
                       <Badge variant="outline" className="text-xs">
                         {transaction.account}

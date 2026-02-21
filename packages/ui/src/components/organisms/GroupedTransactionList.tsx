@@ -6,7 +6,9 @@ import {
   AccordionContent,
   AccordionItem,
   Badge,
+  CategoryIcon,
 } from "@money-insight/ui/components/atoms";
+import { useCategoryIcon } from "@money-insight/ui/hooks";
 import {
   cn,
   formatCurrency,
@@ -28,6 +30,7 @@ export function GroupedTransactionList({
   valuesHidden = false,
   onTransactionClick,
 }: GroupedTransactionListProps) {
+  const { getIcon } = useCategoryIcon();
   const maskValue = (value: string) => "*".repeat(value.length);
 
   const groups = groupTransactionsByTimePeriod(transactions, periodMode);
@@ -148,7 +151,16 @@ export function GroupedTransactionList({
                             {format(transactionDate, "MMM dd")}
                           </span>
                           <Badge variant={isAdjustment ? "default" : "outline"}>
-                            {displayCategory}
+                            <span className="inline-flex items-center gap-1">
+                              {getIcon(transaction.category) && (
+                                <CategoryIcon
+                                  name={getIcon(transaction.category)}
+                                  size={14}
+                                  className="inline-block shrink-0"
+                                />
+                              )}
+                              {displayCategory}
+                            </span>
                           </Badge>
                           <Badge variant="secondary">
                             {transaction.account}

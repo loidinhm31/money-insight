@@ -6,3 +6,4 @@ export {
   usePortalContainer,
 } from "./useNav";
 export { useAuth, type UseAuthOptions } from "./useAuth";
+export { useCategoryIcon } from "./useCategoryIcon";

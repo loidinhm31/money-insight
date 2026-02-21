@@ -9,6 +9,8 @@ import {
 } from "recharts";
 import { CategorySpending } from "@money-insight/ui/types";
 import { formatCurrency } from "@money-insight/ui/lib";
+import { CategoryIcon } from "@money-insight/ui/components/atoms";
+import { useCategoryIcon } from "@money-insight/ui/hooks";
 import { TransactionListModal } from "./TransactionListModal";
 import { SubCategoryBreakdownModal } from "./SubCategoryBreakdownModal";
 
@@ -35,6 +37,7 @@ export function CategoryPieChart({
   data,
   valuesHidden = false,
 }: CategoryPieChartProps) {
+  const { getIcon } = useCategoryIcon();
   const [selectedCategory, setSelectedCategory] =
     useState<CategorySpending | null>(null);
   const [showSubCategoryModal, setShowSubCategoryModal] = useState(false);
@@ -112,7 +115,16 @@ export function CategoryPieChart({
               const data = payload[0].payload;
               return (
                 <div className="border rounded-lg p-3 shadow-lg bg-card border-border">
-                  <p className="font-semibold text-foreground">{data.name}</p>
+                  <p className="font-semibold text-foreground inline-flex items-center gap-1.5">
+                    {getIcon(data.name) && (
+                      <CategoryIcon
+                        name={getIcon(data.name)}
+                        size={16}
+                        className="inline-block shrink-0"
+                      />
+                    )}
+                    {data.name}
+                  </p>
                   <p className="text-sm text-foreground">
                     Amount:{" "}
                     {valuesHidden

@@ -8,7 +8,9 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  CategoryIcon,
 } from "@money-insight/ui/components/atoms";
+import { useCategoryIcon } from "@money-insight/ui/hooks";
 import { TransactionListModal } from "@money-insight/ui/components/organisms";
 import { formatCurrency } from "@money-insight/ui/lib";
 import { TrendingUp } from "lucide-react";
@@ -39,6 +41,7 @@ export function TopSpendingSection({
   transactions,
   valuesHidden = false,
 }: TopSpendingSectionProps) {
+  const { getIcon } = useCategoryIcon();
   const [activeTab, setActiveTab] = useState<"week" | "month">("week");
   const [selectedCategory, setSelectedCategory] =
     useState<CategoryTotal | null>(null);
@@ -117,7 +120,14 @@ export function TopSpendingSection({
                 >
                   {index + 1}
                 </span>
-                <div>
+                <div className="flex items-center gap-1.5">
+                  {getIcon(item.category) && (
+                    <CategoryIcon
+                      name={getIcon(item.category)}
+                      size={16}
+                      className="inline-block shrink-0"
+                    />
+                  )}
                   <span className="text-sm font-medium text-secondary-foreground">
                     {item.category}
                   </span>

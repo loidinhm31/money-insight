@@ -49,3 +49,8 @@ export {
 } from "./select";
 export { Label, labelVariants, type LabelProps } from "./label";
 export { Spinner, spinnerVariants, type SpinnerProps } from "./spinner";
+export {
+  CategoryIcon,
+  CATEGORY_ICONS,
+  type CategoryIconProps,
+} from "./CategoryIcon";
