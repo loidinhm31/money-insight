@@ -12,7 +12,7 @@ import type { NewTransaction } from "@money-insight/ui/types";
  * Allows user to upload CSV or manually add first transaction
  */
 export function InitialSetupPage() {
-  const { nav } = useNav();
+  const { navigate } = useNav();
   const { isDbReady, addTransaction, importFromCSV } = useSpendingStore();
 
   // Handle CSV file processing
@@ -24,9 +24,9 @@ export function InitialSetupPage() {
       }
       await importFromCSV(transactions, file.name);
       // Navigate to dashboard after successful import
-      nav("dashboard");
+      navigate("/dashboard");
     },
-    [importFromCSV, nav],
+    [importFromCSV, navigate],
   );
 
   // Handle add transaction
@@ -34,9 +34,9 @@ export function InitialSetupPage() {
     async (tx: NewTransaction): Promise<void> => {
       await addTransaction(tx);
       // Navigate to dashboard after adding first transaction
-      nav("dashboard");
+      navigate("/dashboard");
     },
-    [addTransaction, nav],
+    [addTransaction, navigate],
   );
 
   // Get categories and accounts for form

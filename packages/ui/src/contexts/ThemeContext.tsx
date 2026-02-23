@@ -25,6 +25,11 @@ interface ThemeProviderProps {
    * This prevents theme conflicts between multiple embedded apps.
    */
   embedded?: boolean;
+  /**
+   * Custom event name dispatched when theme changes in embedded mode.
+   * Parent app should listen for this event to update shadow DOM styles.
+   */
+  themeEventName?: string;
 }
 
 const getSystemTheme = (): "light" | "dark" => {
@@ -39,6 +44,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   defaultTheme = "cyber",
   storageKey = MONEY_INSIGHT_THEME_STORAGE_KEY,
   embedded = false,
+  themeEventName = MONEY_INSIGHT_THEME_EVENT,
 }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window === "undefined") return defaultTheme;
@@ -83,7 +89,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
       // In embedded mode, dispatch custom event for ShadowWrapper to handle
       // This avoids modifying document.documentElement which would affect other apps
       window.dispatchEvent(
-        new CustomEvent(MONEY_INSIGHT_THEME_EVENT, {
+        new CustomEvent(themeEventName, {
           detail: { theme: resolved },
         }),
       );
@@ -98,7 +104,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
         root.classList.add(resolved);
       }
     }
-  }, [theme, storageKey, embedded]);
+  }, [theme, storageKey, embedded, themeEventName]);
 
   useEffect(() => {
     if (theme !== "system") return;
@@ -110,7 +116,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
       if (embedded) {
         window.dispatchEvent(
-          new CustomEvent(MONEY_INSIGHT_THEME_EVENT, {
+          new CustomEvent(themeEventName, {
             detail: { theme: newTheme },
           }),
         );
@@ -124,7 +130,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
-  }, [theme, embedded]);
+  }, [theme, embedded, themeEventName]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);

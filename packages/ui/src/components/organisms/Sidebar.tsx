@@ -41,31 +41,31 @@ export function Sidebar({
 
   const navItems: NavItem[] = [
     {
-      path: to("dashboard"),
+      path: to("/dashboard"),
       label: "Dashboard",
       icon: <Home className="h-5 w-5" />,
       show: hasTransactions,
     },
     {
-      path: to("transactions"),
+      path: to("/transactions"),
       label: "Transactions",
       icon: <List className="h-5 w-5" />,
       show: hasTransactions,
     },
     {
-      path: to("add"),
+      path: to("/add"),
       label: "Add Transaction",
       icon: <PlusCircle className="h-5 w-5" />,
       show: true,
     },
     {
-      path: to("categories"),
+      path: to("/categories"),
       label: "Categories",
       icon: <Layers className="h-5 w-5" />,
       show: hasTransactions,
     },
     {
-      path: to("settings"),
+      path: to("/settings"),
       label: "Settings",
       icon: <Settings className="h-5 w-5" />,
       show: true,
@@ -77,7 +77,7 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col h-screen sticky top-0 bg-card border-r border-border transition-all duration-300",
+        "fixed left-0 top-0 bottom-0 z-40 hidden md:flex flex-col bg-card border-r border-border transition-all duration-300",
         collapsed ? "w-16" : "w-64",
         className,
       )}

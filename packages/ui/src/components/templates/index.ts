@@ -4,5 +4,4 @@ export {
   type FileUploadSectionProps,
 } from "./FileUploadSection";
 export { AddTransactionEntry } from "./AddTransactionEntry";
-export { RootLayout } from "./RootLayout";
 export { AppShell, type AppShellProps } from "./AppShell";

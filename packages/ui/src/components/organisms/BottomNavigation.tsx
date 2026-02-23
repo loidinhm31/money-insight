@@ -29,25 +29,25 @@ export function BottomNavigation({
 
   const navItems: BottomNavItem[] = [
     {
-      path: to("dashboard"),
+      path: to("/dashboard"),
       label: "Dashboard",
       icon: <Home className="h-5 w-5" />,
       show: hasTransactions,
     },
     {
-      path: to("transactions"),
+      path: to("/transactions"),
       label: "Transactions",
       icon: <List className="h-5 w-5" />,
       show: hasTransactions,
     },
     {
-      path: to("add"),
+      path: to("/add"),
       label: "Add",
       icon: <PlusCircle className="h-5 w-5" />,
       show: true,
     },
     {
-      path: to("settings"),
+      path: to("/settings"),
       label: "Settings",
       icon: <Settings className="h-5 w-5" />,
       show: true,

@@ -47,7 +47,7 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
   const [isOpeningBrowser, setIsOpeningBrowser] = useState(false);
   const [browserUrl, setBrowserUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { nav } = useNav();
+  const { navigate } = useNav();
   const { isAuthenticated, logout } = useAuth();
   const { theme, setTheme } = useTheme();
 
@@ -269,7 +269,7 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
               <Button
                 variant="default"
                 className="w-full"
-                onClick={() => nav("/login")}
+                onClick={() => navigate("/login")}
               >
                 Login / Register
               </Button>
@@ -280,7 +280,7 @@ export function SettingsPage({ onBack, onLogout }: SettingsPageProps) {
         {/* Category Setup */}
         <Card
           className="cursor-pointer hover:bg-accent/50 transition-colors"
-          onClick={() => nav("/categories")}
+          onClick={() => navigate("/categories")}
         >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">

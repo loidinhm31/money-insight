@@ -11,7 +11,7 @@ import type { NewTransaction } from "@money-insight/ui/types";
  * Add Transaction page - allows manual transaction entry or CSV import
  */
 export function AddTransactionPage() {
-  const { nav } = useNav();
+  const { navigate } = useNav();
   const { isDbReady, addTransaction, importFromCSV } = useSpendingStore();
 
   // Handle add transaction
@@ -31,15 +31,15 @@ export function AddTransactionPage() {
       }
       await importFromCSV(transactions, file.name);
       // Navigate to dashboard after successful import
-      nav("dashboard");
+      navigate("/dashboard");
     },
-    [importFromCSV, nav],
+    [importFromCSV, navigate],
   );
 
   // Success handler - navigate to dashboard
   const handleSuccess = useCallback(() => {
-    nav("dashboard");
-  }, [nav]);
+    navigate("/dashboard");
+  }, [navigate]);
 
   // Get categories and accounts for form
   const getCategories = useCallback(() => categoryService.getCategories(), []);
