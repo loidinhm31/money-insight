@@ -213,8 +213,16 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
       const transaction = await transactionService.addTransaction(tx);
       let transactions = [...get().transactions, transaction];
 
+      // Sync accounts: IndexedDBTransactionAdapter auto-creates missing accounts in DB;
+      // reload if the transaction's account isn't already in store state.
+      const existingAccount = get().accounts.find((a) => a.name === tx.account);
+      if (!existingAccount && tx.account?.trim()) {
+        const freshAccounts = await accountService.getAccounts();
+        set({ accounts: freshAccounts });
+      }
+
       // Recalculate adjustments for the affected account
-      const account = get().accounts.find((a) => a.name === tx.account);
+      const account = (existingAccount ?? get().accounts.find((a) => a.name === tx.account));
       if (account) {
         const updatedAdjs = balanceAdjustmentService.recalculateAdjustments(
           transactions,
