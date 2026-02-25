@@ -6,6 +6,11 @@ import {
   TabsList,
   TabsTrigger,
   TabsContent,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@money-insight/ui/components/atoms";
 import { useSpendingStore } from "@money-insight/ui/stores";
 import { useNav } from "@money-insight/ui/hooks";
@@ -43,12 +48,18 @@ export function TransactionPage() {
 
   const [activeTab, setActiveTab] = useState("transactions");
   const [periodMode, setPeriodMode] = useState<TimePeriodMode>("month");
+  const [selectedAccount, setSelectedAccount] = useState<string>("__all__");
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [adjustingAccount, setAdjustingAccount] = useState<Account | null>(
     null,
   );
+
+  const displayTransactions =
+    selectedAccount !== "__all__"
+      ? transactions.filter((t) => t.account === selectedAccount)
+      : transactions;
 
   const getCategories = useCallback(() => categoryService.getCategories(), []);
 
@@ -130,7 +141,7 @@ export function TransactionPage() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {activeTab === "transactions"
-              ? `${transactions.length} transactions`
+              ? `${displayTransactions.length} transactions`
               : `${accounts.length} accounts`}
           </p>
         </div>
@@ -148,8 +159,8 @@ export function TransactionPage() {
 
           {/* Transactions Tab Content */}
           <TabsContent value="transactions" className="mt-0">
-            {/* Sticky period selector */}
-            <div className="sticky top-13 z-10 border-b p-4 bg-card">
+            {/* Sticky period selector + account filter */}
+            <div className="sticky top-13 z-10 border-b p-4 bg-card space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
                   Group by
@@ -159,12 +170,33 @@ export function TransactionPage() {
                   onChange={setPeriodMode}
                 />
               </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Account
+                </span>
+                <Select
+                  value={selectedAccount}
+                  onValueChange={setSelectedAccount}
+                >
+                  <SelectTrigger className="w-44 h-8 text-xs">
+                    <SelectValue placeholder="All Accounts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">All Accounts</SelectItem>
+                    {accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.name}>
+                        {account.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Grouped transaction list */}
             <div className="p-4">
               <GroupedTransactionList
-                transactions={transactions}
+                transactions={displayTransactions}
                 periodMode={periodMode}
                 valuesHidden={valuesHidden}
                 onTransactionClick={handleTransactionClick}
