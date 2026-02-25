@@ -78,3 +78,4 @@ export {
   AdjustBalanceDialog,
   type AdjustBalanceDialogProps,
 } from "./AdjustBalanceDialog";
+export { TransferForm, type TransferFormProps } from "./TransferForm";

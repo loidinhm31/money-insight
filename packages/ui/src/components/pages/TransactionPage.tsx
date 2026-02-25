@@ -33,6 +33,8 @@ export function TransactionPage() {
     isDbReady,
     updateTransaction,
     deleteTransaction,
+    updateTransfer,
+    deleteTransfer,
     addAccount,
     updateAccount,
     deleteAccount,
@@ -147,7 +149,7 @@ export function TransactionPage() {
           {/* Transactions Tab Content */}
           <TabsContent value="transactions" className="mt-0">
             {/* Sticky period selector */}
-            <div className="sticky top-[52px] z-10 border-b p-4 bg-card">
+            <div className="sticky top-13 z-10 border-b p-4 bg-card">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
                   Group by
@@ -199,9 +201,19 @@ export function TransactionPage() {
         onClose={() => setEditingTransaction(null)}
         onSubmit={handleTransactionSubmit}
         onDelete={handleTransactionDelete}
+        onUpdateTransfer={async (transferId, params) => {
+          await updateTransfer(transferId, params);
+          setEditingTransaction(null);
+        }}
+        onDeleteTransfer={async (transferId) => {
+          await deleteTransfer(transferId);
+          setEditingTransaction(null);
+        }}
         isDbReady={isDbReady}
         getCategories={getCategories}
         getAccounts={async () => accounts}
+        accounts={accounts}
+        allTransactions={transactions}
       />
 
       {/* Edit Account Dialog */}

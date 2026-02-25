@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { ChevronDown, Scale } from "lucide-react";
+import { ArrowLeftRight, ChevronDown, Scale } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -15,6 +15,7 @@ import {
   groupTransactionsByTimePeriod,
   type TimePeriodMode,
 } from "@money-insight/ui/lib";
+import { getTransferDisplayNote } from "@money-insight/ui/services/transferService";
 import type { Transaction } from "@money-insight/ui/types";
 
 export interface GroupedTransactionListProps {
@@ -34,11 +35,25 @@ export function GroupedTransactionList({
   const maskValue = (value: string) => "*".repeat(value.length);
 
   const groups = groupTransactionsByTimePeriod(transactions, periodMode);
+  const groupKeysStr = groups.map((g) => g.key).join(",");
 
   // Default open the first group (most recent)
   const [openGroups, setOpenGroups] = useState<string[]>(
     groups.length > 0 ? [groups[0].key] : [],
   );
+
+  // Prune stale keys and fall back to first group when all open groups disappear
+  // (e.g. after delete removes the last transaction in an open group, or periodMode changes)
+  useEffect(() => {
+    if (groups.length === 0) return;
+    const keySet = new Set(groups.map((g) => g.key));
+    setOpenGroups((prev) => {
+      const valid = prev.filter((k) => keySet.has(k));
+      return valid.length > 0 ? valid : [groups[0].key];
+    });
+  // groupKeysStr is a stable string fingerprint of the group set — safe dep
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodMode, groupKeysStr]);
 
   if (groups.length === 0) {
     return (
@@ -120,17 +135,28 @@ export function GroupedTransactionList({
                   const isExpense = transaction.expense > 0;
                   const isAdjustment =
                     transaction.source === "balance_adjustment";
+                  const isTransfer = transaction.source === "transfer";
                   const transactionDate = new Date(transaction.date);
 
-                  // Determine display values based on transaction type
-                  const displayCategory = isAdjustment
-                    ? "Balance Adjustment"
-                    : transaction.category;
+                  let displayCategory: string;
+                  let displayNote: string | undefined;
+                  if (isAdjustment) {
+                    displayCategory = "Balance Adjustment";
+                  } else if (isTransfer) {
+                    displayCategory = "Transfer";
+                    displayNote = getTransferDisplayNote(transaction);
+                  } else {
+                    displayCategory = transaction.category;
+                    displayNote = transaction.note || undefined;
+                  }
+
                   const amountColor = isAdjustment
-                    ? "var(--color-info)"
-                    : isExpense
-                      ? "var(--color-destructive)"
-                      : "var(--color-success)";
+                    ? "var(--color-primary-500)"
+                    : isTransfer
+                      ? "var(--color-text-secondary)"
+                      : isExpense
+                        ? "var(--color-destructive)"
+                        : "var(--color-success)";
 
                   return (
                     <div
@@ -138,27 +164,33 @@ export function GroupedTransactionList({
                       className={cn(
                         "flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors",
                         onTransactionClick && "cursor-pointer",
-                        isAdjustment && "border-blue-200 bg-blue-50/50",
+                        isAdjustment && "border-primary/20 bg-primary/5",
+                        isTransfer && "border-muted-foreground/20 bg-muted/20",
                       )}
                       onClick={() => onTransactionClick?.(transaction)}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           {isAdjustment && (
-                            <Scale className="h-4 w-4 text-info" />
+                            <Scale className="h-4 w-4 text-primary" />
+                          )}
+                          {isTransfer && (
+                            <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
                           )}
                           <span className="text-sm font-medium text-secondary-foreground">
                             {format(transactionDate, "MMM dd")}
                           </span>
                           <Badge variant={isAdjustment ? "default" : "outline"}>
                             <span className="inline-flex items-center gap-1">
-                              {getIcon(transaction.category) && (
-                                <CategoryIcon
-                                  name={getIcon(transaction.category)}
-                                  size={14}
-                                  className="inline-block shrink-0"
-                                />
-                              )}
+                              {!isAdjustment &&
+                                !isTransfer &&
+                                getIcon(transaction.category) && (
+                                  <CategoryIcon
+                                    name={getIcon(transaction.category)}
+                                    size={14}
+                                    className="inline-block shrink-0"
+                                  />
+                                )}
                               {displayCategory}
                             </span>
                           </Badge>
@@ -166,13 +198,13 @@ export function GroupedTransactionList({
                             {transaction.account}
                           </Badge>
                         </div>
-                        {transaction.note && !isAdjustment && (
+                        {displayNote && !isAdjustment && (
                           <p className="text-sm truncate mt-1 text-muted-foreground">
-                            {transaction.note}
+                            {displayNote}
                           </p>
                         )}
                         {isAdjustment && (
-                          <p className="text-sm mt-1 text-info">
+                          <p className="text-sm mt-1 text-primary">
                             Auto-adjusting entry
                           </p>
                         )}

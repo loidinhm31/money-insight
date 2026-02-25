@@ -15,6 +15,7 @@ import type {
   Account,
   Category,
   NewTransaction,
+  TransferParams,
 } from "@money-insight/ui/types";
 import {
   AddTransactionForm,
@@ -30,6 +31,8 @@ interface AddTransactionPageProps {
   isDbReady: boolean;
   onBack?: () => void;
   onSuccess?: () => void;
+  onTransfer?: (params: TransferParams) => Promise<void>;
+  accounts?: Account[];
 }
 
 /**
@@ -43,6 +46,8 @@ export function AddTransactionEntry({
   isDbReady,
   onBack,
   onSuccess,
+  onTransfer,
+  accounts,
 }: AddTransactionPageProps) {
   const [activeTab, setActiveTab] = useState<string>("manual");
 
@@ -103,6 +108,8 @@ export function AddTransactionEntry({
                   getCategories={getCategories}
                   getAccounts={getAccounts}
                   isDbReady={isDbReady}
+                  onTransfer={onTransfer}
+                  accounts={accounts}
                 />
               </CardContent>
             </Card>

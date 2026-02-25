@@ -5,6 +5,7 @@ import type {
   NewTransaction,
   TransactionFilter,
   ImportResult,
+  TransferParams,
 } from "@money-insight/ui/types";
 
 /**
@@ -38,5 +39,32 @@ export class HttpTransactionAdapter
       transactions,
       filename,
     });
+  }
+
+  async createTransfer(
+    params: TransferParams,
+  ): Promise<{ outgoing: Transaction; incoming: Transaction }> {
+    return this.post<{ outgoing: Transaction; incoming: Transaction }>(
+      "/transactions/transfer",
+      params,
+    );
+  }
+
+  async updateTransfer(
+    transferId: string,
+    params: TransferParams,
+  ): Promise<{ outgoing: Transaction; incoming: Transaction }> {
+    return this.put<{ outgoing: Transaction; incoming: Transaction }>(
+      `/transactions/transfer/${transferId}`,
+      params,
+    );
+  }
+
+  async deleteTransfer(transferId: string): Promise<void> {
+    return this.delete<void>(`/transactions/transfer/${transferId}`);
+  }
+
+  async getTransferPair(transferId: string): Promise<Transaction[]> {
+    return this.get<Transaction[]>(`/transactions/transfer/${transferId}`);
   }
 }

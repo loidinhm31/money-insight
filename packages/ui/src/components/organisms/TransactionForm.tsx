@@ -16,6 +16,7 @@ import {
 } from "@money-insight/ui/components/atoms";
 import { DatePicker, FormField } from "@money-insight/ui/components/molecules";
 import { cn } from "@money-insight/ui/lib";
+import { SUPPORTED_CURRENCIES } from "@money-insight/shared";
 import type {
   Transaction,
   NewTransaction,
@@ -272,9 +273,9 @@ export function TransactionForm(props: TransactionFormProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="VND">VND</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

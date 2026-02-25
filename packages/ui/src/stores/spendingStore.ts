@@ -11,11 +11,16 @@ import type {
   SpendingBottleneck,
   ProcessedTransaction,
   MonthlyReport,
+  TransferParams,
 } from "@money-insight/ui/types";
 import { matchesSearch, MoneyInsightAnalyzer } from "@money-insight/ui/lib";
 import * as transactionService from "@money-insight/ui/services/transactionService";
 import * as accountService from "@money-insight/ui/services/accountService";
 import * as balanceAdjustmentService from "@money-insight/ui/services/balanceAdjustmentService";
+import {
+  isTransferTransaction,
+  reconstructTransferParams,
+} from "@money-insight/ui/services/transferService";
 import { useCategoryGroupStore } from "./categoryGroupStore";
 
 // Convert Transaction (from DB) to ProcessedTransaction (for analysis)
@@ -37,6 +42,15 @@ function toProcessedTransaction(tx: Transaction): ProcessedTransaction {
     month: tx.month,
     monthName: new Date(tx.date).toLocaleString("default", { month: "long" }),
   };
+}
+
+function buildAnalyzerState(transactions: Transaction[]) {
+  const processedTransactions = transactions.map(toProcessedTransaction);
+  const reportableTransactions = processedTransactions.filter(
+    (t) => !t.excludeReport,
+  );
+  const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
+  return { transactions, processedTransactions, analyzer };
 }
 
 interface Statistics {
@@ -120,6 +134,16 @@ interface SpendingStore {
     date: string,
   ) => Promise<Transaction>;
   recalculateAdjustmentsForAccount: (accountName: string) => Promise<void>;
+
+  // Transfer actions
+  createTransfer: (
+    params: TransferParams,
+  ) => Promise<{ outgoing: Transaction; incoming: Transaction }>;
+  updateTransfer: (
+    transferId: string,
+    params: TransferParams,
+  ) => Promise<{ outgoing: Transaction; incoming: Transaction }>;
+  deleteTransfer: (transferId: string) => Promise<void>;
 }
 
 const initialFilter: FilterState = {
@@ -163,18 +187,9 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
         accountService.getAccounts(),
         useCategoryGroupStore.getState().loadFromDatabase(),
       ]);
-      const processedTransactions = transactions.map(toProcessedTransaction);
-      // Filter out transactions with excludeReport=true for analysis
-      const reportableTransactions = processedTransactions.filter(
-        (t: ProcessedTransaction) => !t.excludeReport,
-      );
-      const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
-
       set({
-        transactions,
-        processedTransactions,
+        ...buildAnalyzerState(transactions),
         accounts,
-        analyzer,
         isLoading: false,
         isDbReady: true,
       });
@@ -212,20 +227,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
         }
       }
 
-      const processedTransactions = transactions.map(toProcessedTransaction);
-      // Filter out transactions with excludeReport=true for analysis
-      const reportableTransactions = processedTransactions.filter(
-        (t) => !t.excludeReport,
-      );
-      const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
-
-      set({
-        transactions,
-        processedTransactions,
-        analyzer,
-        isLoading: false,
-      });
-
+      set({ ...buildAnalyzerState(transactions), isLoading: false });
       get().refreshAnalysis();
       return transaction;
     } catch (error) {
@@ -240,6 +242,29 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
 
   // Update an existing transaction
   updateTransaction: async (tx) => {
+    // Auto-escalate: transfer legs must always be updated as a pair
+    const storedTx = get().transactions.find((t) => t.id === tx.id);
+    if (storedTx && isTransferTransaction(storedTx) && storedTx.transferId) {
+      // `pair` includes the stale stored version of tx.id. reconstructTransferParams
+      // merges `tx` on top of the stored leg, so the caller's updated fields win.
+      const pair = get().transactions.filter(
+        (t) => t.transferId === storedTx.transferId,
+      );
+      const params = reconstructTransferParams(tx, pair);
+      if (params) {
+        const { outgoing, incoming } = await get().updateTransfer(
+          storedTx.transferId,
+          params,
+        );
+        return tx.id === outgoing.id ? outgoing : incoming;
+      }
+      // Pair incomplete in store (corrupted sync state) — fall through to single-leg
+      // update so the edit is not silently dropped. Dev adapter guard will log a warning.
+      console.warn(
+        `[money-insight] updateTransaction: transfer pair incomplete for transferId=${storedTx.transferId}. Updating single leg id=${tx.id}.`,
+      );
+    }
+
     set({ isLoading: true });
 
     try {
@@ -264,20 +289,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
         }
       }
 
-      const processedTransactions = transactions.map(toProcessedTransaction);
-      // Filter out transactions with excludeReport=true for analysis
-      const reportableTransactions = processedTransactions.filter(
-        (t) => !t.excludeReport,
-      );
-      const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
-
-      set({
-        transactions,
-        processedTransactions,
-        analyzer,
-        isLoading: false,
-      });
-
+      set({ ...buildAnalyzerState(transactions), isLoading: false });
       get().refreshAnalysis();
       return updated;
     } catch (error) {
@@ -294,6 +306,12 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
 
   // Delete a transaction
   deleteTransaction: async (id) => {
+    // If it's a transfer leg, delete both sides atomically via deleteTransfer
+    const tx = get().transactions.find((t) => t.id === id);
+    if (tx && isTransferTransaction(tx) && tx.transferId) {
+      return get().deleteTransfer(tx.transferId);
+    }
+
     set({ isLoading: true });
 
     try {
@@ -322,20 +340,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
         }
       }
 
-      const processedTransactions = transactions.map(toProcessedTransaction);
-      // Filter out transactions with excludeReport=true for analysis
-      const reportableTransactions = processedTransactions.filter(
-        (t) => !t.excludeReport,
-      );
-      const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
-
-      set({
-        transactions,
-        processedTransactions,
-        analyzer,
-        isLoading: false,
-      });
-
+      set({ ...buildAnalyzerState(transactions), isLoading: false });
       get().refreshAnalysis();
     } catch (error) {
       set({
@@ -378,15 +383,9 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
 
   // Legacy method for backward compatibility with existing CSV import flow
   loadTransactions: (transactions) => {
-    // Filter out transactions with excludeReport=true for analysis
     const reportableTransactions = transactions.filter((t) => !t.excludeReport);
     const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
-    set({
-      processedTransactions: transactions,
-      analyzer,
-      isLoading: false,
-      error: null,
-    });
+    set({ processedTransactions: transactions, analyzer, isLoading: false, error: null });
     get().refreshAnalysis();
   },
 
@@ -476,7 +475,9 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
         );
       }
 
-      // Calculate wallet balances (using all transactions, not filtered)
+      // Calculate wallet balances using ALL transactions (not filtered, not excludeReport-filtered).
+      // Transfer legs are intentionally included: an outgoing transfer reduces fromAccount balance
+      // and the incoming leg increases toAccount balance, correctly reflecting actual money movement.
       const walletMap = new Map<
         string,
         { totalIncome: number; totalExpense: number }
@@ -647,19 +648,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
       const transaction =
         await transactionService.addTransaction(adjustmentData);
       const newTransactions = [...transactions, transaction];
-      const processedTransactions = newTransactions.map(toProcessedTransaction);
-      const reportableTransactions = processedTransactions.filter(
-        (t) => !t.excludeReport,
-      );
-      const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
-
-      set({
-        transactions: newTransactions,
-        processedTransactions,
-        analyzer,
-        isLoading: false,
-      });
-
+      set({ ...buildAnalyzerState(newTransactions), isLoading: false });
       get().refreshAnalysis();
       return transaction;
     } catch (error) {
@@ -667,6 +656,76 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
         isLoading: false,
         error:
           error instanceof Error ? error.message : "Failed to adjust balance",
+      });
+      throw error;
+    }
+  },
+
+  // Create a transfer between two accounts
+  createTransfer: async (params) => {
+    set({ isLoading: true });
+
+    try {
+      const { outgoing, incoming } =
+        await transactionService.createTransfer(params);
+      const transactions = [...get().transactions, outgoing, incoming];
+      set({ ...buildAnalyzerState(transactions), isLoading: false });
+      get().refreshAnalysis();
+      return { outgoing, incoming };
+    } catch (error) {
+      set({
+        isLoading: false,
+        error:
+          error instanceof Error ? error.message : "Failed to create transfer",
+      });
+      throw error;
+    }
+  },
+
+  // Update both legs of a transfer atomically
+  updateTransfer: async (transferId, params) => {
+    set({ isLoading: true });
+
+    try {
+      const { outgoing, incoming } = await transactionService.updateTransfer(
+        transferId,
+        params,
+      );
+
+      const transactions = get().transactions.map((t) => {
+        if (t.id === outgoing.id) return outgoing;
+        if (t.id === incoming.id) return incoming;
+        return t;
+      });
+      set({ ...buildAnalyzerState(transactions), isLoading: false });
+      get().refreshAnalysis();
+      return { outgoing, incoming };
+    } catch (error) {
+      set({
+        isLoading: false,
+        error:
+          error instanceof Error ? error.message : "Failed to update transfer",
+      });
+      throw error;
+    }
+  },
+
+  // Delete both legs of a transfer atomically
+  deleteTransfer: async (transferId) => {
+    set({ isLoading: true });
+
+    try {
+      await transactionService.deleteTransfer(transferId);
+      const transactions = get().transactions.filter(
+        (t) => t.transferId !== transferId,
+      );
+      set({ ...buildAnalyzerState(transactions), isLoading: false });
+      get().refreshAnalysis();
+    } catch (error) {
+      set({
+        isLoading: false,
+        error:
+          error instanceof Error ? error.message : "Failed to delete transfer",
       });
       throw error;
     }
@@ -697,21 +756,7 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
         );
       }
 
-      const processedTransactions = updatedTransactions.map(
-        toProcessedTransaction,
-      );
-      const reportableTransactions = processedTransactions.filter(
-        (t) => !t.excludeReport,
-      );
-      const analyzer = new MoneyInsightAnalyzer(reportableTransactions);
-
-      set({
-        transactions: updatedTransactions,
-        processedTransactions,
-        analyzer,
-        isLoading: false,
-      });
-
+      set({ ...buildAnalyzerState(updatedTransactions), isLoading: false });
       get().refreshAnalysis();
     } catch (error) {
       set({

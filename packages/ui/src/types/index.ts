@@ -14,6 +14,8 @@ export type {
   Statistics,
   ImportResult,
   AdjustmentNote,
+  TransferNote,
+  TransferParams,
 } from "@money-insight/shared/types";
 
 // UI-specific types

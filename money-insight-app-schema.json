@@ -18,7 +18,8 @@
         { "name": "year", "type": "integer", "nullable": false },
         { "name": "month", "type": "integer", "nullable": false },
         { "name": "createdAt", "type": "string", "nullable": false },
-        { "name": "updatedAt", "type": "string", "nullable": false }
+        { "name": "updatedAt", "type": "string", "nullable": false },
+        { "name": "transferId", "type": "string", "nullable": true }
       ],
       "primaryKey": "rowId"
     },

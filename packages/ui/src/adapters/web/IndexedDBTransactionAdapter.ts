@@ -5,9 +5,11 @@ import type {
   TransactionFilter,
   ImportResult,
   Account,
+  TransferParams,
 } from "@money-insight/ui/types";
 import { db, generateId } from "./database";
 import { trackDelete } from "./indexedDbHelpers";
+import { createTransferTransactions } from "../../services/transferService";
 export class IndexedDBTransactionAdapter implements ITransactionService {
   async getTransactions(filter?: TransactionFilter): Promise<Transaction[]> {
     let collection = db.transactions.toCollection();
@@ -66,6 +68,7 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
       id: generateId(),
       source: tx.source || "manual",
       importBatchId: tx.importBatchId,
+      transferId: tx.transferId,
       note: tx.note,
       amount,
       category: tx.category,
@@ -91,6 +94,31 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
 
   async updateTransaction(tx: Transaction): Promise<Transaction> {
     const existing = await db.transactions.get(tx.id);
+
+    // Dev-only guard: warn if a transfer leg is updated without its counterpart.
+    // Type cast is intentional: packages/ui tsconfig uses react-library (no vite/client types).
+    // import.meta.env.DEV resolves to false in production builds and is tree-shaken by Vite.
+    const isDev = (import.meta as { env?: { DEV?: boolean } }).env?.DEV;
+    if (
+      isDev &&
+      (tx.source === "transfer" || existing?.source === "transfer") &&
+      (tx.transferId || existing?.transferId)
+    ) {
+      const transferId = tx.transferId ?? existing?.transferId;
+      if (transferId) {
+        const pairCount = await db.transactions
+          .where("transferId")
+          .equals(transferId)
+          .count();
+        if (pairCount < 2) {
+          console.warn(
+            `[money-insight] updateTransaction on transfer leg (id=${tx.id}, transferId=${transferId}) ` +
+              `but only ${pairCount} leg(s) in DB. Use updateTransfer() to keep both legs consistent.`,
+          );
+        }
+      }
+    }
+
     const updated = {
       ...tx,
       updatedAt: new Date().toISOString(),
@@ -198,6 +226,108 @@ export class IndexedDBTransactionAdapter implements ITransactionService {
         await db.accounts.add(newAccount);
       }
     }
+  }
+
+  async createTransfer(
+    params: TransferParams,
+  ): Promise<{ outgoing: Transaction; incoming: Transaction }> {
+    const transferId = generateId();
+    const { outgoing: outTx, incoming: inTx } = createTransferTransactions({
+      ...params,
+      transferId,
+    });
+
+    return db.transaction("rw", db.transactions, db.accounts, async () => {
+      await this.ensureAccountsExist([outTx, inTx]);
+      const outgoing = await this.addTransaction(outTx);
+      const incoming = await this.addTransaction(inTx);
+      return { outgoing, incoming };
+    });
+  }
+
+  async updateTransfer(
+    transferId: string,
+    params: TransferParams,
+  ): Promise<{ outgoing: Transaction; incoming: Transaction }> {
+    const { outgoing: newOutTx, incoming: newInTx } =
+      createTransferTransactions({ ...params, transferId });
+
+    return db.transaction("rw", db.transactions, db.accounts, async () => {
+      const pair = await db.transactions
+        .where("transferId")
+        .equals(transferId)
+        .toArray();
+
+      const outgoing = pair.find((t) => t.amount < 0);
+      const incoming = pair.find((t) => t.amount > 0);
+
+      if (!outgoing || !incoming) {
+        throw new Error(
+          `Transfer pair incomplete for transferId: ${transferId}`,
+        );
+      }
+
+      await this.ensureAccountsExist([newOutTx, newInTx]);
+
+      // Recalculate derived fields that NewTransaction omits but Transaction requires.
+      // Without this, expense/income and date-bucketing fields stay stale after edits.
+      const parsedDate = new Date(params.date);
+      const yearMonth = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, "0")}`;
+      const year = parsedDate.getFullYear();
+      const month = parsedDate.getMonth() + 1;
+
+      const updatedOut = await this.updateTransaction({
+        ...outgoing,
+        ...newOutTx,
+        id: outgoing.id,
+        expense: Math.abs(params.amount),
+        income: 0,
+        yearMonth,
+        year,
+        month,
+      });
+      const updatedIn = await this.updateTransaction({
+        ...incoming,
+        ...newInTx,
+        id: incoming.id,
+        expense: 0,
+        income: params.amount,
+        yearMonth,
+        year,
+        month,
+      });
+      return { outgoing: updatedOut, incoming: updatedIn };
+    });
+  }
+
+  async deleteTransfer(transferId: string): Promise<void> {
+    await db.transaction(
+      "rw",
+      db.transactions,
+      db._pendingChanges,
+      async () => {
+        const pair = await db.transactions
+          .where("transferId")
+          .equals(transferId)
+          .toArray();
+
+        if (pair.length === 0) return;
+        if (pair.length !== 2) {
+          console.warn(
+            `deleteTransfer: expected 2 legs, found ${pair.length} for transferId ${transferId}`,
+          );
+        }
+
+        for (const tx of pair) {
+          await trackDelete("transactions", tx.id, tx.syncVersion || 0);
+          await db.transactions.delete(tx.id);
+        }
+      },
+    );
+  }
+
+  async getTransferPair(transferId: string): Promise<Transaction[]> {
+    return db.transactions.where("transferId").equals(transferId).toArray();
   }
 
   /**

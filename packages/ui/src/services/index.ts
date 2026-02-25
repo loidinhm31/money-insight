@@ -7,3 +7,4 @@ export * as statisticsService from "./statisticsService";
 export * as authService from "./authService";
 export * as syncService from "./syncService";
 export * as balanceAdjustmentService from "./balanceAdjustmentService";
+export * as transferService from "./transferService";

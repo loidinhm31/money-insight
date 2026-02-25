@@ -4,6 +4,7 @@ import type {
   NewTransaction,
   TransactionFilter,
   ImportResult,
+  TransferParams,
 } from "@money-insight/ui/types";
 
 export async function getTransactions(
@@ -29,4 +30,27 @@ export async function importTransactions(
   filename: string,
 ): Promise<ImportResult> {
   return getTransactionService().importTransactions(transactions, filename);
+}
+
+export async function createTransfer(
+  params: TransferParams,
+): Promise<{ outgoing: Transaction; incoming: Transaction }> {
+  return getTransactionService().createTransfer(params);
+}
+
+export async function updateTransfer(
+  transferId: string,
+  params: TransferParams,
+): Promise<{ outgoing: Transaction; incoming: Transaction }> {
+  return getTransactionService().updateTransfer(transferId, params);
+}
+
+export async function deleteTransfer(transferId: string): Promise<void> {
+  return getTransactionService().deleteTransfer(transferId);
+}
+
+export async function getTransferPair(
+  transferId: string,
+): Promise<Transaction[]> {
+  return getTransactionService().getTransferPair(transferId);
 }

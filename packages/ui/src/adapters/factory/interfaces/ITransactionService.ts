@@ -3,37 +3,33 @@ import type {
   NewTransaction,
   TransactionFilter,
   ImportResult,
+  TransferParams,
 } from "@money-insight/ui/types";
 
-/**
- * Transaction service interface
- */
 export interface ITransactionService {
-  /**
-   * Get transactions with optional filter
-   */
   getTransactions(filter?: TransactionFilter): Promise<Transaction[]>;
 
-  /**
-   * Add a new transaction
-   */
   addTransaction(tx: NewTransaction): Promise<Transaction>;
 
-  /**
-   * Update an existing transaction
-   */
   updateTransaction(tx: Transaction): Promise<Transaction>;
 
-  /**
-   * Delete a transaction
-   */
   deleteTransaction(id: string): Promise<void>;
 
-  /**
-   * Import transactions from CSV
-   */
   importTransactions(
     transactions: NewTransaction[],
     filename: string,
   ): Promise<ImportResult>;
+
+  createTransfer(
+    params: TransferParams,
+  ): Promise<{ outgoing: Transaction; incoming: Transaction }>;
+
+  updateTransfer(
+    transferId: string,
+    params: TransferParams,
+  ): Promise<{ outgoing: Transaction; incoming: Transaction }>;
+
+  deleteTransfer(transferId: string): Promise<void>;
+
+  getTransferPair(transferId: string): Promise<Transaction[]>;
 }

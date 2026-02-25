@@ -5,14 +5,15 @@ import { AddTransactionEntry } from "@money-insight/ui/components/templates";
 import { parseCSVForImport } from "@money-insight/ui/lib";
 import * as categoryService from "@money-insight/ui/services/categoryService";
 import * as accountService from "@money-insight/ui/services/accountService";
-import type { NewTransaction } from "@money-insight/ui/types";
+import type { NewTransaction, TransferParams } from "@money-insight/ui/types";
 
 /**
  * Add Transaction page - allows manual transaction entry or CSV import
  */
 export function AddTransactionPage() {
   const { navigate } = useNav();
-  const { isDbReady, addTransaction, importFromCSV } = useSpendingStore();
+  const { isDbReady, accounts, addTransaction, createTransfer, importFromCSV } =
+    useSpendingStore();
 
   // Handle add transaction
   const handleAddTransaction = useCallback(
@@ -20,6 +21,14 @@ export function AddTransactionPage() {
       await addTransaction(tx);
     },
     [addTransaction],
+  );
+
+  const handleTransfer = useCallback(
+    async (params: TransferParams): Promise<void> => {
+      await createTransfer(params);
+      navigate("/dashboard");
+    },
+    [createTransfer, navigate],
   );
 
   // Handle CSV file processing
@@ -53,6 +62,8 @@ export function AddTransactionPage() {
       getAccounts={getAccounts}
       isDbReady={isDbReady}
       onSuccess={handleSuccess}
+      onTransfer={handleTransfer}
+      accounts={accounts}
     />
   );
 }

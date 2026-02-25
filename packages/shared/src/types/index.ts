@@ -105,14 +105,34 @@ export interface FilterState {
 }
 
 // Transaction source type
-export type TransactionSource = "csv_import" | "manual" | "balance_adjustment";
+export type TransactionSource = "csv_import" | "manual" | "balance_adjustment" | "transfer";
 
 // Special category for balance adjustments
 export const BALANCE_ADJUSTMENT_CATEGORY = "__balance_adjustment__";
 
+// Special category for account transfers
+export const TRANSFER_CATEGORY = "__transfer__";
+
 // Parsed adjustment note structure
 export interface AdjustmentNote {
   targetBalance: number;
+}
+
+// Transfer note encoded in transaction note field
+export interface TransferNote {
+  userNote: string;
+  toAccount?: string;   // present on outgoing tx (debit)
+  fromAccount?: string; // present on incoming tx (credit)
+}
+
+// Params for creating/updating a transfer
+export interface TransferParams {
+  fromAccount: string;
+  toAccount: string;
+  amount: number;
+  date: string;
+  note: string;
+  currency: string;
 }
 
 // New transaction for creation (matches Rust NewTransaction)
@@ -127,6 +147,7 @@ export interface NewTransaction {
   excludeReport: boolean;
   source?: TransactionSource;
   importBatchId?: number;
+  transferId?: string;
 }
 
 // Full transaction from database (matches Rust Transaction)
@@ -134,6 +155,7 @@ export interface Transaction {
   id: string;
   source: TransactionSource;
   importBatchId?: number;
+  transferId?: string;
   note: string;
   amount: number;
   category: string;
