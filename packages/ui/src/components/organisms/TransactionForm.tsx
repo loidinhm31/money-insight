@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { DollarSign, Tag, CreditCard, Trash2 } from "lucide-react";
 import {
@@ -17,6 +17,7 @@ import {
 import { DatePicker, FormField } from "@money-insight/ui/components/molecules";
 import { cn } from "@money-insight/ui/lib";
 import { SUPPORTED_CURRENCIES } from "@money-insight/shared";
+import { useLastFormValues } from "@money-insight/ui/hooks";
 import type {
   Transaction,
   NewTransaction,
@@ -66,6 +67,12 @@ export function TransactionForm(props: TransactionFormProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
 
+  const { save, getLastDate, getLastAccount } = useLastFormValues(
+    accounts.map((a) => a.name),
+  );
+  // Ensures account is pre-filled only once per add-mode mount, after accounts load
+  const accountPrefilledRef = useRef(false);
+
   // Form state
   const [date, setDate] = useState<Date>(new Date());
   const [amount, setAmount] = useState("");
@@ -87,9 +94,21 @@ export function TransactionForm(props: TransactionFormProps) {
       setCurrency(transaction.currency);
       setConfirmDelete(false);
     } else if (mode === "add") {
+      accountPrefilledRef.current = false;
       resetForm();
+      setDate(getLastDate());
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, transaction]);
+
+  // Pre-fill last-used account after accounts load (add mode only)
+  useEffect(() => {
+    if (mode === "add" && accounts.length > 0 && !accountPrefilledRef.current) {
+      accountPrefilledRef.current = true;
+      setAccount(getLastAccount());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accounts]);
 
   // Load categories and accounts
   useEffect(() => {
@@ -169,6 +188,7 @@ export function TransactionForm(props: TransactionFormProps) {
         };
 
         await props.onSubmit(newTransaction);
+        save({ date: date.toISOString(), account });
         resetForm();
       }
 

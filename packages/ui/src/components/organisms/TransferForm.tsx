@@ -16,6 +16,7 @@ import {
 } from "@money-insight/ui/components/atoms";
 import { DatePicker, FormField } from "@money-insight/ui/components/molecules";
 import { parseTransferNote } from "@money-insight/ui/services/transferService";
+import { useLastFormValues } from "@money-insight/ui/hooks";
 import { SUPPORTED_CURRENCIES } from "@money-insight/shared";
 import type { Transaction, Account, TransferParams } from "@money-insight/ui/types";
 
@@ -44,15 +45,24 @@ export type TransferFormProps = TransferFormAddProps | TransferFormEditProps;
 export function TransferForm(props: TransferFormProps) {
   const { mode, accounts, isDbReady, onCancel } = props;
 
+  const { save, getLastDate, getLastFromAccount, getLastToAccount } =
+    useLastFormValues(accounts.map((a) => a.name));
+
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const [fromAccount, setFromAccount] = useState("");
-  const [toAccount, setToAccount] = useState("");
+  const [fromAccount, setFromAccount] = useState(() =>
+    mode === "add" ? getLastFromAccount() : "",
+  );
+  const [toAccount, setToAccount] = useState(() =>
+    mode === "add" ? getLastToAccount() : "",
+  );
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("VND");
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date>(() =>
+    mode === "add" ? getLastDate() : new Date(),
+  );
   const [note, setNote] = useState("");
 
   const outgoing = mode === "edit" ? props.outgoing : undefined;
@@ -117,6 +127,7 @@ export function TransferForm(props: TransferFormProps) {
         await props.onSubmit(props.transferId, buildParams());
       } else {
         await props.onSubmit(buildParams());
+        save({ date: date.toISOString(), fromAccount, toAccount });
         resetForm();
       }
       onCancel();
