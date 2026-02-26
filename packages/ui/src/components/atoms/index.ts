@@ -54,3 +54,4 @@ export {
   CATEGORY_ICONS,
   type CategoryIconProps,
 } from "./CategoryIcon";
+export { ErrorBoundary } from "./ErrorBoundary";

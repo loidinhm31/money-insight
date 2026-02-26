@@ -51,6 +51,7 @@ export function TransferForm(props: TransferFormProps) {
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [fromAccount, setFromAccount] = useState(() =>
     mode === "add" ? getLastFromAccount() : "",
@@ -118,7 +119,9 @@ export function TransferForm(props: TransferFormProps) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!amount || !fromAccount || !toAccount) return;
+    setSubmitError(null);
+
+    if (!amount || parseFloat(amount) <= 0 || !fromAccount || !toAccount) return;
     if (fromAccount.trim() === toAccount.trim()) return;
 
     setLoading(true);
@@ -133,6 +136,9 @@ export function TransferForm(props: TransferFormProps) {
       onCancel();
     } catch (error) {
       console.error("Failed to save transfer:", error);
+      setSubmitError(
+        error instanceof Error ? error.message : "Failed to save. Try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -157,6 +163,8 @@ export function TransferForm(props: TransferFormProps) {
       setConfirmDelete(false);
     }
   }
+
+  const formId = mode === "edit" ? "edit" : "add";
 
   const isSameAccount =
     fromAccount.trim() !== "" &&
@@ -188,7 +196,7 @@ export function TransferForm(props: TransferFormProps) {
         onWheel={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
       >
-        <form onSubmit={handleSubmit} id="transfer-form">
+        <form onSubmit={handleSubmit} id={`transfer-form-${formId}`}>
           <div className="grid gap-4">
             {/* From → To accounts */}
             <div className="flex items-end gap-2">
@@ -198,7 +206,7 @@ export function TransferForm(props: TransferFormProps) {
                   id="transfer-from"
                   type="text"
                   value={fromAccount}
-                  onChange={(e) => setFromAccount(e.target.value)}
+                  onChange={(e) => { setSubmitError(null); setFromAccount(e.target.value); }}
                   placeholder="e.g., Cash"
                   list="transfer-accounts-from"
                   required
@@ -220,7 +228,7 @@ export function TransferForm(props: TransferFormProps) {
                   id="transfer-to"
                   type="text"
                   value={toAccount}
-                  onChange={(e) => setToAccount(e.target.value)}
+                  onChange={(e) => { setSubmitError(null); setToAccount(e.target.value); }}
                   placeholder="e.g., Savings"
                   list="transfer-accounts-to"
                   required
@@ -252,12 +260,12 @@ export function TransferForm(props: TransferFormProps) {
                   min="0.01"
                   step="any"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => { setSubmitError(null); setAmount(e.target.value); }}
                   placeholder="0"
                   className="flex-1"
                   required
                 />
-                <Select value={currency} onValueChange={setCurrency}>
+                <Select value={currency} onValueChange={(v) => { setSubmitError(null); setCurrency(v); }}>
                   <SelectTrigger className="w-24">
                     <SelectValue />
                   </SelectTrigger>
@@ -285,7 +293,7 @@ export function TransferForm(props: TransferFormProps) {
               id="transfer-note"
               type="text"
               value={note}
-              onChange={(e) => setNote(e.target.value)}
+              onChange={(e) => { setSubmitError(null); setNote(e.target.value); }}
               placeholder="Optional description"
             />
           </div>
@@ -293,6 +301,9 @@ export function TransferForm(props: TransferFormProps) {
       </div>
 
       <div className="px-6 pb-6 pt-4 flex-shrink-0 border-t">
+        {submitError && (
+          <p className="text-sm text-destructive mb-3">{submitError}</p>
+        )}
         <DialogFooter className="flex-col sm:flex-row gap-2">
           {mode === "edit" && (
             <Button
@@ -320,7 +331,7 @@ export function TransferForm(props: TransferFormProps) {
           </Button>
           <Button
             type="submit"
-            form="transfer-form"
+            form={`transfer-form-${formId}`}
             disabled={loading || deleting || !canSubmit || !isDbReady}
           >
             {loading

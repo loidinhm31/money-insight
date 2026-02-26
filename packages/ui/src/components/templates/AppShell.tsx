@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, useEffect, useCallback } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { LoginPage } from "@money-insight/ui/components/pages";
-import { Spinner } from "@money-insight/ui/components/atoms";
+import { Spinner, ErrorBoundary } from "@money-insight/ui/components/atoms";
 import {
   BrowserSyncInitializer,
   Sidebar,
@@ -143,54 +143,56 @@ export function AppShell({
             sidebarCollapsed ? "md:ml-16" : "md:ml-64"
           }`}
         >
-          <Suspense
-            fallback={
-              <div
-                className="flex items-center justify-center min-h-screen"
-                style={{ background: "var(--color-bg-app)" }}
-              >
-                <Spinner className="w-8 h-8 text-primary" />
-              </div>
-            }
-          >
-            <main>
-              <Routes>
-                <Route
-                  index
-                  element={<Navigate to={to("/dashboard")} replace />}
-                />
-                <Route path="dashboard" element={<DashboardPage />} />
-                <Route path="add" element={<AddTransactionPage />} />
-                <Route
-                  path="settings"
-                  element={<SettingsPage onLogout={handleLogout} />}
-                />
-                <Route
-                  path="login"
-                  element={
-                    <LoginPage
-                      onLoginSuccess={() => {
-                        checkAuthStatus();
-                        navigate("/dashboard");
-                      }}
-                      onSkip={() => {
-                        setLocalSkipAuth(true);
-                        navigate("/dashboard");
-                      }}
-                    />
-                  }
-                />
-                <Route path="setup" element={<InitialSetupPage />} />
-                <Route path="reports" element={<ReportsPage />} />
-                <Route path="transactions" element={<TransactionPage />} />
-                <Route path="categories" element={<CategorySetupPage />} />
-                <Route
-                  path="*"
-                  element={<Navigate to={to("/dashboard")} replace />}
-                />
-              </Routes>
-            </main>
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense
+              fallback={
+                <div
+                  className="flex items-center justify-center min-h-screen"
+                  style={{ background: "var(--color-bg-app)" }}
+                >
+                  <Spinner className="w-8 h-8 text-primary" />
+                </div>
+              }
+            >
+              <main>
+                <Routes>
+                  <Route
+                    index
+                    element={<Navigate to={to("/dashboard")} replace />}
+                  />
+                  <Route path="dashboard" element={<DashboardPage />} />
+                  <Route path="add" element={<AddTransactionPage />} />
+                  <Route
+                    path="settings"
+                    element={<SettingsPage onLogout={handleLogout} />}
+                  />
+                  <Route
+                    path="login"
+                    element={
+                      <LoginPage
+                        onLoginSuccess={() => {
+                          checkAuthStatus();
+                          navigate("/dashboard");
+                        }}
+                        onSkip={() => {
+                          setLocalSkipAuth(true);
+                          navigate("/dashboard");
+                        }}
+                      />
+                    }
+                  />
+                  <Route path="setup" element={<InitialSetupPage />} />
+                  <Route path="reports" element={<ReportsPage />} />
+                  <Route path="transactions" element={<TransactionPage />} />
+                  <Route path="categories" element={<CategorySetupPage />} />
+                  <Route
+                    path="*"
+                    element={<Navigate to={to("/dashboard")} replace />}
+                  />
+                </Routes>
+              </main>
+            </Suspense>
+          </ErrorBoundary>
         </div>
 
         <BottomNavigation hasTransactions={hasTransactions} />
