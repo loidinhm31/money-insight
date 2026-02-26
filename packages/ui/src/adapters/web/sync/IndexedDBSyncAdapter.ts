@@ -43,6 +43,10 @@ export class IndexedDBSyncAdapter implements ISyncService {
   private config: IndexedDBSyncAdapterConfig;
   private initialized = false;
   private lastConfigHash: string = "";
+  // Concurrency lock: coalesces double-click / auto+manual overlaps into one in-flight sync.
+  // All callers share the same result; their progress callbacks are all notified.
+  private _syncInFlight: Promise<SyncResult> | null = null;
+  private _progressCallbacks: Set<(p: SyncProgress) => void> = new Set();
 
   constructor(config: IndexedDBSyncAdapterConfig) {
     this.config = config;
@@ -95,6 +99,21 @@ export class IndexedDBSyncAdapter implements ISyncService {
   }
 
   async syncWithProgress(
+    onProgress: (progress: SyncProgress) => void,
+  ): Promise<SyncResult> {
+    this._progressCallbacks.add(onProgress);
+    if (this._syncInFlight) return this._syncInFlight;
+    const fanOut = (p: SyncProgress) => {
+      for (const cb of this._progressCallbacks) cb(p);
+    };
+    this._syncInFlight = this._doSyncWithProgress(fanOut).finally(() => {
+      this._syncInFlight = null;
+      this._progressCallbacks.clear();
+    });
+    return this._syncInFlight;
+  }
+
+  private async _doSyncWithProgress(
     onProgress: (progress: SyncProgress) => void,
   ): Promise<SyncResult> {
     const client = this.ensureClient();

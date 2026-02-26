@@ -2,12 +2,15 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { Transaction } from "@money-insight/ui/types";
 import {
   setTransactionService,
+  setAccountService,
+  setCategoryGroupService,
   resetServices,
 } from "@money-insight/ui/adapters";
 import {
   createOutgoingTransferNote,
   createIncomingTransferNote,
 } from "@money-insight/ui/services/transferService";
+import { useCategoryGroupStore } from "./categoryGroupStore";
 import { useSpendingStore } from "./spendingStore";
 
 // Minimal transfer pair factory (mirrors transferService.test.ts helper)
@@ -55,6 +58,81 @@ function makeTransferPair(
     },
   };
 }
+
+describe("spendingStore.initFromDatabase", () => {
+  beforeEach(() => {
+    useSpendingStore.getState().reset();
+    useCategoryGroupStore.setState({
+      groups: [],
+      mappings: [],
+      lookupMap: new Map(),
+      isLoaded: false,
+      isLoading: false,
+      error: null,
+    });
+    resetServices();
+  });
+
+  it("categoryGroups are fully loaded before initFromDatabase resolves", async () => {
+    const group = {
+      id: "grp-1",
+      name: "Food & Dining",
+      syncVersion: 1,
+      syncedAt: null,
+      createdAt: "2024-01-01T00:00:00Z",
+      updatedAt: "2024-01-01T00:00:00Z",
+    };
+    const mapping = {
+      id: "map-1",
+      subCategory: "Coffee",
+      parentGroupId: "grp-1",
+      syncVersion: 1,
+      syncedAt: null,
+      createdAt: "2024-01-01T00:00:00Z",
+      updatedAt: "2024-01-01T00:00:00Z",
+    };
+
+    setTransactionService({
+      getTransactions: vi.fn().mockResolvedValue([]),
+      addTransaction: vi.fn(),
+      updateTransaction: vi.fn(),
+      deleteTransaction: vi.fn(),
+      importTransactions: vi.fn(),
+      createTransfer: vi.fn(),
+      updateTransfer: vi.fn(),
+      deleteTransfer: vi.fn(),
+      getTransferPair: vi.fn(),
+    });
+    setAccountService({
+      getAccounts: vi.fn().mockResolvedValue([]),
+      addAccount: vi.fn(),
+      updateAccount: vi.fn(),
+      deleteAccount: vi.fn(),
+    });
+    setCategoryGroupService({
+      getCategoryGroups: vi.fn().mockResolvedValue([group]),
+      getCategoryGroup: vi.fn(),
+      addCategoryGroup: vi.fn(),
+      updateCategoryGroup: vi.fn(),
+      deleteCategoryGroup: vi.fn(),
+      getCategoryMappings: vi.fn().mockResolvedValue([mapping]),
+      getMappingsForGroup: vi.fn(),
+      mapSubCategory: vi.fn(),
+      unmapSubCategory: vi.fn(),
+      buildCategoryLookup: vi.fn(),
+    });
+
+    await useSpendingStore.getState().initFromDatabase();
+
+    // By the time initFromDatabase resolves, categoryGroupStore must be fully loaded
+    const cgState = useCategoryGroupStore.getState();
+    expect(cgState.isLoaded).toBe(true);
+    expect(cgState.lookupMap.get("Coffee")).toBe("Food & Dining");
+
+    // Spending store must be ready
+    expect(useSpendingStore.getState().isDbReady).toBe(true);
+  });
+});
 
 describe("spendingStore.updateTransfer", () => {
   beforeEach(() => {
