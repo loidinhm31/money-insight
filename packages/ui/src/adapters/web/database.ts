@@ -38,48 +38,6 @@ export class MoneyInsightDatabase extends Dexie {
 
     this.version(1).stores({
       transactions:
-        "id, category, account, date, year_month, year, month, source, import_batch_id, sync_version, synced_at",
-      categories: "id, name, sync_version, synced_at",
-      accounts: "id, name, sync_version, synced_at",
-      importBatches: "id, filename, imported_at",
-      _syncMeta: "key",
-      _pendingChanges: "++id, tableName, rowId",
-    });
-
-    this.version(2).stores({
-      transactions:
-        "id, category, account, date, yearMonth, year, month, source, importBatchId, syncVersion, syncedAt",
-      categories: "id, name, syncVersion, syncedAt",
-      accounts: "id, name, syncVersion, syncedAt",
-      importBatches: "id, filename, importedAt",
-      _syncMeta: "key",
-      _pendingChanges: "++id, tableName, rowId",
-    });
-
-    this.version(3).stores({
-      transactions:
-        "id, category, account, date, yearMonth, year, month, source, importBatchId, syncVersion, syncedAt",
-      categories: "id, name, syncVersion, syncedAt",
-      accounts: "id, name, accountType, currency, syncVersion, syncedAt",
-      importBatches: "id, filename, importedAt",
-      _syncMeta: "key",
-      _pendingChanges: "++id, tableName, rowId",
-    });
-
-    this.version(4).stores({
-      transactions:
-        "id, category, account, date, yearMonth, year, month, source, importBatchId, syncVersion, syncedAt",
-      categories: "id, name, syncVersion, syncedAt",
-      accounts: "id, name, accountType, currency, syncVersion, syncedAt",
-      importBatches: "id, filename, importedAt",
-      categoryGroups: "id, name, syncVersion, syncedAt",
-      categoryMappings: "id, subCategory, parentGroupId, syncVersion, syncedAt",
-      _syncMeta: "key",
-      _pendingChanges: "++id, tableName, rowId",
-    });
-
-    this.version(5).stores({
-      transactions:
         "id, category, account, date, yearMonth, year, month, source, importBatchId, transferId, syncVersion, syncedAt",
       categories: "id, name, syncVersion, syncedAt",
       accounts: "id, name, accountType, currency, syncVersion, syncedAt",
