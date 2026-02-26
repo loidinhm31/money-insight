@@ -181,11 +181,11 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      // Load category groups in parallel with transactions and accounts
+      // All 3 must complete before refreshAnalysis() reads categoryGroupStore.lookupMap
       const [transactions, accounts] = await Promise.all([
         transactionService.getTransactions(),
         accountService.getAccounts(),
-        useCategoryGroupStore.getState().loadFromDatabase(),
+        useCategoryGroupStore.getState().loadFromDatabase(), // void — awaited for side-effect
       ]);
       set({
         ...buildAnalyzerState(transactions),
@@ -676,8 +676,10 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
     try {
       const { outgoing, incoming } =
         await transactionService.createTransfer(params);
-      const transactions = [...get().transactions, outgoing, incoming];
-      set({ ...buildAnalyzerState(transactions), isLoading: false });
+      set((state) => ({
+        ...buildAnalyzerState([...state.transactions, outgoing, incoming]),
+        isLoading: false,
+      }));
       get().refreshAnalysis();
       return { outgoing, incoming };
     } catch (error) {
@@ -700,12 +702,16 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
         params,
       );
 
-      const transactions = get().transactions.map((t) => {
-        if (t.id === outgoing.id) return outgoing;
-        if (t.id === incoming.id) return incoming;
-        return t;
-      });
-      set({ ...buildAnalyzerState(transactions), isLoading: false });
+      set((state) => ({
+        ...buildAnalyzerState(
+          state.transactions.map((t) => {
+            if (t.id === outgoing.id) return outgoing;
+            if (t.id === incoming.id) return incoming;
+            return t;
+          }),
+        ),
+        isLoading: false,
+      }));
       get().refreshAnalysis();
       return { outgoing, incoming };
     } catch (error) {
@@ -724,10 +730,12 @@ export const useSpendingStore = create<SpendingStore>()((set, get) => ({
 
     try {
       await transactionService.deleteTransfer(transferId);
-      const transactions = get().transactions.filter(
-        (t) => t.transferId !== transferId,
-      );
-      set({ ...buildAnalyzerState(transactions), isLoading: false });
+      set((state) => ({
+        ...buildAnalyzerState(
+          state.transactions.filter((t) => t.transferId !== transferId),
+        ),
+        isLoading: false,
+      }));
       get().refreshAnalysis();
     } catch (error) {
       set({

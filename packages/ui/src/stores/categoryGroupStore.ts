@@ -33,200 +33,208 @@ interface CategoryGroupStore {
 }
 
 export const useCategoryGroupStore = create<CategoryGroupStore>()(
-  (set, get) => ({
-    // Initial state
-    groups: [],
-    mappings: [],
-    lookupMap: new Map<string, string>(),
-    isLoaded: false,
-    isLoading: false,
-    error: null,
+  (set, get) => {
+    // Scoped to factory closure — no cross-test leakage (would be module-level otherwise)
+    let _analysisRefreshTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // Load from database
-    loadFromDatabase: async () => {
-      set({ isLoading: true, error: null });
+    return {
+      // Initial state
+      groups: [],
+      mappings: [],
+      lookupMap: new Map<string, string>(),
+      isLoaded: false,
+      isLoading: false,
+      error: null,
 
-      try {
-        const [groups, mappings] = await Promise.all([
-          categoryGroupService.getCategoryGroups(),
-          categoryGroupService.getCategoryMappings(),
-        ]);
+      // Load from database
+      loadFromDatabase: async () => {
+        set({ isLoading: true, error: null });
 
-        set({ groups, mappings, isLoading: false, isLoaded: true });
-        get().rebuildLookup();
-      } catch (error) {
-        console.error("Failed to load category groups:", error);
-        set({
-          isLoading: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Failed to load category groups",
-        });
-      }
-    },
+        try {
+          const [groups, mappings] = await Promise.all([
+            categoryGroupService.getCategoryGroups(),
+            categoryGroupService.getCategoryMappings(),
+          ]);
 
-    // Add a new group
-    addGroup: async (groupData) => {
-      set({ isLoading: true });
-
-      try {
-        const group = await categoryGroupService.addCategoryGroup(groupData);
-        set((state) => ({
-          groups: [...state.groups, group],
-          isLoading: false,
-        }));
-        get().rebuildLookup();
-        get().triggerAnalysisRefresh();
-        return group;
-      } catch (error) {
-        set({
-          isLoading: false,
-          error: error instanceof Error ? error.message : "Failed to add group",
-        });
-        throw error;
-      }
-    },
-
-    // Update a group
-    updateGroup: async (group) => {
-      set({ isLoading: true });
-
-      try {
-        const updated = await categoryGroupService.updateCategoryGroup(group);
-        set((state) => ({
-          groups: state.groups.map((g) => (g.id === updated.id ? updated : g)),
-          isLoading: false,
-        }));
-        get().rebuildLookup();
-        get().triggerAnalysisRefresh();
-        return updated;
-      } catch (error) {
-        set({
-          isLoading: false,
-          error:
-            error instanceof Error ? error.message : "Failed to update group",
-        });
-        throw error;
-      }
-    },
-
-    // Delete a group (cascade deletes mappings)
-    deleteGroup: async (id) => {
-      set({ isLoading: true });
-
-      try {
-        await categoryGroupService.deleteCategoryGroup(id);
-        set((state) => ({
-          groups: state.groups.filter((g) => g.id !== id),
-          mappings: state.mappings.filter((m) => m.parentGroupId !== id),
-          isLoading: false,
-        }));
-        get().rebuildLookup();
-        get().triggerAnalysisRefresh();
-      } catch (error) {
-        set({
-          isLoading: false,
-          error:
-            error instanceof Error ? error.message : "Failed to delete group",
-        });
-        throw error;
-      }
-    },
-
-    // Map a sub-category to a parent group
-    mapSubCategory: async (subCategory, parentGroupId) => {
-      set({ isLoading: true });
-
-      try {
-        const mapping = await categoryGroupService.mapSubCategory(
-          subCategory,
-          parentGroupId,
-        );
-        set((state) => ({
-          mappings: [
-            ...state.mappings.filter((m) => m.subCategory !== subCategory),
-            mapping,
-          ],
-          isLoading: false,
-        }));
-        get().rebuildLookup();
-        get().triggerAnalysisRefresh();
-        return mapping;
-      } catch (error) {
-        set({
-          isLoading: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Failed to map sub-category",
-        });
-        throw error;
-      }
-    },
-
-    // Remove a sub-category mapping
-    unmapSubCategory: async (subCategory) => {
-      set({ isLoading: true });
-
-      try {
-        await categoryGroupService.unmapSubCategory(subCategory);
-        set((state) => ({
-          mappings: state.mappings.filter((m) => m.subCategory !== subCategory),
-          isLoading: false,
-        }));
-        get().rebuildLookup();
-        get().triggerAnalysisRefresh();
-      } catch (error) {
-        set({
-          isLoading: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Failed to unmap sub-category",
-        });
-        throw error;
-      }
-    },
-
-    // Synchronous resolver using in-memory lookup
-    resolveParent: (subCategory) => {
-      const { lookupMap } = get();
-      return lookupMap.get(subCategory) ?? subCategory;
-    },
-
-    // Rebuild the lookup map
-    rebuildLookup: () => {
-      const { groups, mappings } = get();
-
-      const groupMap = new Map<string, string>();
-      for (const group of groups) {
-        groupMap.set(group.id, group.name);
-      }
-
-      const lookup = new Map<string, string>();
-      for (const mapping of mappings) {
-        const parentName = groupMap.get(mapping.parentGroupId);
-        if (parentName) {
-          lookup.set(mapping.subCategory, parentName);
+          set({ groups, mappings, isLoading: false, isLoaded: true });
+          get().rebuildLookup();
+        } catch (error) {
+          console.error("Failed to load category groups:", error);
+          set({
+            isLoading: false,
+            isLoaded: false,
+            error:
+              error instanceof Error
+                ? error.message
+                : "Failed to load category groups",
+          });
         }
-      }
+      },
 
-      set({ lookupMap: lookup });
-    },
+      // Add a new group
+      addGroup: async (groupData) => {
+        set({ isLoading: true });
 
-    // Trigger spending store refresh
-    triggerAnalysisRefresh: () => {
-      // This will be called to refresh analysis in spendingStore
-      // Import dynamically to avoid circular dependency
-      import("@money-insight/ui/stores/spendingStore").then(
-        ({ useSpendingStore }) => {
-          const { refreshAnalysis, isDbReady } = useSpendingStore.getState();
-          if (isDbReady) {
-            refreshAnalysis();
+        try {
+          const group = await categoryGroupService.addCategoryGroup(groupData);
+          set((state) => ({
+            groups: [...state.groups, group],
+            isLoading: false,
+          }));
+          get().rebuildLookup();
+          get().triggerAnalysisRefresh();
+          return group;
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Failed to add group",
+          });
+          throw error;
+        }
+      },
+
+      // Update a group
+      updateGroup: async (group) => {
+        set({ isLoading: true });
+
+        try {
+          const updated = await categoryGroupService.updateCategoryGroup(group);
+          set((state) => ({
+            groups: state.groups.map((g) => (g.id === updated.id ? updated : g)),
+            isLoading: false,
+          }));
+          get().rebuildLookup();
+          get().triggerAnalysisRefresh();
+          return updated;
+        } catch (error) {
+          set({
+            isLoading: false,
+            error:
+              error instanceof Error ? error.message : "Failed to update group",
+          });
+          throw error;
+        }
+      },
+
+      // Delete a group (cascade deletes mappings)
+      deleteGroup: async (id) => {
+        set({ isLoading: true });
+
+        try {
+          await categoryGroupService.deleteCategoryGroup(id);
+          set((state) => ({
+            groups: state.groups.filter((g) => g.id !== id),
+            mappings: state.mappings.filter((m) => m.parentGroupId !== id),
+            isLoading: false,
+          }));
+          get().rebuildLookup();
+          get().triggerAnalysisRefresh();
+        } catch (error) {
+          set({
+            isLoading: false,
+            error:
+              error instanceof Error ? error.message : "Failed to delete group",
+          });
+          throw error;
+        }
+      },
+
+      // Map a sub-category to a parent group
+      mapSubCategory: async (subCategory, parentGroupId) => {
+        set({ isLoading: true });
+
+        try {
+          const mapping = await categoryGroupService.mapSubCategory(
+            subCategory,
+            parentGroupId,
+          );
+          set((state) => ({
+            mappings: [
+              ...state.mappings.filter((m) => m.subCategory !== subCategory),
+              mapping,
+            ],
+            isLoading: false,
+          }));
+          get().rebuildLookup();
+          get().triggerAnalysisRefresh();
+          return mapping;
+        } catch (error) {
+          set({
+            isLoading: false,
+            error:
+              error instanceof Error
+                ? error.message
+                : "Failed to map sub-category",
+          });
+          throw error;
+        }
+      },
+
+      // Remove a sub-category mapping
+      unmapSubCategory: async (subCategory) => {
+        set({ isLoading: true });
+
+        try {
+          await categoryGroupService.unmapSubCategory(subCategory);
+          set((state) => ({
+            mappings: state.mappings.filter((m) => m.subCategory !== subCategory),
+            isLoading: false,
+          }));
+          get().rebuildLookup();
+          get().triggerAnalysisRefresh();
+        } catch (error) {
+          set({
+            isLoading: false,
+            error:
+              error instanceof Error
+                ? error.message
+                : "Failed to unmap sub-category",
+          });
+          throw error;
+        }
+      },
+
+      // Synchronous resolver using in-memory lookup
+      resolveParent: (subCategory) => {
+        const { lookupMap } = get();
+        return lookupMap.get(subCategory) ?? subCategory;
+      },
+
+      // Rebuild the lookup map
+      rebuildLookup: () => {
+        const { groups, mappings } = get();
+
+        const groupMap = new Map<string, string>();
+        for (const group of groups) {
+          groupMap.set(group.id, group.name);
+        }
+
+        const lookup = new Map<string, string>();
+        for (const mapping of mappings) {
+          const parentName = groupMap.get(mapping.parentGroupId);
+          if (parentName) {
+            lookup.set(mapping.subCategory, parentName);
           }
-        },
-      );
-    },
-  }),
+        }
+
+        set({ lookupMap: lookup });
+      },
+
+      // Trigger spending store refresh
+      triggerAnalysisRefresh: () => {
+        // Debounced dynamic import: coalesces rapid calls (e.g. batch mapping updates)
+        // and avoids bundler issues from the spendingStore ↔ categoryGroupStore circular import.
+        if (_analysisRefreshTimer) clearTimeout(_analysisRefreshTimer);
+        _analysisRefreshTimer = setTimeout(() => {
+          _analysisRefreshTimer = null;
+          import("@money-insight/ui/stores/spendingStore").then(
+            ({ useSpendingStore }) => {
+              const { refreshAnalysis, isDbReady } = useSpendingStore.getState();
+              if (isDbReady) refreshAnalysis();
+            },
+          );
+        }, 50);
+      },
+    };
+  },
 );
