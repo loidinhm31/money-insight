@@ -64,6 +64,7 @@ export function TransactionForm(props: TransactionFormProps) {
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
 
@@ -141,7 +142,10 @@ export function TransactionForm(props: TransactionFormProps) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!amount || !category) {
+    setSubmitError(null);
+
+    if (!amount.trim() || parseFloat(amount) <= 0 || !category.trim()) {
+      setSubmitError("Please enter a valid amount and category.");
       return;
     }
 
@@ -196,6 +200,9 @@ export function TransactionForm(props: TransactionFormProps) {
       onCancel();
     } catch (error) {
       console.error("Failed to save transaction:", error);
+      setSubmitError(
+        error instanceof Error ? error.message : "Failed to save. Try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -244,7 +251,7 @@ export function TransactionForm(props: TransactionFormProps) {
         onWheel={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
       >
-        <form onSubmit={handleSubmit} id="transaction-form">
+        <form onSubmit={handleSubmit} id={`transaction-form-${formId}`}>
           <div className="grid gap-4">
             {/* Transaction Type Toggle */}
             <div className="flex gap-2">
@@ -255,7 +262,7 @@ export function TransactionForm(props: TransactionFormProps) {
                   "flex-1",
                   isExpense && "bg-red-600 hover:bg-red-700",
                 )}
-                onClick={() => setIsExpense(true)}
+                onClick={() => { setSubmitError(null); setIsExpense(true); }}
               >
                 Expense
               </Button>
@@ -266,7 +273,7 @@ export function TransactionForm(props: TransactionFormProps) {
                   "flex-1",
                   !isExpense && "bg-green-600 hover:bg-green-700",
                 )}
-                onClick={() => setIsExpense(false)}
+                onClick={() => { setSubmitError(null); setIsExpense(false); }}
               >
                 Income
               </Button>
@@ -282,13 +289,15 @@ export function TransactionForm(props: TransactionFormProps) {
               <div className="flex gap-2">
                 <Input
                   type="number"
+                  min="0.01"
+                  step="any"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => { setSubmitError(null); setAmount(e.target.value); }}
                   placeholder="0"
                   className="flex-1"
                   required
                 />
-                <Select value={currency} onValueChange={setCurrency}>
+                <Select value={currency} onValueChange={(v) => { setSubmitError(null); setCurrency(v); }}>
                   <SelectTrigger className="w-24">
                     <SelectValue />
                   </SelectTrigger>
@@ -309,7 +318,7 @@ export function TransactionForm(props: TransactionFormProps) {
               required
               type="text"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={(e) => { setSubmitError(null); setCategory(e.target.value); }}
               placeholder="e.g., Food, Transport, Salary"
               list={`${formId}-categories`}
             />
@@ -326,7 +335,7 @@ export function TransactionForm(props: TransactionFormProps) {
               icon={<CreditCard className="h-4 w-4" />}
               type="text"
               value={account}
-              onChange={(e) => setAccount(e.target.value)}
+              onChange={(e) => { setSubmitError(null); setAccount(e.target.value); }}
               placeholder="e.g., Cash, Credit Card, Bank"
               list={`${formId}-accounts`}
             />
@@ -346,20 +355,25 @@ export function TransactionForm(props: TransactionFormProps) {
             </FormField>
 
             {/* Note */}
-            <FormField
-              label="Note"
-              id={`${formId}-note`}
-              type="text"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Transaction description"
-            />
+            <FormField label="Note" id={`${formId}-note`}>
+              <Input
+                id={`${formId}-note`}
+                type="text"
+                value={note}
+                onChange={(e) => { setSubmitError(null); setNote(e.target.value); }}
+                placeholder="Transaction description"
+                maxLength={500}
+              />
+            </FormField>
           </div>
         </form>
       </div>
 
       {/* Fixed Footer */}
       <div className="px-6 pb-6 pt-4 flex-shrink-0 border-t">
+        {submitError && (
+          <p className="text-sm text-destructive mb-3">{submitError}</p>
+        )}
         <DialogFooter className="flex-col sm:flex-row gap-2">
           {isEdit && onDelete && (
             <Button
@@ -387,8 +401,8 @@ export function TransactionForm(props: TransactionFormProps) {
           </Button>
           <Button
             type="submit"
-            form="transaction-form"
-            disabled={loading || deleting || !amount || !category}
+            form={`transaction-form-${formId}`}
+            disabled={loading || deleting || !amount.trim() || parseFloat(amount) <= 0 || !category.trim()}
           >
             {loading
               ? isEdit
