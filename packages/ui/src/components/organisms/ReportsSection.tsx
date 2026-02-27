@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -24,32 +25,42 @@ export function ReportsSection({
   const { getIcon } = useCategoryIcon();
   const maskValue = (value: string) => "*".repeat(value.length);
 
-  // Get current month's year-month string
-  const now = new Date();
-  const yearMonth =
-    currentYearMonth ||
-    `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}`;
+  const yearMonth = useMemo(() => {
+    if (currentYearMonth) return currentYearMonth;
+    const now = new Date();
+    return `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}`;
+  }, [currentYearMonth]);
 
-  // Filter transactions for current month, excluding those marked as excludeReport
-  const currentMonthTransactions = transactions.filter((t) => {
-    return t.yearMonth === yearMonth && !t.excludeReport;
-  });
+  // Single-pass partition into spending/income; ISO date strings sort lexicographically
+  const { spendingTransactions, incomeTransactions, totalSpending, totalIncome } =
+    useMemo(() => {
+      const spending: Transaction[] = [];
+      const income: Transaction[] = [];
+      let spendSum = 0;
+      let incomeSum = 0;
 
-  // Separate into spending and income
-  const spendingTransactions = currentMonthTransactions
-    .filter((t) => t.expense > 0)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      for (const t of transactions) {
+        if (t.yearMonth !== yearMonth || t.excludeReport) continue;
+        if (t.expense > 0) {
+          spending.push(t);
+          spendSum += t.expense;
+        }
+        if (t.income > 0) {
+          income.push(t);
+          incomeSum += t.income;
+        }
+      }
 
-  const incomeTransactions = currentMonthTransactions
-    .filter((t) => t.income > 0)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const byDateDesc = (a: Transaction, b: Transaction) =>
+        b.date < a.date ? -1 : b.date > a.date ? 1 : 0;
 
-  // Calculate totals
-  const totalSpending = spendingTransactions.reduce(
-    (sum, t) => sum + t.expense,
-    0,
-  );
-  const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.income, 0);
+      return {
+        spendingTransactions: spending.sort(byDateDesc),
+        incomeTransactions: income.sort(byDateDesc),
+        totalSpending: spendSum,
+        totalIncome: incomeSum,
+      };
+    }, [transactions, yearMonth]);
 
   const monthNames = [
     "January",
