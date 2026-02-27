@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -43,14 +43,18 @@ export function CategoryPieChart({
   const [showSubCategoryModal, setShowSubCategoryModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
 
-  const chartData = data.slice(0, 10).map((cat) => ({
-    name: cat.category,
-    value: cat.total,
-    percentage: cat.percentage,
-    count: cat.count,
-    transactions: cat.transactions,
-    hasSubCategories: !!cat.subCategories && cat.subCategories.length > 0,
-  }));
+  const chartData = useMemo(
+    () =>
+      data.slice(0, 10).map((cat) => ({
+        name: cat.category,
+        value: cat.total,
+        percentage: cat.percentage,
+        count: cat.count,
+        transactions: cat.transactions,
+        hasSubCategories: !!cat.subCategories && cat.subCategories.length > 0,
+      })),
+    [data],
+  );
 
   const handleClick = (chartEntry: any) => {
     const category = data.find((c) => c.category === chartEntry.name);

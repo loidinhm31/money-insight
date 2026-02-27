@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,16 @@ export function TransactionDetailModal({
   selectedCategory,
   categoryData,
 }: TransactionDetailModalProps) {
+  const sortedTransactions = useMemo(
+    () =>
+      categoryData
+        ? [...categoryData.transactions].sort(
+            (a, b) => b.date.getTime() - a.date.getTime(),
+          )
+        : [],
+    [categoryData],
+  );
+
   if (!selectedCategory || !categoryData) return null;
 
   return (
@@ -51,9 +62,7 @@ export function TransactionDetailModal({
                 </tr>
               </thead>
               <tbody>
-                {categoryData.transactions
-                  .sort((a, b) => b.date.getTime() - a.date.getTime())
-                  .map((transaction) => (
+                {sortedTransactions.map((transaction) => (
                     <tr
                       key={transaction.id}
                       className="border-b hover:bg-accent transition-colors"
@@ -80,9 +89,7 @@ export function TransactionDetailModal({
 
           {/* Mobile Card View */}
           <div className="md:hidden space-y-2">
-            {categoryData.transactions
-              .sort((a, b) => b.date.getTime() - a.date.getTime())
-              .map((transaction) => (
+            {sortedTransactions.map((transaction) => (
                 <div
                   key={transaction.id}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent"

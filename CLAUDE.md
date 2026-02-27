@@ -72,6 +72,16 @@ Atomic design in `packages/ui/src/components/`:
 - `pages/` - Full pages (DashboardPage, TransactionPage)
 - `templates/` - Layouts (AppShell)
 
+#### Performance & Memoization
+
+Phase-03 optimizations use **single-pass useMemo** to avoid repeated iterations and allocations:
+
+- **`ReportsSection.tsx`** — `useMemo` partitions transactions into spending/income/totals in one loop; ISO string date comparison in sort (no Date object allocations)
+- **`CategoryPieChart.tsx`** — `chartData` wrapped in `useMemo([data])` to prevent re-renders of chart library
+- **`TransactionDetailModal.tsx`** — `sortedTransactions` memoized once via copy-sort (avoids mutating prop); reused in both desktop table and mobile card views
+
+**Convention**: When data flowing from props requires transformation (partition, sort, deduplicate), memoize in the consuming component using `useMemo` with minimal dependency array. Pass memoized result to child views to ensure stable object identity across renders.
+
 ### Category Icon System
 
 Categories and category groups support an optional `icon?: string` field (stored in IndexedDB, synced to server).
@@ -100,16 +110,24 @@ Categories and category groups support an optional `icon?: string` field (stored
 
 Uses qm-sync-client for offline-first sync with qm-hub-server:
 
-- Checkpoint-based pagination
-- Client-generated UUIDs for offline creation
-- Sync metadata tracked in `_syncMeta` IndexedDB table
+- **Checkpoint-based pagination** — client maintains `_syncMeta` table with last-synced timestamps per table
+- **Client-generated UUIDs** — enables offline record creation; soft-deleted records retained for 60-day TTL
+- **Concurrency lock** — `IndexedDBSyncAdapter._syncInFlight` prevents overlapping syncs (e.g. double-click + auto-sync). Progress callbacks fan-out to all concurrent callers
+- **Dual auth** — `X-API-Key` + `X-App-Id` for app identity, `Authorization: Bearer` for user authentication
+- Sync metadata tracked in `_syncMeta` and `_pendingChanges` IndexedDB tables
+
+## State Management (Zustand)
+
+All state lives in `packages/ui/src/stores/`:
+
+- **`spendingStore.ts`** — Transactions, accounts, analysis (statistics, monthly/yearly reports, bottlenecks). Transfer actions (createTransfer, updateTransfer, deleteTransfer) use `set((state) => {...})` callback pattern to preserve state reactivity and avoid race conditions when multiple legs are updated atomically.
+- **`categoryGroupStore.ts`** — Category groups, category mappings, lookup map for parent resolution. `triggerAnalysisRefresh()` debounces (50ms, factory-closure scoped) dynamic import to avoid circular dependency with spendingStore and coalesce rapid updates.
 
 ## Key Conventions
 
 - Path alias `@/` → `packages/ui/src/` in apps
 - Tailwind CSS v4 with `@tailwindcss/vite` plugin
 - shadcn/ui components (configured in `components.json`)
-- State management with Zustand (`packages/ui/src/stores/`)
 
 ## Embedding
 
