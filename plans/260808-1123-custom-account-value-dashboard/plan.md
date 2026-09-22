@@ -21,7 +21,7 @@ Deliver one inline, cross-device-configured `/dashboard` widget. Users select ac
 - **Acceptance:** config persists/syncs; balances honor opening balance, transfers, adjustments; never sum currencies; safe empty states; tests and typecheck pass.
 - **Scope:** one inline widget. **Non-goals:** drag/drop layouts, FX conversion, account-level selection, custom ranges, snapshots, price feeds.
 - **Risk/public contracts:** new sync table/server contract; server-wins edits; old-client compatibility; financial derivation; uncontrolled type strings; private values.
-- **Affected systems:** shared types; Dexie/sync storage; service DI/platform setup; dashboard UI; external `glean-oak-server` contract.
+- **Affected systems:** shared types; Dexie/sync storage; service DI/platform setup; dashboard UI; external `glean-hub-server` contract.
 - **Testing:** strict TypeScript; focused Vitest unit/DB/sync/component tests; manual two-session sync, privacy, theme, responsive checks.
 - **Open questions:** active server `_schemas` rollout and authenticated two-session sync proof remain release gates.
 
@@ -58,7 +58,7 @@ Run `/code plans/260808-1123-custom-account-value-dashboard`. The active-plan sc
 
 ## Unresolved Questions
 
-- **Release gates:** the active `glean-oak-server` `_schemas` configuration must include `dashboardPreferences`, and an authenticated two-session delta-sync/stale-conflict check must pass before release.
+- **Release gates:** the active `glean-hub-server` `_schemas` configuration must include `dashboardPreferences`, and an authenticated two-session delta-sync/stale-conflict check must pass before release.
 - **Approved warnings (2026-08-08 12:13 ICT):** same-device preference delete/save is not yet transactional; live server integration proof remains outstanding.
 - **Phase 02 final review (2026-08-08 15:45:49 ICT):** approved and completed. Encoded ISO calendar dates are compared as date-only values (offsets and `Z` suffixes are not converted to runtime timezone); compatible transactions are grouped once and reused for current/history calculations; January-boundary, local-midnight account creation, and same-day `createdAt` ordering assertions pass.
 - **Phase 03 final review (2026-08-09 23:30:55 ICT):** approved (8/10, zero criticals). Validation: 40 UI test files / 242 tests; type-check, lint, and build passed. Root `pnpm test:run` was unavailable because the host returned `/tmp` error `-122` (disk quota).

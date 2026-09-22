@@ -1,6 +1,6 @@
 # Money Insight - Architecture Documentation
 
-Personal finance tracking app with offline-first sync. Runs as standalone web app, embedded in glean-oak-app via Shadow DOM, or as Tauri desktop app. Turborepo monorepo with shared UI package.
+Personal finance tracking app with offline-first sync. Runs as standalone web app, embedded in glean-hub-app via Shadow DOM, or as Tauri desktop app. Turborepo monorepo with shared UI package.
 
 ## System Overview
 
@@ -12,8 +12,8 @@ C4Context
 
     System(mi, "Money Insight", "Offline-first finance tracker")
 
-    System_Ext(qmHub, "glean-oak-app", "Admin panel host")
-    System_Ext(qmServer, "glean-oak-server", "Sync + Auth API")
+    System_Ext(qmHub, "glean-hub-app", "Admin panel host")
+    System_Ext(qmServer, "glean-hub-server", "Sync + Auth API")
 
     Rel(user, mi, "Manages transactions, accounts, reports")
     Rel(mi, qmServer, "Sync data, authenticate", "HTTP/REST")
@@ -311,7 +311,7 @@ additive table, and saving a preference never changes account or transaction
 rows.
 
 **Release constraint:** deploy the matching `dashboardPreferences` table to
-`glean-oak-server/embed-app/money-insight/money-insight-app-schema.json` and
+`glean-hub-server/embed-app/money-insight/money-insight-app-schema.json` and
 verify push, pull, acknowledgement, conflict, and tombstone behavior between
 two authenticated sessions before exposing dashboard configuration. The client
 must not be released against a server that does not allow this table.
@@ -336,7 +336,7 @@ flowchart LR
     Preferences --> Adapter[IndexedDB dashboard preferences adapter]
     Adapter --> Local[(dashboardPreferences table)]
     Local --> Storage[IndexedDBSyncStorage]
-    Storage <--> Server[glean-oak-server sync contract]
+    Storage <--> Server[glean-hub-server sync contract]
     Store[spendingStore accounts and transactions] --> Balance[shared balance history helper]
     Balance --> Widget
 ```
@@ -608,7 +608,7 @@ sequenceDiagram
     participant Sync as IndexedDBSyncAdapter
     participant Meta as _syncMeta
     participant DB as IndexedDB
-    participant Server as glean-oak-server
+    participant Server as glean-hub-server
 
     Init->>Sync: syncNow()
     Sync->>Sync: Acquire concurrency lock
@@ -668,8 +668,8 @@ flowchart LR
         WebApp --> MoneyApp1["MoneyInsightApp<br/>useRouter=true"]
     end
 
-    subgraph Embedded["Embedded in glean-oak-app"]
-        Hub["glean-oak-app"]
+    subgraph Embedded["Embedded in glean-hub-app"]
+        Hub["glean-hub-app"]
         Hub --> Shadow["Shadow DOM"]
         Shadow --> MoneyApp2["MoneyInsightApp<br/>useRouter=false<br/>basePath=/money"]
     end
@@ -685,7 +685,7 @@ flowchart LR
     MoneyApp2 --> IDB
     MoneyApp3 --> IDB
 
-    MoneyApp1 --> QmServer["glean-oak-server"]
+    MoneyApp1 --> QmServer["glean-hub-server"]
     MoneyApp2 --> QmServer
     RustBE --> QmServer
 
@@ -715,7 +715,7 @@ flowchart TB
     JS -->|"IPC: auth_refresh"| Auth
     Auth --> Session
     Session --> EncStore["Encrypted Token<br/>Storage (disk)"]
-    Auth --> QmServer["glean-oak-server"]
+    Auth --> QmServer["glean-hub-server"]
 
     classDef rust fill:#ffecb3,stroke:#ff8f00
     class Auth,Session,WebSrv,Main rust

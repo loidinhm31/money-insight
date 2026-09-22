@@ -34,8 +34,8 @@ Validation proves this flow: preference adapter/outbox → sync server → remot
 ## Related Code Files
 
 - Modify/create tests beside all changed modules from Phases 01–03.
-- Modify: `/mnt/data/ws/sharing/glean-oak/embed-app/money-insight/docs/architecture.md` only if implementation intentionally differs from the approved design.
-- Modify external `glean-oak-server` contract/integration tests as required by Phase 01.
+- Modify: `/mnt/data/ws/sharing/glean-hub/embed-app/money-insight/docs/architecture.md` only if implementation intentionally differs from the approved design.
+- Modify external `glean-hub-server` contract/integration tests as required by Phase 01.
 
 ## Implementation Steps
 

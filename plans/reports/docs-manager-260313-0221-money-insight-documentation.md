@@ -26,7 +26,7 @@ Created **comprehensive documentation suite** for Money Insight personal finance
 - Target users: Budget trackers, multi-account managers, digital nomads, finance students, embedded users
 - Feature inventory: Transactions, accounts, categories, reports, CSV import, sync, multi-platform
 - Non-functional requirements: Performance (<2s load), reliability, security, scalability, accessibility
-- Deployment modes: Web, embedded (glean-oak-app), Tauri desktop
+- Deployment modes: Web, embedded (glean-hub-app), Tauri desktop
 - Success metrics: Time to first entry, sync latency, offline usability, category accuracy
 - v1.0 success criteria: 10 checkpoints from basic CRUD to zero data loss
 - Known limitations & roadmap: Budget features (v1.1), recurring rules (v1.2), investment tracking (v1.3)

@@ -2,7 +2,7 @@
 
 ## Product Vision
 
-**Money Insight** is an offline-first personal finance tracker with encrypted sync, multi-platform deployment, and powerful analytics. Users track transactions, manage accounts, analyze spending patterns, and make data-driven financial decisions across web, desktop (Tauri), and embedded (glean-oak-app) deployments.
+**Money Insight** is an offline-first personal finance tracker with encrypted sync, multi-platform deployment, and powerful analytics. Users track transactions, manage accounts, analyze spending patterns, and make data-driven financial decisions across web, desktop (Tauri), and embedded (glean-hub-app) deployments.
 
 **Core philosophy**: Offline-first means users work seamlessly without internet; sync is automatic when available. Privacy-first: user data never syncs without consent.
 
@@ -14,7 +14,7 @@
 | Multi-account manager | Managing checking, savings, credit cards; fund transfers between accounts |
 | Digital nomad | Working offline in areas with poor connectivity; periodic batch sync |
 | Finance student | Analyzing spending trends, learning double-entry (transfers as paired legs) |
-| Embedded user | Accessing Money Insight as part of glean-oak-app admin panel (no separate login) |
+| Embedded user | Accessing Money Insight as part of glean-hub-app admin panel (no separate login) |
 
 ## Feature Inventory
 
@@ -66,12 +66,12 @@
 - **Manual sync trigger**: "Sync now" button in settings
 
 ### Multi-Platform Deployment
-- **Web (Vite + React)**: Standalone app or embedded in glean-oak-app via Shadow DOM
+- **Web (Vite + React)**: Standalone app or embedded in glean-hub-app via Shadow DOM
 - **Tauri Desktop**: Native macOS/Windows/Linux app with encrypted token storage
-- **Embedded mode**: Integrates into glean-oak-app with shared auth tokens and routing
+- **Embedded mode**: Integrates into glean-hub-app with shared auth tokens and routing
 
 ### Authentication & Security
-- **OAuth/JWT flow**: Register/login via glean-oak-server (web + desktop)
+- **OAuth/JWT flow**: Register/login via glean-hub-server (web + desktop)
 - **Token refresh**: Automatic refresh-token rotation with 10-second cache
 - **Tauri encrypted storage**: ChaCha20Poly1305 cipher with Argon2 key derivation
 - **Machine-ID isolation**: Tauri tokens tied to machine fingerprint
@@ -118,19 +118,19 @@
 - **Modern browsers**: Chrome 120+, Firefox 121+, Safari 17+ (ES2020 minimum)
 - **Mobile browsers**: iOS Safari, Android Chrome (responsive design, touch-friendly)
 - **Tauri desktop**: macOS 11+, Windows 10+, Linux (glibc 2.29+)
-- **Embedded**: Requires glean-oak-app environment (post-v1.0)
+- **Embedded**: Requires glean-hub-app environment (post-v1.0)
 
 ## Deployment Modes
 
 ### Standalone Web (`apps/web`)
 - User accesses `https://app.example.com/money`
 - Full authentication flow (login, register, logout)
-- Syncs to glean-oak-server
+- Syncs to glean-hub-server
 - Uses QmServerAuthAdapter (HTTP)
 
-### Embedded in glean-oak-app
+### Embedded in glean-hub-app
 - Hosted as Shadow DOM component in admin panel route `/money`
-- Inherits auth from glean-oak-app (shared localStorage tokens)
+- Inherits auth from glean-hub-app (shared localStorage tokens)
 - No separate login required
 - Uses embedded MoneyInsightApp component with `useRouter=false`
 
@@ -138,7 +138,7 @@
 - Native app window; user runs locally
 - Embedded Axum web server (port 25096) hosts frontend + api
 - Encrypted token storage via ChaCha20Poly1305
-- Syncs to glean-oak-server via TauriAuthAdapter (IPC → Rust → HTTP)
+- Syncs to glean-hub-server via TauriAuthAdapter (IPC → Rust → HTTP)
 
 ## Success Metrics
 
@@ -168,7 +168,7 @@
 4. Monthly and yearly reports
 5. CSV import functionality
 6. Tauri desktop app working
-7. Embedded in glean-oak-app
+7. Embedded in glean-hub-app
 8. Offline sync verified (30+ transactions)
 9. Zero unrecoverable data loss in testing
 10. All pages load < 2 seconds

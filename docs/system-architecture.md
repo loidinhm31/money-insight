@@ -97,9 +97,9 @@ User Registration:
   ←
   { accessToken, refreshToken, userId, expiresIn }
   ↓
-  localStorage.setItem("glean-oak-accessToken", accessToken)
-  localStorage.setItem("glean-oak-refreshToken", refreshToken)
-  localStorage.setItem("glean-oak-userId", userId)
+  localStorage.setItem("glean-hub-access-token", accessToken)
+  localStorage.setItem("glean-hub-refresh-token", refreshToken)
+  localStorage.setItem("glean-hub-user-id", userId)
 
 User Login:
   POST /api/v1/auth/login
@@ -413,7 +413,7 @@ if (isTauri()) {
 
 Router::new()
   .route("/", get(serve_frontend))
-  .route("/api/*path", forward_to_server) // Proxy to glean-oak-server
+  .route("/api/*path", forward_to_server) // Proxy to glean-hub-server
   .fallback(serve_frontend)
   .layer(middleware::from_fn(session_auth_middleware))
   .layer(CorsLayer::permissive())
@@ -577,7 +577,7 @@ const monthlyAnalysis = useMemo(() => {
 
 ## References
 
-- **Sync Protocol**: Based on glean-oak-sync-engine checkpoint design
+- **Sync Protocol**: Based on glean-hub-sync-engine checkpoint design
 - **Auth**: JWT with refresh-token rotation (industry standard)
 - **Encryption**: ChaCha20Poly1305 + Argon2 (OWASP-recommended)
 - **IndexedDB**: Dexie.js wrapper; transactional guarantees
@@ -587,4 +587,4 @@ const monthlyAnalysis = useMemo(() => {
 
 **Last updated**: 2026-03-13
 **Architecture version**: 1.0
-**Compatibility**: glean-oak-server v1.0+, Tauri v2.0+
+**Compatibility**: glean-hub-server v1.0+, Tauri v2.0+

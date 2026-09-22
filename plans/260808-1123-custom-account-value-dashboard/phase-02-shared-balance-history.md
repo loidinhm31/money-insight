@@ -34,8 +34,8 @@ Create a pure helper module beside balance services. It accepts accounts, transa
 
 ## Related Code Files
 
-- Modify: `/mnt/data/ws/sharing/glean-oak/embed-app/money-insight/packages/ui/src/services/balanceAdjustmentService.ts` — extract/reuse shared primitives only if needed.
-- Create: `/mnt/data/ws/sharing/glean-oak/embed-app/money-insight/packages/ui/src/services/account-type-value-history.ts` and test.
+- Modify: `/mnt/data/ws/sharing/glean-hub/embed-app/money-insight/packages/ui/src/services/balanceAdjustmentService.ts` — extract/reuse shared primitives only if needed.
+- Create: `/mnt/data/ws/sharing/glean-hub/embed-app/money-insight/packages/ui/src/services/account-type-value-history.ts` and test.
 - Modify: `packages/ui/src/components/pages/TransactionPage.tsx` — replace duplicated current-balance logic.
 - Modify: `packages/ui/src/services/balanceAdjustmentService.test.ts` and `packages/ui/src/stores/spendingStore.test.ts` only as regression coverage requires.
 

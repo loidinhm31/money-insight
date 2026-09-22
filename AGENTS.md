@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents and developers working with code in this repository.
 
 ## Overview
 
@@ -64,7 +64,7 @@ setAuthService(isTauri() ? new TauriAuthAdapter() : new QmServerAuthAdapter());
 **Auth Services** - Platform-specific:
 
 - `TauriAuthAdapter` - Uses Tauri IPC commands to Rust backend
-- `QmServerAuthAdapter` - HTTP calls to glean-oak-server
+- `QmServerAuthAdapter` - HTTP calls to glean-hub-server
 
 **Platform Context** - Services provided to React tree via `PlatformProvider` (`packages/ui/src/platform/`)
 
@@ -133,7 +133,7 @@ All 35 icons redesigned to match the flat two-tone outlined style:
 
 ### Sync Architecture
 
-Uses glean-oak-sync-client for offline-first sync with glean-oak-server:
+Uses glean-hub-sync-client for offline-first sync with glean-hub-server:
 
 - **Checkpoint-based pagination** — client maintains `_syncMeta` table with last-synced timestamps per table
 - **Debt sync tables** — Dexie schema version 2 adds `debts` and `debtSettlements` as synced tables, including `syncVersion` and `syncedAt` fields plus debt-settlement indexes in `packages/ui/src/adapters/web/database.ts`
@@ -170,8 +170,8 @@ The `MoneyInsightApp` component (`packages/ui/src/embed/`) can be embedded:
 
 ## Dependencies on Parent Project
 
-Part of glean-oak-sync ecosystem:
+Part of glean-hub-sync ecosystem:
 
-- Uses `@glean-oak/sync-client-types` for TypeScript types
-- Uses `glean-oak-sync-client` Rust crate for sync (Tauri only)
-- Designed to embed in `glean-oak-app` admin panel
+- Uses `@glean-hub/sync-client-types` for TypeScript types
+- Uses `glean-hub-sync-client` Rust crate for sync (Tauri only)
+- Designed to embed in `glean-hub-app` admin panel

@@ -35,8 +35,8 @@
 
 ## Related Code Files
 
-- Modify: `/mnt/data/ws/sharing/glean-oak/embed-app/money-insight/packages/ui/src/components/pages/DashboardPage.tsx` — load preference, prevent upload-only dead end, pass data.
-- Modify: `/mnt/data/ws/sharing/glean-oak/embed-app/money-insight/packages/ui/src/components/templates/Dashboard.tsx` — stable placement/props.
+- Modify: `/mnt/data/ws/sharing/glean-hub/embed-app/money-insight/packages/ui/src/components/pages/DashboardPage.tsx` — load preference, prevent upload-only dead end, pass data.
+- Modify: `/mnt/data/ws/sharing/glean-hub/embed-app/money-insight/packages/ui/src/components/templates/Dashboard.tsx` — stable placement/props.
 - Create: `packages/ui/src/components/organisms/AccountTypeValueWidget.tsx` and focused tests.
 - Create if separation keeps files focused: `AccountTypeValueChart.tsx` and/or `AccountTypeValueWidgetConfig.tsx`.
 - Modify: `packages/ui/src/components/organisms/index.ts` — exports.

@@ -34,13 +34,13 @@
 
 ## Related Code Files
 
-- Modify: `/mnt/data/ws/sharing/glean-oak/embed-app/money-insight/packages/shared/src/types/*` — preference type/export.
-- Modify: `/mnt/data/ws/sharing/glean-oak/embed-app/money-insight/packages/ui/src/adapters/web/database.ts` — additive Dexie version/table.
-- Create: `/mnt/data/ws/sharing/glean-oak/embed-app/money-insight/packages/ui/src/adapters/factory/interfaces/IDashboardPreferencesService.ts`.
-- Create: `/mnt/data/ws/sharing/glean-oak/embed-app/money-insight/packages/ui/src/adapters/web/IndexedDBDashboardPreferencesAdapter.ts`.
+- Modify: `/mnt/data/ws/sharing/glean-hub/embed-app/money-insight/packages/shared/src/types/*` — preference type/export.
+- Modify: `/mnt/data/ws/sharing/glean-hub/embed-app/money-insight/packages/ui/src/adapters/web/database.ts` — additive Dexie version/table.
+- Create: `/mnt/data/ws/sharing/glean-hub/embed-app/money-insight/packages/ui/src/adapters/factory/interfaces/IDashboardPreferencesService.ts`.
+- Create: `/mnt/data/ws/sharing/glean-hub/embed-app/money-insight/packages/ui/src/adapters/web/IndexedDBDashboardPreferencesAdapter.ts`.
 - Modify: `ServiceFactory.ts`, facade exports, `MoneyInsightApp.tsx`, and `PlatformContext.tsx` — DI wiring.
 - Modify: `IndexedDBSyncStorage.ts` and relevant sync tests — table serialization, remote upsert/delete, ack marking.
-- Coordinate/modify outside this repo: `glean-oak-server` sync schema/table allowlists, validation, delta pull/push, acknowledgement, soft-delete TTL tests.
+- Coordinate/modify outside this repo: `glean-hub-server` sync schema/table allowlists, validation, delta pull/push, acknowledgement, soft-delete TTL tests.
 
 ## Implementation Steps
 

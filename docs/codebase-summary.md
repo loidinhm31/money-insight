@@ -85,7 +85,7 @@ money-insight/
 │   │   │   │   ├── sync.ts           # SyncStatus, SyncResult, SyncProgress
 │   │   │   │   └── index.ts          # Transaction, Category, Account, etc.
 │   │   │   ├── constants/
-│   │   │   │   ├── auth.ts           # AUTH_STORAGE_KEYS (glean-oak-*)
+│   │   │   │   ├── auth.ts           # AUTH_STORAGE_KEYS (glean-hub-*)
 │   │   │   │   └── index.ts          # BALANCE_ADJUSTMENT_CATEGORY, SUPPORTED_CURRENCIES
 │   │   │   ├── utils/
 │   │   │   │   ├── env.ts            # EnvironmentManager singleton
@@ -107,7 +107,7 @@ money-insight/
 │   ├── codebase-summary.md (NEW)
 │   ├── code-standards.md (NEW)
 │   └── system-architecture.md (NEW)
-├── CLAUDE.md              # Development guide
+├── AGENTS.md              # Development guide
 ├── README.md              # Quick start (updating)
 ├── money-insight-app-schema.json  # Sync schema definition
 ├── components.json        # shadcn/ui config
@@ -183,7 +183,7 @@ Total: 46 tests, Vitest (node environment), `pnpm test:run` single run
 - **React Router 7**: Client-side routing
 - **Zustand**: State management (spendingStore, categoryGroupStore)
 - **Dexie.js**: IndexedDB wrapper
-- **@glean-oak/sync-client-types**: Sync protocol types (from parent)
+- **@glean-hub/sync-client-types**: Sync protocol types (from parent)
 - **Tauri v2**: Desktop app framework (native)
 - **shadcn/ui**: Radix UI + Tailwind components
 - **Tailwind CSS v4**: Styling via @tailwindcss/vite plugin
@@ -236,7 +236,7 @@ Total: 46 tests, Vitest (node environment), `pnpm test:run` single run
 3. **Zustand state**: Reactive state with action callbacks; debounced analysis refresh
 4. **Atomic design**: Atoms → Molecules → Organisms → Pages → Templates
 5. **Dexie.js DB**: Per-user IndexedDB with sync metadata tables
-6. **Checkpoint sync**: Client-managed pull/push via glean-oak-sync-client
+6. **Checkpoint sync**: Client-managed pull/push via glean-hub-sync-client
 7. **Single-pass analytics**: MoneyInsightAnalyzer with useMemo caching
 
 ## Known Technical Debt

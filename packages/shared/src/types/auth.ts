@@ -1,4 +1,4 @@
-// Authentication types for glean-oak-sync integration
+// Authentication types for glean-hub-sync integration
 
 /**
  * Response from register/login endpoints

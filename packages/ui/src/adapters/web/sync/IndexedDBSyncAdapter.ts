@@ -6,7 +6,7 @@ import type {
 import {
   createSyncClientConfig,
   type HttpClientFn,
-  GleanOakClient,
+  GleanHubClient,
 } from "@money-insight/shared/types";
 import { IndexedDBSyncStorage } from "@money-insight/ui/adapters/web";
 import { getCurrentTimestamp } from "@money-insight/ui/adapters/web";
@@ -38,7 +38,7 @@ export interface IndexedDBSyncAdapterConfig {
 }
 
 export class IndexedDBSyncAdapter implements ISyncService {
-  private client: GleanOakClient | null = null;
+  private client: GleanHubClient | null = null;
   private storage: IndexedDBSyncStorage;
   private config: IndexedDBSyncAdapterConfig;
   private initialized = false;
@@ -61,7 +61,7 @@ export class IndexedDBSyncAdapter implements ISyncService {
     return `${config.serverUrl}|${config.appId}|${config.apiKey}`;
   }
 
-  private ensureClient(): GleanOakClient {
+  private ensureClient(): GleanHubClient {
     const config = this.config.getConfig();
     const hash = this.getConfigHash(config);
 
@@ -71,7 +71,7 @@ export class IndexedDBSyncAdapter implements ISyncService {
         config.appId,
         config.apiKey,
       );
-      this.client = new GleanOakClient(clientConfig, this.config.httpClient);
+      this.client = new GleanHubClient(clientConfig, this.config.httpClient);
       this.lastConfigHash = hash;
       this.initialized = false;
       // Write rotated tokens back to persistent storage immediately so the
@@ -298,7 +298,7 @@ export class IndexedDBSyncAdapter implements ISyncService {
     return this.storage;
   }
 
-  getClient(): GleanOakClient {
+  getClient(): GleanHubClient {
     return this.ensureClient();
   }
 }

@@ -2,7 +2,7 @@
  * Environment configuration interface
  */
 export interface AppEnvironment {
-  VITE_GLEAN_OAK_SERVER_URL: string;
+  VITE_GLEAN_HUB_SERVER_URL: string;
   VITE_MONEY_INSIGHT_APP_ID: string;
   VITE_MONEY_INSIGHT_API_KEY: string;
   DEV: boolean;
@@ -14,7 +14,7 @@ export interface AppEnvironment {
  * Default values for environment variables
  */
 const ENV_DEFAULTS: Partial<AppEnvironment> = {
-  VITE_GLEAN_OAK_SERVER_URL: "http://localhost:3000",
+  VITE_GLEAN_HUB_SERVER_URL: "http://localhost:3000",
   VITE_MONEY_INSIGHT_APP_ID: "money-insight",
   VITE_MONEY_INSIGHT_API_KEY: "",
   DEV: false,
@@ -74,7 +74,14 @@ class EnvironmentManager {
   }
 
   get serverUrl(): string {
-    return this.get("VITE_GLEAN_OAK_SERVER_URL");
+    const env = this.getViteEnv();
+    if (env) {
+      if (typeof env.VITE_GLEAN_HUB_SERVER_URL === "string" && env.VITE_GLEAN_HUB_SERVER_URL) {
+        return env.VITE_GLEAN_HUB_SERVER_URL.replace(/\/+$/, "");
+      }
+    }
+    const fallback = ENV_DEFAULTS.VITE_GLEAN_HUB_SERVER_URL || "http://localhost:3000";
+    return fallback.replace(/\/+$/, "");
   }
 
   get appId(): string {
