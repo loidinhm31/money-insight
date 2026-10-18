@@ -1,0 +1,261 @@
+import {
+  IndexedDBAccountAdapter,
+  IndexedDBCategoryAdapter,
+  IndexedDBCategoryGroupAdapter,
+  IndexedDBStatisticsAdapter,
+  IndexedDBTransactionAdapter,
+  IndexedDBDebtAdapter,
+  IndexedDBBudgetAdapter,
+  IndexedDBDashboardPreferencesAdapter,
+  IndexedDBNotificationEventAdapter,
+  createIndexedDBSyncAdapter,
+  setAccountService,
+  setAuthService,
+  setCategoryService,
+  setCategoryGroupService,
+  setStatisticsService,
+  setDebtService,
+  setBudgetService,
+  setDashboardPreferencesService,
+  setNotificationEventService,
+  setSyncService,
+  setTransactionService,
+  getSyncService,
+} from "../adapters";
+import {
+  initDb,
+  deleteCurrentDb,
+  IndexedDBSyncStorage,
+  ensureCategoryBackfill,
+} from "../adapters/web";
+import { QmServerAuthAdapter } from "../adapters/shared";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { BrowserRouter } from "react-router-dom";
+import { AppShell } from "../components/templates";
+import {
+  BasePathContext,
+  PortalContainerContext,
+} from "../hooks";
+import {
+  PlatformProvider,
+  type IPlatformServices,
+} from "../platform";
+import { ThemeProvider } from "../contexts";
+import { useAutoSync } from "../hooks/useAutoSync";
+import { useSyncToast } from "../hooks/useSyncToast";
+import { SyncToastProvider } from "../contexts/SyncToastContext";
+import { SyncToast } from "../components/atoms/SyncToast";
+import type { ISyncService } from "../adapters/factory/interfaces";
+
+function SyncAutoSyncManager({
+  syncService,
+  enabled,
+}: {
+  syncService: ISyncService | null;
+  enabled: boolean;
+}) {
+  const { handleSyncStart, handleSyncResult } = useSyncToast();
+  useAutoSync({
+    syncService,
+    enabled,
+    onSyncStart: handleSyncStart,
+    onSyncResult: handleSyncResult,
+  });
+  return null;
+}
+
+export interface AuthTokens {
+  accessToken?: string;
+  refreshToken?: string;
+  userId?: string;
+}
+
+type LogoutCleanupFn = () => Promise<{ success: boolean; error?: string }>;
+type UnregisterFn = () => void;
+
+export interface MoneyInsightAppProps {
+  authTokens?: AuthTokens;
+  embedded?: boolean;
+  useRouter?: boolean;
+  basePath?: string;
+  className?: string;
+  onLogoutRequest?: () => void;
+  /** Register a cleanup callback for logout (sync + delete DB). Returns unregister fn. */
+  registerLogoutCleanup?: (appId: string, fn: LogoutCleanupFn) => UnregisterFn;
+}
+
+export function MoneyInsightApp({
+  authTokens,
+  embedded = false,
+  useRouter = true,
+  basePath,
+  className,
+  onLogoutRequest,
+  registerLogoutCleanup,
+}: MoneyInsightAppProps) {
+  // Gate rendering on DB ready to prevent getDb() throws before initDb() completes
+  const [dbReady, setDbReady] = useState(false);
+  const [tokensReady, setTokensReady] = useState(!embedded);
+
+  useEffect(() => {
+    // Embedded: use userId from hub. Standalone: userId=undefined → legacy "MoneyInsightDB"
+    setDbReady(false);
+    setTokensReady(!embedded);
+    initDb(authTokens?.userId)
+      .then(async () => {
+        await ensureCategoryBackfill();
+        setDbReady(true);
+      })
+      .catch(console.error);
+  }, [authTokens?.userId, embedded]);
+
+  // Register logout cleanup with hub after DB is ready
+  useEffect(() => {
+    if (!dbReady || !registerLogoutCleanup) return;
+    const unregister = registerLogoutCleanup("money-insight", async () => {
+      try {
+        const storage = new IndexedDBSyncStorage();
+        const hasPending = await storage.hasPendingChanges();
+        if (hasPending) {
+          const syncService = getSyncService();
+          const result = await syncService.syncNow();
+          if (!result.success) return { success: false, error: result.error };
+        }
+        await deleteCurrentDb();
+        return { success: true };
+      } catch (e) {
+        return {
+          success: false,
+          error: e instanceof Error ? e.message : "Cleanup failed",
+        };
+      }
+    });
+    return unregister;
+  }, [dbReady, registerLogoutCleanup]);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (containerRef.current) setPortalContainer(containerRef.current);
+  }, [dbReady]);
+
+  // Initialize services only after DB is ready
+  const services: IPlatformServices = useMemo(() => {
+    if (!dbReady) return {} as IPlatformServices;
+    // Initialize data services
+    const transaction = new IndexedDBTransactionAdapter();
+    const category = new IndexedDBCategoryAdapter();
+    const categoryGroup = new IndexedDBCategoryGroupAdapter();
+    const account = new IndexedDBAccountAdapter();
+    const statistics = new IndexedDBStatisticsAdapter();
+    const debt = new IndexedDBDebtAdapter();
+    const budget = new IndexedDBBudgetAdapter();
+    const dashboardPreferences = new IndexedDBDashboardPreferencesAdapter();
+    const notificationEvent = new IndexedDBNotificationEventAdapter();
+    setTransactionService(transaction);
+    setCategoryService(category);
+    setCategoryGroupService(categoryGroup);
+    setAccountService(account);
+    setStatisticsService(statistics);
+    setDebtService(debt);
+    setBudgetService(budget);
+    setDashboardPreferencesService(dashboardPreferences);
+    setNotificationEventService(notificationEvent);
+
+    // Initialize auth service with QmServerAuthAdapter
+    const auth = new QmServerAuthAdapter();
+    setAuthService(auth);
+
+    // Initialize sync service (depends on auth)
+    const sync = createIndexedDBSyncAdapter({
+      getConfig: () => auth.getSyncConfig(),
+      getTokens: () => auth.getTokens(),
+      saveTokens:
+        "saveTokensExternal" in auth && auth.saveTokensExternal
+          ? (accessToken, refreshToken, userId) =>
+              auth.saveTokensExternal!(accessToken, refreshToken, userId)
+          : undefined,
+    });
+    setSyncService(sync);
+
+    return {
+      transaction,
+      category,
+      categoryGroup,
+      account,
+      statistics,
+      debt,
+      budget,
+      dashboardPreferences,
+      notificationEvent,
+      auth,
+      sync,
+    };
+  }, [dbReady]);
+
+  const isAuthenticated = !!(
+    authTokens?.accessToken && authTokens?.refreshToken
+  );
+  const autoSyncEnabled = dbReady && tokensReady && isAuthenticated && embedded;
+
+  // Write embedded SSO tokens before child auto-sync effects are allowed to run.
+  useLayoutEffect(() => {
+    if (
+      dbReady &&
+      authTokens?.accessToken &&
+      authTokens?.refreshToken &&
+      services.auth &&
+      "saveTokensExternal" in services.auth &&
+      services.auth.saveTokensExternal
+    ) {
+      services.auth
+        .saveTokensExternal(
+          authTokens.accessToken,
+          authTokens.refreshToken,
+          authTokens.userId || "",
+        )
+        .then(() => setTokensReady(true))
+        .catch(console.error);
+    }
+  }, [dbReady, authTokens, services.auth]);
+
+  const skipAuth = !!(authTokens?.accessToken && authTokens?.refreshToken);
+
+  if (!dbReady) return null;
+
+  const content = (
+    <AppShell
+      skipAuth={skipAuth}
+      embedded={embedded}
+      onLogoutRequest={onLogoutRequest}
+    />
+  );
+
+  return (
+    <div ref={containerRef} className={className}>
+      <ThemeProvider embedded={embedded}>
+        <PlatformProvider services={services}>
+          <PortalContainerContext.Provider value={portalContainer}>
+            <BasePathContext.Provider value={basePath || ""}>
+              <SyncToastProvider position="top-right">
+                {useRouter ? (
+                  <BrowserRouter basename={basePath}>{content}</BrowserRouter>
+                ) : (
+                  content
+                )}
+                <SyncAutoSyncManager
+                  syncService={dbReady ? getSyncService() : null}
+                  enabled={autoSyncEnabled}
+                />
+                <SyncToast />
+              </SyncToastProvider>
+            </BasePathContext.Provider>
+          </PortalContainerContext.Provider>
+        </PlatformProvider>
+      </ThemeProvider>
+    </div>
+  );
+}

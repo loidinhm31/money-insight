@@ -4,174 +4,67 @@ This file provides guidance to AI coding agents and developers working with code
 
 ## Overview
 
-Money Insight is a personal finance tracking app with offline-first sync. Turborepo monorepo running as web app or Tauri desktop app.
+Money Insight is a personal finance tracking app with offline-first sync. It is built as a single browser package (`@money-insight/app`) that runs both as a standalone web app and embedded in `glean-hub-app`.
 
 ## Build & Development Commands
 
 ```bash
-pnpm dev:web          # Web dev server (port 25096)
-pnpm dev:tauri        # Tauri desktop app with hot reload
-pnpm build            # Build all packages
-pnpm lint             # Lint all packages
-pnpm test             # Run tests in watch mode (vitest)
-pnpm test:run         # Run tests once
-pnpm format           # Format code with Prettier
-pnpm type-check       # TypeScript type checking
-```
-
-### Tauri/Rust Development
-
-```bash
-cd apps/native/src-tauri
-cargo build           # Build Rust backend
-cargo test            # Run Rust tests
+pnpm dev            # Web dev server (port 25096)
+pnpm build          # Typecheck & build production bundle with Vite
+pnpm lint           # Lint source with ESLint
+pnpm test           # Run tests in watch mode (vitest)
+pnpm test:run       # Run tests once
+pnpm type-check     # TypeScript type checking (tsc --noEmit)
 ```
 
 ## Architecture
 
-### Monorepo Structure
+### Package Structure
 
 ```
-apps/
-  web/              # Standalone web app (Vite + React)
-  native/           # Tauri desktop app
-    src-tauri/      # Rust backend (auth, sync, web server)
-packages/
-  ui/               # Shared UI (components, adapters, hooks, stores)
-  shared/           # Types, constants, utilities
+src/
+  adapters/         # Web data & sync adapters (Dexie IndexedDB, shared QmServer auth)
+  assets/           # Icons and assets
+  components/       # UI components (atoms, molecules, organisms, pages, templates)
+  contexts/         # React contexts (Theme, SyncToast)
+  embed/            # Embedded entry (MoneyInsightApp, MoneyInsightAppProps, AuthTokens)
+  hooks/            # React hooks
+  lib/              # Business logic, budget calculations, date helpers
+  platform/         # Platform provider and interfaces
+  services/         # Service layer (ServiceFactory DI)
+  shared/           # Types, constants, utilities, sync client types
+  standalone/       # Standalone browser shell (App.tsx)
+  stores/           # Zustand stores (spendingStore, categoryGroupStore, debtStore, budgetStore)
+  styles/           # Tailwind CSS v4 design system (global.css)
+  types/            # TypeScript interfaces and domain types
+  utils/            # Utility helpers and logging
 ```
 
 ### Service Architecture
 
-Services are injected via `ServiceFactory` (`packages/ui/src/adapters/factory/ServiceFactory.ts`) using setter functions:
+Services are injected via `ServiceFactory` (`src/adapters/factory/ServiceFactory.ts`) using setter functions:
 
 ```typescript
 setTransactionService(new IndexedDBTransactionAdapter());
-setAuthService(isTauri() ? new TauriAuthAdapter() : new QmServerAuthAdapter());
+setAuthService(new QmServerAuthAdapter());
 ```
 
-**Data Services** - All platforms use IndexedDB via Dexie (`packages/ui/src/adapters/web/`):
+**Data Services** - IndexedDB via Dexie (`src/adapters/web/`):
 
-- `IndexedDBTransactionAdapter`, `IndexedDBCategoryAdapter`, `IndexedDBAccountAdapter`, `IndexedDBDebtAdapter`
-- Debt domain service contract lives in `packages/ui/src/adapters/factory/interfaces/IDebtService.ts`; thin service wrappers live in `packages/ui/src/services/debtService.ts`
-- Database schema in `packages/ui/src/adapters/web/database.ts`
+- `IndexedDBTransactionAdapter`, `IndexedDBCategoryAdapter`, `IndexedDBAccountAdapter`, `IndexedDBDebtAdapter`, `IndexedDBBudgetAdapter`, etc.
+- Debt domain service contract in `src/adapters/factory/interfaces/IDebtService.ts`; thin service wrappers in `src/services/debtService.ts`
+- Database schema in `src/adapters/web/database.ts` (versions 1–5 preserved)
 
 **Service Wiring**
 
-- `MoneyInsightApp` initializes `IndexedDBDebtAdapter`, injects it with `setDebtService(...)`, and passes the resolved service set through `PlatformProvider`
-- `PlatformContext` now exposes `debt: IDebtService` alongside transaction/category/account/statistics/auth/sync services
+- `MoneyInsightApp` initializes all IndexedDB adapters, injects them via setters, and passes the resolved service set through `PlatformProvider`.
+- `PlatformContext` exposes transaction, category, categoryGroup, account, statistics, debt, budget, dashboardPreferences, notificationEvent, auth, and sync services.
 
-**Auth Services** - Platform-specific:
+### Key Conventions
 
-- `TauriAuthAdapter` - Uses Tauri IPC commands to Rust backend
-- `QmServerAuthAdapter` - HTTP calls to glean-hub-server
-
-**Platform Context** - Services provided to React tree via `PlatformProvider` (`packages/ui/src/platform/`)
-
-### Component Architecture
-
-Atomic design in `packages/ui/src/components/`:
-
-- `atoms/` - Primitives (Button, Input, Card, **CategoryIcon**)
-- `molecules/` - Composed (DatePicker, TransactionItem, **IconPicker**)
-- `organisms/` - Features (TransactionList, Charts)
-- `pages/` - Full pages (DashboardPage, TransactionPage)
-- `templates/` - Layouts (AppShell)
-
-#### Performance & Memoization
-
-Phase-03 optimizations use **single-pass useMemo** to avoid repeated iterations and allocations:
-
-- **`ReportsSection.tsx`** — `useMemo` partitions transactions into spending/income/totals in one loop; ISO string date comparison in sort (no Date object allocations)
-- **`CategoryPieChart.tsx`** — `chartData` wrapped in `useMemo([data])` to prevent re-renders of chart library
-- **`TransactionDetailModal.tsx`** — `sortedTransactions` memoized once via copy-sort (avoids mutating prop); reused in both desktop table and mobile card views
-
-**Convention**: When data flowing from props requires transformation (partition, sort, deduplicate), memoize in the consuming component using `useMemo` with minimal dependency array. Pass memoized result to child views to ensure stable object identity across renders.
-
-### Category Icon System
-
-Categories and category groups support an optional `icon?: string` field (stored in IndexedDB, synced to server).
-
-**`<CategoryIcon name={string} size={number} />`** (`atoms/CategoryIcon.tsx`)
-
-- Renders one of 35 inline SVG icons with hardcoded colors — all colorful, flat minimal style
-- Falls back to the `wallet` icon if name is not found
-- `CATEGORY_ICONS` registry: `Record<string, { label: string; icon: ComponentFn }>` — 35 keys covering common finance categories
-
-**Icon Pack (v2 — mint-teal + amber outlined style)**
-
-All 35 icons redesigned to match the flat two-tone outlined style:
-- **Teal group** (transport, housing, health, entertainment, education, travel, finance): `#92E0C0` fill · `#5FA77E` depth
-- **Amber group** (food & drink, shopping, personal): `#FFC850` fill · `#FF9052` depth
-- Outline stroke `#474D54` (1.5px) on all main shapes
-- White `#FFFFFF` fills for interior details (windows, screens, paper)
-
-**Design Schema** (`CategoryIcon.tsx` header)
-
-- Two-tone outlined style: 24x24 viewBox, flat solid fills + dark stroke outlines
-- Main shape: fill + `stroke="#474D54"` `strokeWidth="1.5"` `strokeLinecap="round"` `strokeLinejoin="round"`
-- Depth: darker tint fills (`#5FA77E` or `#FF9052`) for secondary/shadow areas (no separate outline)
-- Interior: `#FFFFFF` for windows, screens, text areas
-
-**Helper Functions**
-
-- `svg(children, props)` — SVG wrapper forwarding all props; each icon controls its own fill/stroke colors
-
-**`<IconPicker value={string} onChange={fn} />`** (`molecules/IconPicker.tsx`)
-
-- Popover trigger button showing the current icon (or `?` placeholder)
-- Searchable 6-column grid of all 35 icons
-- Used in `CategorySetupPage` for both parent groups and standalone categories
-
-**`useCategoryIcon()`** (`hooks/useCategoryIcon.ts`)
-
-- Returns `{ getIcon(categoryName) => string | undefined }`
-- Resolution order: parent group name → sub-category mapping → parent group icon → `undefined`
-- Used in TransactionItem, GroupedTransactionList, CategoryPieChart, SubCategoryBreakdownModal, TransactionListModal, TopSpendingSection, ReportsSection, BottleneckAlerts
-
-**Persistence**: Icons are saved via `categoryGroupService.updateCategoryGroup()` (for groups) and `categoryService.updateCategory()` (for standalone categories). The `icon` field is already declared on both `CategoryGroup` and `Category` types in `@money-insight/shared`.
-
-### Sync Architecture
-
-Uses glean-hub-sync-client for offline-first sync with glean-hub-server:
-
-- **Checkpoint-based pagination** — client maintains `_syncMeta` table with last-synced timestamps per table
-- **Debt sync tables** — Dexie schema version 2 adds `debts` and `debtSettlements` as synced tables, including `syncVersion` and `syncedAt` fields plus debt-settlement indexes in `packages/ui/src/adapters/web/database.ts`
-- **Client-generated UUIDs** — enables offline record creation; soft-deleted records retained for 60-day TTL
-- **Concurrency lock** — `IndexedDBSyncAdapter._syncInFlight` prevents overlapping syncs (e.g. double-click + auto-sync). Progress callbacks fan-out to all concurrent callers
-- **Dual auth** — `X-API-Key` + `X-App-Id` for app identity, `Authorization: Bearer` for user authentication
-- Sync metadata tracked in `_syncMeta` and `_pendingChanges` IndexedDB tables
-
-## State Management (Zustand)
-
-All state lives in `packages/ui/src/stores/`:
-
-- **`spendingStore.ts`** — Transactions, accounts, analysis (statistics, monthly/yearly reports, bottlenecks). Transfer actions (createTransfer, updateTransfer, deleteTransfer) use `set((state) => {...})` callback pattern to preserve state reactivity and avoid race conditions when multiple legs are updated atomically.
-- **`categoryGroupStore.ts`** — Category groups, category mappings, lookup map for parent resolution. `triggerAnalysisRefresh()` debounces (50ms, factory-closure scoped) dynamic import to avoid circular dependency with spendingStore and coalesce rapid updates.
-
-## Key Conventions
-
-- Path alias `@/` → `packages/ui/src/` in apps
-- Tailwind CSS v4 with `@tailwindcss/vite` plugin
-- shadcn/ui components (configured in `components.json`)
-
-## Embedding
-
-The `MoneyInsightApp` component (`packages/ui/src/embed/`) can be embedded:
-
-```tsx
-<MoneyInsightApp
-  authTokens={{ accessToken, refreshToken, userId }}
-  embedded={true}
-  basePath="/money"
-  useRouter={false} // Use parent's BrowserRouter
-/>
-```
-
-## Dependencies on Parent Project
-
-Part of glean-hub-sync ecosystem:
-
-- Uses `@glean-hub/sync-client-types` for TypeScript types
-- Uses `glean-hub-sync-client` Rust crate for sync (Tauri only)
-- Designed to embed in `glean-hub-app` admin panel
+- **Module Exports**:
+  - `./embed`: `src/embed/index.ts`
+  - `./styles`: `src/styles/global.css`
+- **Imports**: All internal imports within the package use relative paths.
+- **Port**: Standalone dev server runs on port 25096 (strictPort: true).
+- **Embedded Mode**: `MoneyInsightApp` accepts `authTokens`, `embedded`, `useRouter`, `basePath`, `registerLogoutCleanup`. When `useRouter=false`, it renders without `BrowserRouter` to integrate seamlessly into host router.

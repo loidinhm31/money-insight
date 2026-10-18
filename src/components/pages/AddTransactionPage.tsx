@@ -1,0 +1,63 @@
+import { useCallback } from "react";
+import { useSpendingStore } from "../../stores";
+import { useNav } from "../../hooks";
+import { AddTransactionEntry } from "../templates";
+import { parseCSVForImport } from "../../lib";
+import * as categoryService from "../../services/categoryService";
+import * as accountService from "../../services/accountService";
+import type { NewTransaction, TransferParams } from "../../types";
+
+/**
+ * Add Transaction page - allows manual transaction entry or CSV import
+ */
+export function AddTransactionPage() {
+  const { navigate } = useNav();
+  const { isDbReady, accounts, addTransaction, createTransfer, importFromCSV } =
+    useSpendingStore();
+
+  // Handle add transaction
+  const handleAddTransaction = useCallback(
+    async (tx: NewTransaction): Promise<void> => {
+      await addTransaction(tx);
+    },
+    [addTransaction],
+  );
+
+  const handleTransfer = useCallback(
+    async (params: TransferParams): Promise<void> => {
+      await createTransfer(params);
+      navigate("/dashboard");
+    },
+    [createTransfer, navigate],
+  );
+
+  // Handle CSV file processing
+  const handleFileProcess = useCallback(
+    async (file: File) => {
+      const transactions = await parseCSVForImport(file);
+      if (transactions.length === 0) {
+        throw new Error("No valid transactions found in CSV file");
+      }
+      await importFromCSV(transactions, file.name);
+      // Navigate to dashboard after successful import
+      navigate("/dashboard");
+    },
+    [importFromCSV, navigate],
+  );
+
+  // Get categories and accounts for form
+  const getCategories = useCallback(() => categoryService.getCategories(), []);
+  const getAccounts = useCallback(() => accountService.getAccounts(), []);
+
+  return (
+    <AddTransactionEntry
+      onAddTransaction={handleAddTransaction}
+      onImportCSV={handleFileProcess}
+      getCategories={getCategories}
+      getAccounts={getAccounts}
+      isDbReady={isDbReady}
+      onTransfer={handleTransfer}
+      accounts={accounts}
+    />
+  );
+}
